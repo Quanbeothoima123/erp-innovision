@@ -1,3 +1,14 @@
+// ============================================================
+//  schema.prisma — v2.0  (HR + Payroll + Client Management)
+//  Upgraded từ v1 với các bổ sung:
+//  [NEW]  Quản lý khách hàng / nhà đầu tư (Client domain)
+//  [NEW]  Hợp đồng & hóa đơn (Contract / Invoice)
+//  [NEW]  Thanh toán khách hàng (ClientPayment)
+//  [IMPROVED] Lương – thêm OT, thuế, bảo hiểm, số dư phép
+//  [IMPROVED] Chấm công – thêm ca, đi muộn, OT phút
+//  [IMPROVED] Dự án – link sang Client & Contract
+// ============================================================
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -6,6 +17,12 @@ generator client {
 datasource db {
   provider = "mysql"
 }
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║                        ENUMS                            ║
+// ╚══════════════════════════════════════════════════════════╝
+
+// ─── HR / Employee ────────────────────────────────────────
 
 enum EmploymentStatus {
   PROBATION
@@ -21,6 +38,8 @@ enum Gender {
   OTHER
   UNDISCLOSED
 }
+
+// ─── Leave ────────────────────────────────────────────────
 
 enum LeaveRequestStatus {
   PENDING
@@ -41,12 +60,33 @@ enum ApprovalStatus {
   SKIPPED
 }
 
+// ─── Attendance ───────────────────────────────────────────
+
 enum AttendanceStatus {
   CHECKED_IN
   COMPLETED
   ABSENT
   MANUAL_ADJUSTED
 }
+
+// [NEW] Loại ca làm việc
+enum ShiftType {
+  MORNING      // Ca sáng
+  AFTERNOON    // Ca chiều
+  NIGHT        // Ca đêm
+  FLEXIBLE     // Giờ linh hoạt
+  SPLIT        // Ca kép
+}
+
+// [NEW] Trạng thái yêu cầu làm thêm giờ
+enum OvertimeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// ─── Project ──────────────────────────────────────────────
 
 enum ProjectStatus {
   PLANNING
@@ -81,6 +121,26 @@ enum MilestoneStatus {
   DONE
   OVERDUE
 }
+
+// [NEW] Loại chi phí dự án
+enum ProjectExpenseCategory {
+  LABOR        // Chi phí nhân công
+  SOFTWARE     // Phần mềm / license
+  HARDWARE     // Thiết bị
+  TRAVEL       // Đi lại
+  TRAINING     // Đào tạo
+  SUBCONTRACT  // Thuê ngoài
+  OTHER        // Khác
+}
+
+enum ProjectExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+// ─── Payroll ──────────────────────────────────────────────
 
 enum PayrollPeriodStatus {
   DRAFT
@@ -118,11 +178,13 @@ enum PayrollItemSourceType {
   BASE
   ALLOWANCE
   BONUS
+  OVERTIME      // [NEW] Lương làm thêm giờ
   ATTENDANCE
   LEAVE
   MANUAL
   TAX
   INSURANCE
+  ADVANCE       // [NEW] Tạm ứng lương
 }
 
 enum PayrollAdjustmentType {
@@ -139,28 +201,142 @@ enum PayrollAdjustmentStatus {
   APPLIED
 }
 
+// [NEW] Loại kỳ tính bảo hiểm
+enum InsurancePolicyType {
+  SOCIAL      // Bảo hiểm xã hội (BHXH)
+  HEALTH      // Bảo hiểm y tế (BHYT)
+  UNEMPLOYMENT// Bảo hiểm thất nghiệp (BHTN)
+  ACCIDENT    // Bảo hiểm tai nạn lao động
+}
+
+// ─── Client / Contract ────────────────────────────────────
+
+// [NEW] Loại khách hàng
+enum ClientType {
+  INDIVIDUAL   // Cá nhân
+  COMPANY      // Doanh nghiệp
+  GOVERNMENT   // Cơ quan nhà nước
+  NGO          // Tổ chức phi lợi nhuận
+}
+
+// [NEW] Trạng thái khách hàng
+enum ClientStatus {
+  PROSPECT     // Tiềm năng, chưa ký hợp đồng
+  ACTIVE       // Đang hợp tác
+  INACTIVE     // Tạm dừng hợp tác
+  BLACKLISTED  // Đưa vào danh sách đen
+}
+
+// [NEW] Loại hợp đồng
+enum ContractType {
+  FIXED_PRICE       // Trọn gói cố định
+  TIME_AND_MATERIAL // Theo thời gian & vật liệu
+  RETAINER          // Duy trì dịch vụ hàng tháng
+  MILESTONE_BASED   // Theo cột mốc
+  MIXED             // Kết hợp nhiều loại
+}
+
+// [NEW] Trạng thái hợp đồng
+enum ContractStatus {
+  DRAFT        // Nháp, chưa ký
+  PENDING_SIGN // Chờ ký
+  ACTIVE       // Đang hiệu lực
+  COMPLETED    // Hoàn thành
+  TERMINATED   // Chấm dứt trước hạn
+  SUSPENDED    // Tạm dừng
+  EXPIRED      // Hết hạn
+}
+
+// [NEW] Trạng thái hóa đơn
+enum InvoiceStatus {
+  DRAFT          // Nháp
+  SENT           // Đã gửi
+  VIEWED         // Khách đã xem
+  PARTIALLY_PAID // Thanh toán một phần
+  PAID           // Đã thanh toán đủ
+  OVERDUE        // Quá hạn
+  DISPUTED       // Đang tranh chấp
+  CANCELLED      // Đã hủy
+}
+
+// [NEW] Phương thức thanh toán
+enum PaymentMethod {
+  BANK_TRANSFER  // Chuyển khoản
+  CASH           // Tiền mặt
+  CHECK          // Séc
+  CREDIT_CARD    // Thẻ tín dụng
+  ONLINE         // Ví điện tử / cổng thanh toán
+  CRYPTO         // Tiền mã hóa
+}
+
+// [NEW] Trạng thái thanh toán
+enum ClientPaymentStatus {
+  PENDING    // Đang chờ xác nhận
+  COMPLETED  // Đã xác nhận
+  FAILED     // Thất bại
+  REFUNDED   // Hoàn tiền
+}
+
+// [NEW] Trạng thái phụ lục hợp đồng
+enum ContractAmendmentStatus {
+  DRAFT
+  PENDING_SIGN
+  SIGNED
+  REJECTED
+}
+
+// ─── System ───────────────────────────────────────────────
+
 enum NotificationType {
+  // Leave
   LEAVE_REQUEST_CREATED
   LEAVE_REQUEST_APPROVED
   LEAVE_REQUEST_REJECTED
   LEAVE_REQUEST_NEEDS_HR_REVIEW
+  LEAVE_BALANCE_LOW            // [NEW] Sắp hết ngày phép
+  // Overtime
+  OVERTIME_REQUEST_CREATED     // [NEW]
+  OVERTIME_APPROVED            // [NEW]
+  OVERTIME_REJECTED            // [NEW]
+  // Project
   PROJECT_ASSIGNED
+  PROJECT_STATUS_CHANGED       // [NEW]
+  MILESTONE_DUE_SOON           // [NEW]
+  // Payroll
   PAYROLL_READY
+  PAYSLIP_AVAILABLE            // [NEW]
+  // Client / Contract
+  CONTRACT_SIGNED              // [NEW]
+  CONTRACT_EXPIRING_SOON       // [NEW]
+  INVOICE_SENT                 // [NEW]
+  PAYMENT_RECEIVED             // [NEW]
+  INVOICE_OVERDUE              // [NEW]
+  // General
   GENERAL
 }
 
 enum AuditEntityType {
+  // HR
   EMPLOYEE
   EMPLOYEE_PROFILE
   DEPARTMENT
   JOB_TITLE
+  // Leave
   LEAVE_TYPE
   LEAVE_REQUEST
   LEAVE_REQUEST_APPROVAL
+  LEAVE_BALANCE              // [NEW]
+  // Attendance
   ATTENDANCE
+  WORK_SHIFT                 // [NEW]
+  HOLIDAY                    // [NEW]
+  OVERTIME_REQUEST           // [NEW]
+  // Project
   PROJECT
   PROJECT_ASSIGNMENT
   PROJECT_MILESTONE
+  PROJECT_EXPENSE            // [NEW]
+  // Payroll
   PAYROLL_PERIOD
   EMPLOYEE_COMPENSATION
   SALARY_COMPONENT
@@ -168,6 +344,18 @@ enum AuditEntityType {
   PAYROLL_RECORD
   PAYROLL_RECORD_ITEM
   PAYROLL_ADJUSTMENT
+  INSURANCE_POLICY           // [NEW]
+  TAX_POLICY                 // [NEW]
+  // Client
+  CLIENT                     // [NEW]
+  CLIENT_CONTACT             // [NEW]
+  CONTRACT                   // [NEW]
+  CONTRACT_AMENDMENT         // [NEW]
+  INVOICE                    // [NEW]
+  INVOICE_ITEM               // [NEW]
+  CLIENT_PAYMENT             // [NEW]
+  CLIENT_DOCUMENT            // [NEW]
+  // Auth / System
   USER
   USER_ROLE
   AUTH_TOKEN
@@ -186,6 +374,10 @@ enum AuditActionType {
   ASSIGN
   REMOVE
   STATUS_CHANGE
+  SEND              // [NEW] Gửi hóa đơn, email
+  PAYMENT           // [NEW] Ghi nhận thanh toán
+  CANCEL            // [NEW]
+  SIGN              // [NEW] Ký hợp đồng
   LOGIN
   LOGOUT
   PASSWORD_SET
@@ -203,6 +395,10 @@ enum AuthTokenType {
   ACCOUNT_SETUP
   PASSWORD_RESET
 }
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║              ORGANIZATIONAL MODELS                      ║
+// ╚══════════════════════════════════════════════════════════╝
 
 model Department {
   id             String  @id @default(cuid()) @db.VarChar(30)
@@ -238,6 +434,10 @@ model JobTitle {
   @@map("job_titles")
 }
 
+// ╔══════════════════════════════════════════════════════════╗
+// ║                   EMPLOYEE MODELS                       ║
+// ╚══════════════════════════════════════════════════════════╝
+
 model Employee {
   id           String  @id @default(cuid()) @db.VarChar(30)
   employeeCode String? @unique @map("employee_code") @db.VarChar(50)
@@ -266,27 +466,29 @@ model Employee {
 
   department Department? @relation("EmployeeDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
   jobTitle   JobTitle?   @relation("EmployeeJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
+  manager    Employee?   @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
 
-  manager      Employee?  @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
-  subordinates Employee[] @relation("EmployeeManager")
-
+  subordinates        Employee[]                  @relation("EmployeeManager")
   headedDepartments   Department[]                @relation("DepartmentHead")
   profile             EmployeeProfile?
   leaveRequests       LeaveRequest[]              @relation("LeaveRequester")
   leaveApprovals      LeaveRequestApproval[]      @relation("LeaveApprover")
+  leaveBalances       LeaveBalance[]              // [NEW]
   attendanceRecords   AttendanceRecord[]
+  overtimeRequests    OvertimeRequest[]           @relation("OvertimeRequester") // [NEW]
+  overtimeApprovals   OvertimeRequest[]           @relation("OvertimeApprover")  // [NEW]
   projectAssignments  EmployeeProjectAssignment[]
   managedProjects     Project[]                   @relation("ProjectManager")
   milestoneOwnerships ProjectMilestone[]          @relation("MilestoneOwner")
+  projectExpenses     ProjectExpense[]            @relation("ExpenseSubmitter")  // [NEW]
   compensations       EmployeeCompensation[]
   salaryComponents    EmployeeSalaryComponent[]
   payrollRecords      PayrollRecord[]
   payrollAdjustments  PayrollAdjustment[]
-
-  user User? @relation("EmployeeUser")
-
-  createdByUser User? @relation("EmployeeCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  updatedByUser User? @relation("EmployeeUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  managedClients      Client[]                    @relation("ClientAccountManager") // [NEW]
+  user                User?                       @relation("EmployeeUser")
+  createdByUser       User?                       @relation("EmployeeCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser       User?                       @relation("EmployeeUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: SetNull)
 
   @@index([fullName])
   @@index([departmentId])
@@ -319,12 +521,28 @@ model EmployeeProfile {
   emergencyContactPhone        String? @map("emergency_contact_phone") @db.VarChar(30)
   emergencyContactEmail        String? @map("emergency_contact_email") @db.VarChar(191)
 
+  // Thông tin ngân hàng
   bankName          String? @map("bank_name") @db.VarChar(191)
   bankAccountNumber String? @map("bank_account_number") @db.VarChar(100)
   bankAccountHolder String? @map("bank_account_holder") @db.VarChar(191)
   bankBranch        String? @map("bank_branch") @db.VarChar(191)
+  bankSwiftCode     String? @map("bank_swift_code") @db.VarChar(20) // [NEW]
 
-  taxCode String? @map("tax_code") @db.VarChar(100)
+  // Giấy tờ cá nhân
+  taxCode          String? @map("tax_code") @db.VarChar(100)
+  nationalIdNumber String? @map("national_id_number") @db.VarChar(50)  // [NEW] CCCD/CMND
+  nationalIdIssued DateTime? @map("national_id_issued") @db.Date       // [NEW] Ngày cấp
+  nationalIdPlace  String? @map("national_id_place") @db.VarChar(191)  // [NEW] Nơi cấp
+  passportNumber   String? @map("passport_number") @db.VarChar(50)     // [NEW]
+  passportExpiry   DateTime? @map("passport_expiry") @db.Date          // [NEW]
+
+  // Thông tin bảo hiểm xã hội
+  socialInsuranceNumber String? @map("social_insurance_number") @db.VarChar(50)  // [NEW] Mã số BHXH
+  healthInsuranceNumber String? @map("health_insurance_number") @db.VarChar(50)  // [NEW] Mã thẻ BHYT
+  healthInsuranceExpiry DateTime? @map("health_insurance_expiry") @db.Date       // [NEW] Hạn thẻ BHYT
+
+  // Người phụ thuộc (ảnh hưởng thuế TNCN)
+  dependantCount Int @default(0) @map("dependant_count") // [NEW] Số người phụ thuộc
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -334,6 +552,10 @@ model EmployeeProfile {
   @@map("employee_profiles")
 }
 
+// ╔══════════════════════════════════════════════════════════╗
+// ║                 LEAVE MANAGEMENT                        ║
+// ╚══════════════════════════════════════════════════════════╝
+
 model LeaveType {
   id          String  @id @default(cuid()) @db.VarChar(30)
   code        String? @unique @db.VarChar(50)
@@ -342,13 +564,56 @@ model LeaveType {
   isPaid      Boolean @default(true) @map("is_paid")
   isActive    Boolean @default(true) @map("is_active")
 
+  // [NEW] Chính sách nghỉ phép
+  maxDaysPerYear    Int?     @map("max_days_per_year")   // Tối đa bao nhiêu ngày/năm
+  maxDaysPerRequest Int?     @map("max_days_per_request") // Tối đa mỗi đơn
+  minDaysNotice     Int?     @map("min_days_notice")     // Phải báo trước bao nhiêu ngày
+  carryOverDays     Int      @default(0) @map("carry_over_days") // Ngày được chuyển sang năm sau
+  requiresDocument  Boolean  @default(false) @map("requires_document") // Cần nộp giấy tờ (ví dụ: giấy bệnh viện)
+  requiresApproval  Boolean  @default(true) @map("requires_approval")
+  isHalfDayAllowed  Boolean  @default(true) @map("is_half_day_allowed") // Cho phép nghỉ nửa ngày
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   leaveRequests LeaveRequest[]
+  leaveBalances LeaveBalance[] // [NEW]
 
   @@index([isActive])
   @@map("leave_types")
+}
+
+// [NEW] Số dư ngày phép của từng nhân viên theo năm & loại
+model LeaveBalance {
+  id          String @id @default(cuid()) @db.VarChar(30)
+  employeeId  String @map("employee_id") @db.VarChar(30)
+  leaveTypeId String @map("leave_type_id") @db.VarChar(30)
+  year        Int    @db.UnsignedSmallInt
+
+  // Ngày phép được cấp đầu năm / theo chính sách
+  entitledDays  Decimal @map("entitled_days") @db.Decimal(5, 2)
+  // Ngày phép chuyển từ năm trước
+  carriedDays   Decimal @default(0) @map("carried_days") @db.Decimal(5, 2)
+  // Ngày phép được cộng thêm (thưởng phép, phát sinh)
+  adjustedDays  Decimal @default(0) @map("adjusted_days") @db.Decimal(5, 2)
+  // Ngày đã sử dụng (tính từ đơn được duyệt)
+  usedDays      Decimal @default(0) @map("used_days") @db.Decimal(5, 2)
+  // Ngày đang chờ duyệt
+  pendingDays   Decimal @default(0) @map("pending_days") @db.Decimal(5, 2)
+  // Số dư còn lại = entitledDays + carriedDays + adjustedDays - usedDays - pendingDays
+  remainingDays Decimal @default(0) @map("remaining_days") @db.Decimal(5, 2)
+
+  notes     String? @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([employeeId, year])
+  @@index([leaveTypeId])
+  @@map("leave_balances")
 }
 
 model LeaveRequest {
@@ -356,10 +621,13 @@ model LeaveRequest {
   employeeId  String @map("employee_id") @db.VarChar(30)
   leaveTypeId String @map("leave_type_id") @db.VarChar(30)
 
-  startDate DateTime @map("start_date") @db.Date
-  endDate   DateTime @map("end_date") @db.Date
-  totalDays Decimal  @map("total_days") @db.Decimal(5, 2)
-  reason    String?  @db.Text
+  startDate  DateTime @map("start_date") @db.Date
+  endDate    DateTime @map("end_date") @db.Date
+  totalDays  Decimal  @map("total_days") @db.Decimal(5, 2)
+  isHalfDay  Boolean  @default(false) @map("is_half_day")    // [NEW]
+  halfDayPeriod String? @map("half_day_period") @db.VarChar(10) // [NEW] "MORNING" | "AFTERNOON"
+  reason     String?  @db.Text
+  documentUrl String? @map("document_url") @db.VarChar(2048) // [NEW] Đính kèm giấy tờ
 
   status      LeaveRequestStatus @default(PENDING)
   currentStep ApprovalStepType?  @map("current_step")
@@ -368,13 +636,14 @@ model LeaveRequest {
   finalApprovedAt DateTime? @map("final_approved_at")
   rejectedAt      DateTime? @map("rejected_at")
   rejectionReason String?   @map("rejection_reason") @db.Text
+  cancelledAt     DateTime? @map("cancelled_at")               // [NEW]
+  cancelReason    String?   @map("cancel_reason") @db.Text     // [NEW]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   employee  Employee  @relation("LeaveRequester", fields: [employeeId], references: [id], onDelete: Restrict)
   leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
-
   approvals LeaveRequestApproval[]
 
   @@index([employeeId, status])
@@ -407,27 +676,122 @@ model LeaveRequestApproval {
   @@map("leave_request_approvals")
 }
 
+// ╔══════════════════════════════════════════════════════════╗
+// ║              ATTENDANCE & OVERTIME                      ║
+// ╚══════════════════════════════════════════════════════════╝
+
+// [NEW] Lịch ngày nghỉ lễ / ngày đặc biệt
+model Holiday {
+  id          String  @id @default(cuid()) @db.VarChar(30)
+  name        String  @db.VarChar(191)
+  date        DateTime @db.Date
+  year        Int      @db.UnsignedSmallInt
+  isRecurring Boolean  @default(false) @map("is_recurring") // Lặp lại hàng năm
+  description String?  @db.Text
+  overtimeMultiplier Decimal @default(3.0) @map("overtime_multiplier") @db.Decimal(3, 1) // Hệ số lương ngày lễ
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([date])
+  @@index([year])
+  @@map("holidays")
+}
+
+// [NEW] Ca làm việc
+model WorkShift {
+  id          String    @id @default(cuid()) @db.VarChar(30)
+  code        String    @unique @db.VarChar(50)
+  name        String    @unique @db.VarChar(191)
+  shiftType   ShiftType @map("shift_type")
+  startTime   String    @map("start_time") @db.VarChar(5)   // "08:00" định dạng HH:mm
+  endTime     String    @map("end_time") @db.VarChar(5)     // "17:30"
+  breakMinutes Int      @default(60) @map("break_minutes")   // Phút nghỉ giữa ca
+  workMinutes  Int      @map("work_minutes")                  // Tổng phút làm việc tiêu chuẩn
+  isNightShift Boolean  @default(false) @map("is_night_shift")
+  overtimeAfterMinutes Int @default(0) @map("overtime_after_minutes") // OT tính sau bao nhiêu phút làm thêm
+  isActive     Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  attendanceRecords AttendanceRecord[]
+
+  @@index([isActive])
+  @@map("work_shifts")
+}
+
 model AttendanceRecord {
   id         String @id @default(cuid()) @db.VarChar(30)
   employeeId String @map("employee_id") @db.VarChar(30)
+  shiftId    String? @map("shift_id") @db.VarChar(30) // [NEW]
 
   workDate         DateTime         @map("work_date") @db.Date
   checkInAt        DateTime?        @map("check_in_at")
   checkOutAt       DateTime?        @map("check_out_at")
   totalWorkMinutes Int?             @map("total_work_minutes")
-  status           AttendanceStatus @default(CHECKED_IN)
-  note             String?          @db.Text
+
+  // [NEW] Chi tiết chấm công
+  lateMinutes          Int @default(0) @map("late_minutes")           // Số phút đi muộn
+  earlyLeaveMinutes    Int @default(0) @map("early_leave_minutes")     // Số phút về sớm
+  overtimeMinutes      Int @default(0) @map("overtime_minutes")        // Số phút OT thực tế
+  overtimeApprovedMinutes Int @default(0) @map("overtime_approved_minutes") // Phút OT được duyệt
+  isHolidayWork        Boolean @default(false) @map("is_holiday_work") // Làm việc ngày lễ
+  isWeekendWork        Boolean @default(false) @map("is_weekend_work") // Làm việc cuối tuần
+  isRemoteWork         Boolean @default(false) @map("is_remote_work")  // Làm việc từ xa
+
+  status AttendanceStatus @default(CHECKED_IN)
+  note   String?          @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employee  Employee   @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  shift     WorkShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull) // [NEW]
 
   @@unique([employeeId, workDate])
   @@index([workDate])
   @@index([employeeId, status])
+  @@index([shiftId])
   @@map("attendance_records")
 }
+
+// [NEW] Yêu cầu làm thêm giờ (cần approval trước khi tính vào lương)
+model OvertimeRequest {
+  id                 String @id @default(cuid()) @db.VarChar(30)
+  employeeId         String @map("employee_id") @db.VarChar(30)
+  approverEmployeeId String? @map("approver_employee_id") @db.VarChar(30)
+
+  workDate     DateTime @map("work_date") @db.Date
+  startTime    String   @map("start_time") @db.VarChar(5)  // "18:00"
+  endTime      String   @map("end_time") @db.VarChar(5)    // "21:00"
+  plannedMinutes Int    @map("planned_minutes")
+  actualMinutes  Int?   @map("actual_minutes")             // Thực tế sau khi chấm công
+
+  isHoliday    Boolean @default(false) @map("is_holiday")
+  isWeekend    Boolean @default(false) @map("is_weekend")
+  reason       String? @db.Text
+  status       OvertimeRequestStatus @default(PENDING)
+
+  submittedAt DateTime  @default(now()) @map("submitted_at")
+  actionAt    DateTime? @map("action_at")
+  comment     String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  employee Employee  @relation("OvertimeRequester", fields: [employeeId], references: [id], onDelete: Restrict)
+  approver Employee? @relation("OvertimeApprover", fields: [approverEmployeeId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId, status])
+  @@index([workDate])
+  @@index([approverEmployeeId])
+  @@map("overtime_requests")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║                  PROJECT MODELS                         ║
+// ╚══════════════════════════════════════════════════════════╝
 
 model Project {
   id          String  @id @default(cuid()) @db.VarChar(30)
@@ -436,28 +800,49 @@ model Project {
   description String? @db.Text
 
   projectManagerEmployeeId String?              @map("project_manager_employee_id") @db.VarChar(30)
-  status                   ProjectStatus        @default(PLANNING)
-  priority                 ProjectPriority?
-  healthStatus             ProjectHealthStatus? @map("health_status")
-  progressPercent          Decimal              @default(0) @map("progress_percent") @db.Decimal(5, 2)
+
+  // [CHANGED] clientName String → FK sang bảng Client
+  clientId    String? @map("client_id") @db.VarChar(30)   // [NEW]
+  contractId  String? @map("contract_id") @db.VarChar(30) // [NEW] Hợp đồng gắn với dự án
+
+  status          ProjectStatus        @default(PLANNING)
+  priority        ProjectPriority?
+  healthStatus    ProjectHealthStatus? @map("health_status")
+  progressPercent Decimal              @default(0) @map("progress_percent") @db.Decimal(5, 2)
 
   startDate     DateTime? @map("start_date") @db.Date
   endDate       DateTime? @map("end_date") @db.Date
   actualEndDate DateTime? @map("actual_end_date") @db.Date
 
-  budgetAmount Decimal? @map("budget_amount") @db.Decimal(18, 2)
-  clientName   String?  @map("client_name") @db.VarChar(191)
+  // [IMPROVED] Ngân sách dự án chi tiết hơn
+  budgetAmount   Decimal? @map("budget_amount") @db.Decimal(18, 2)   // Tổng ngân sách được duyệt
+  spentAmount    Decimal  @default(0) @map("spent_amount") @db.Decimal(18, 2)  // [NEW] Đã chi
+  currency       String   @default("VND") @db.VarChar(10)            // [NEW]
+
+  // [NEW] Doanh thu từ dự án (billable)
+  contractValue  Decimal? @map("contract_value") @db.Decimal(18, 2)  // Giá trị hợp đồng
+  invoicedAmount Decimal  @default(0) @map("invoiced_amount") @db.Decimal(18, 2) // Đã xuất hóa đơn
+  receivedAmount Decimal  @default(0) @map("received_amount") @db.Decimal(18, 2) // Đã thu được
 
   isActive Boolean @default(true) @map("is_active")
+  closedAt DateTime? @map("closed_at")     // [NEW]
+  closureNote String? @map("closure_note") @db.Text // [NEW]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  projectManager Employee?                   @relation("ProjectManager", fields: [projectManagerEmployeeId], references: [id], onDelete: SetNull)
-  assignments    EmployeeProjectAssignment[]
-  milestones     ProjectMilestone[]
+  projectManager Employee? @relation("ProjectManager", fields: [projectManagerEmployeeId], references: [id], onDelete: SetNull)
+  client         Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull) // [NEW]
+  contract       Contract? @relation("ProjectContract", fields: [contractId], references: [id], onDelete: SetNull) // [NEW]
+
+  assignments EmployeeProjectAssignment[]  @relation("ProjectAssignments")
+  milestones  ProjectMilestone[]
+  expenses    ProjectExpense[]      // [NEW]
+  invoices    Invoice[]             // [NEW] Hóa đơn xuất cho dự án này
 
   @@index([projectManagerEmployeeId])
+  @@index([clientId])
+  @@index([contractId])
   @@index([status, isActive])
   @@index([healthStatus])
   @@index([priority])
@@ -472,6 +857,7 @@ model EmployeeProjectAssignment {
 
   roleInProject     String?                 @map("role_in_project") @db.VarChar(100)
   allocationPercent Decimal?                @map("allocation_percent") @db.Decimal(5, 2)
+  hourlyRate        Decimal?                @map("hourly_rate") @db.Decimal(18, 2) // [NEW] Giá theo giờ (nếu billable)
   joinedAt          DateTime                @map("joined_at") @db.Date
   leftAt            DateTime?               @map("left_at") @db.Date
   status            ProjectAssignmentStatus @default(ACTIVE)
@@ -482,7 +868,7 @@ model EmployeeProjectAssignment {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  project  Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  project  Project  @relation("ProjectAssignments", fields: [projectId], references: [id], onDelete: Restrict)
 
   @@unique([employeeId, projectId, joinedAt])
   @@index([employeeId, status])
@@ -500,16 +886,124 @@ model ProjectMilestone {
   completedAt     DateTime?       @map("completed_at")
   status          MilestoneStatus @default(PENDING)
 
+  // [NEW] Liên kết milestone với hóa đơn (milestone = điều kiện thanh toán)
+  invoiceId String? @map("invoice_id") @db.VarChar(30)
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   project Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   owner   Employee? @relation("MilestoneOwner", fields: [ownerEmployeeId], references: [id], onDelete: SetNull)
+  invoice Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull) // [NEW]
 
   @@index([projectId, status])
   @@index([ownerEmployeeId])
   @@index([dueDate])
   @@map("project_milestones")
+}
+
+// [NEW] Chi phí phát sinh trong dự án
+model ProjectExpense {
+  id                  String               @id @default(cuid()) @db.VarChar(30)
+  projectId           String               @map("project_id") @db.VarChar(30)
+  submittedByEmployeeId String             @map("submitted_by_employee_id") @db.VarChar(30)
+  approvedByUserId    String?              @map("approved_by_user_id") @db.VarChar(30)
+
+  category     ProjectExpenseCategory @map("category")
+  title        String                 @db.VarChar(191)
+  description  String?                @db.Text
+  amount       Decimal                @db.Decimal(18, 2)
+  currency     String                 @default("VND") @db.VarChar(10)
+  expenseDate  DateTime               @map("expense_date") @db.Date
+  receiptUrl   String?                @map("receipt_url") @db.VarChar(2048) // Ảnh hóa đơn
+  status       ProjectExpenseStatus   @default(PENDING)
+
+  submittedAt DateTime  @default(now()) @map("submitted_at")
+  approvedAt  DateTime? @map("approved_at")
+  rejectedAt  DateTime? @map("rejected_at")
+  rejectReason String?  @map("reject_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  submittedBy   Employee  @relation("ExpenseSubmitter", fields: [submittedByEmployeeId], references: [id], onDelete: Restrict)
+  approvedByUser User?    @relation("ExpenseApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([submittedByEmployeeId])
+  @@index([expenseDate])
+  @@map("project_expenses")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║              PAYROLL & COMPENSATION                     ║
+// ╚══════════════════════════════════════════════════════════╝
+
+// [NEW] Chính sách bảo hiểm (theo quy định nhà nước, cập nhật theo từng thời kỳ)
+model InsurancePolicy {
+  id          String              @id @default(cuid()) @db.VarChar(30)
+  policyType  InsurancePolicyType @map("policy_type")
+  name        String              @db.VarChar(191)
+
+  // Tỷ lệ đóng
+  employeeRate  Decimal @map("employee_rate") @db.Decimal(5, 4)  // VD: 0.08 = 8%
+  employerRate  Decimal @map("employer_rate") @db.Decimal(5, 4)  // VD: 0.175 = 17.5%
+
+  // Mức lương trần đóng bảo hiểm (nếu có)
+  salaryCapAmount Decimal? @map("salary_cap_amount") @db.Decimal(18, 2)
+
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  isActive      Boolean   @default(true) @map("is_active")
+  notes         String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([policyType, isActive])
+  @@index([effectiveFrom])
+  @@map("insurance_policies")
+}
+
+// [NEW] Bảng thuế TNCN lũy tiến (progressive tax brackets)
+model TaxPolicy {
+  id          String @id @default(cuid()) @db.VarChar(30)
+  name        String @db.VarChar(191)  // VD: "Thuế TNCN 2024"
+  year        Int    @db.UnsignedSmallInt
+  description String? @db.Text
+  isActive    Boolean @default(true) @map("is_active")
+
+  // Mức giảm trừ gia cảnh
+  personalDeduction  Decimal @map("personal_deduction") @db.Decimal(18, 2)  // Bản thân (hiện 11tr/tháng)
+  dependantDeduction Decimal @map("dependant_deduction") @db.Decimal(18, 2) // Mỗi người phụ thuộc (4.4tr/tháng)
+
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  brackets TaxBracket[]
+
+  @@index([year, isActive])
+  @@map("tax_policies")
+}
+
+// [NEW] Các bậc thuế (7 bậc thuế TNCN VN)
+model TaxBracket {
+  id           String @id @default(cuid()) @db.VarChar(30)
+  taxPolicyId  String @map("tax_policy_id") @db.VarChar(30)
+  bracketOrder Int    @map("bracket_order")           // Bậc 1, 2, 3...
+  minIncome    Decimal @map("min_income") @db.Decimal(18, 2) // Thu nhập tính thuế từ
+  maxIncome    Decimal? @map("max_income") @db.Decimal(18, 2) // Đến (null = không giới hạn)
+  taxRate      Decimal  @map("tax_rate") @db.Decimal(5, 4)   // VD: 0.05 = 5%
+
+  taxPolicy TaxPolicy @relation(fields: [taxPolicyId], references: [id], onDelete: Cascade)
+
+  @@unique([taxPolicyId, bracketOrder])
+  @@index([taxPolicyId])
+  @@map("tax_brackets")
 }
 
 model PayrollPeriod {
@@ -522,15 +1016,24 @@ model PayrollPeriod {
   payDate    DateTime?           @map("pay_date") @db.Date
   status     PayrollPeriodStatus @default(DRAFT)
 
+  // [NEW] Tham số kỳ lương
+  workingDaysInPeriod     Int? @map("working_days_in_period")      // Tổng ngày làm việc trong kỳ
+  standardWorkingMinutes  Int? @map("standard_working_minutes")    // Phút làm chuẩn 1 ngày
+
   lockedAt   DateTime? @map("locked_at")
   approvedAt DateTime? @map("approved_at")
   paidAt     DateTime? @map("paid_at")
+
+  // [NEW] Người phê duyệt
+  approvedByUserId String? @map("approved_by_user_id") @db.VarChar(30)
+  notes            String? @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   payrollRecords     PayrollRecord[]
   payrollAdjustments PayrollAdjustment[]
+  approvedByUser     User?               @relation("PayrollPeriodApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
 
   @@unique([month, year])
   @@index([status])
@@ -542,12 +1045,23 @@ model EmployeeCompensation {
   employeeId           String     @map("employee_id") @db.VarChar(30)
   salaryType           SalaryType @map("salary_type")
   baseSalary           Decimal    @map("base_salary") @db.Decimal(18, 2)
+
+  // [NEW] Lương thử việc (thường 85% lương chính thức)
+  probationSalary      Decimal?   @map("probation_salary") @db.Decimal(18, 2)
+
   standardWorkingDays  Int?       @map("standard_working_days")
   standardWorkingHours Decimal?   @map("standard_working_hours") @db.Decimal(5, 2)
   currency             String     @db.VarChar(10)
-  effectiveFrom        DateTime   @map("effective_from") @db.Date
-  effectiveTo          DateTime?  @map("effective_to") @db.Date
-  isActive             Boolean    @default(true) @map("is_active")
+
+  // [NEW] Hệ số làm thêm giờ
+  overtimeRateWeekday  Decimal @default(1.5) @map("overtime_rate_weekday") @db.Decimal(3, 1) // 150% ngày thường
+  overtimeRateWeekend  Decimal @default(2.0) @map("overtime_rate_weekend") @db.Decimal(3, 1) // 200% cuối tuần
+  overtimeRateHoliday  Decimal @default(3.0) @map("overtime_rate_holiday") @db.Decimal(3, 1) // 300% ngày lễ
+
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  isActive      Boolean   @default(true) @map("is_active")
+  notes         String?   @db.Text // [NEW]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -568,6 +1082,10 @@ model SalaryComponent {
   isTaxable       Boolean               @default(false) @map("is_taxable")
   isInsurable     Boolean               @default(false) @map("is_insurable")
   isActive        Boolean               @default(true) @map("is_active")
+
+  // [NEW] Thứ tự ưu tiên tính lương
+  displayOrder    Int @default(0) @map("display_order")
+  description     String? @db.Text // [NEW]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -610,24 +1128,47 @@ model PayrollRecord {
   workingDays     Decimal?            @map("working_days") @db.Decimal(5, 2)
   paidLeaveDays   Decimal?            @map("paid_leave_days") @db.Decimal(5, 2)
   unpaidLeaveDays Decimal?            @map("unpaid_leave_days") @db.Decimal(5, 2)
+  absentDays      Decimal?            @map("absent_days") @db.Decimal(5, 2)     // [NEW]
+  lateDays        Int     @default(0) @map("late_days")                         // [NEW] Số ngày đi muộn bị trừ
+
+  // [NEW] Làm thêm giờ
+  overtimeWeekdayMinutes Int @default(0) @map("overtime_weekday_minutes")
+  overtimeWeekendMinutes Int @default(0) @map("overtime_weekend_minutes")
+  overtimeHolidayMinutes Int @default(0) @map("overtime_holiday_minutes")
+  totalOvertimePay    Decimal @default(0) @map("total_overtime_pay") @db.Decimal(18, 2)
+
   grossSalary     Decimal             @map("gross_salary") @db.Decimal(18, 2)
   totalAllowances Decimal             @map("total_allowances") @db.Decimal(18, 2)
   totalBonus      Decimal             @map("total_bonus") @db.Decimal(18, 2)
+
+  // [NEW] Chi tiết khấu trừ
+  socialInsuranceEmployee  Decimal @default(0) @map("social_insurance_employee") @db.Decimal(18, 2)
+  healthInsuranceEmployee  Decimal @default(0) @map("health_insurance_employee") @db.Decimal(18, 2)
+  unemploymentInsuranceEmployee Decimal @default(0) @map("unemployment_insurance_employee") @db.Decimal(18, 2)
+  personalIncomeTax        Decimal @default(0) @map("personal_income_tax") @db.Decimal(18, 2)
+  taxableIncome            Decimal @default(0) @map("taxable_income") @db.Decimal(18, 2) // Thu nhập tính thuế
+
   totalDeductions Decimal             @map("total_deductions") @db.Decimal(18, 2)
   netSalary       Decimal             @map("net_salary") @db.Decimal(18, 2)
   status          PayrollRecordStatus @default(DRAFT)
 
-  generatedAt DateTime? @map("generated_at")
-  approvedAt  DateTime? @map("approved_at")
-  paidAt      DateTime? @map("paid_at")
+  // [NEW] Tham số tính lương
+  dailyRate    Decimal? @map("daily_rate") @db.Decimal(18, 2)  // Lương 1 ngày
+  hourlyRate   Decimal? @map("hourly_rate") @db.Decimal(18, 2) // Lương 1 giờ
+
+  generatedAt  DateTime? @map("generated_at")
+  approvedAt   DateTime? @map("approved_at")
+  paidAt       DateTime? @map("paid_at")
+  paymentRef   String?   @map("payment_ref") @db.VarChar(191) // [NEW] Mã giao dịch chuyển lương
+
+  notes String? @db.Text // [NEW]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   payrollPeriod PayrollPeriod @relation(fields: [payrollPeriodId], references: [id], onDelete: Cascade)
   employee      Employee      @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-
-  items PayrollRecordItem[]
+  items         PayrollRecordItem[]
 
   @@unique([payrollPeriodId, employeeId])
   @@index([employeeId, status])
@@ -643,6 +1184,8 @@ model PayrollRecordItem {
   itemType          SalaryComponentType    @map("item_type")
   amount            Decimal                @db.Decimal(18, 2)
   sourceType        PayrollItemSourceType? @map("source_type")
+  quantity          Decimal?               @db.Decimal(10, 2) // [NEW] Số giờ OT, số ngày...
+  unitRate          Decimal?               @map("unit_rate") @db.Decimal(18, 2) // [NEW] Đơn giá
   notes             String?                @db.Text
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -665,6 +1208,11 @@ model PayrollAdjustment {
   reason          String?                 @db.Text
   status          PayrollAdjustmentStatus @default(PENDING)
 
+  // [NEW] Nếu là tạm ứng lương, theo dõi việc thu hồi
+  isAdvance           Boolean   @default(false) @map("is_advance")
+  advanceRecoveredAmount Decimal @default(0) @map("advance_recovered_amount") @db.Decimal(18, 2)
+  advanceFullyRecovered Boolean @default(false) @map("advance_fully_recovered")
+
   createdByUserId  String? @map("created_by_user_id") @db.VarChar(30)
   approvedByUserId String? @map("approved_by_user_id") @db.VarChar(30)
 
@@ -673,7 +1221,6 @@ model PayrollAdjustment {
 
   employee      Employee       @relation(fields: [employeeId], references: [id], onDelete: Restrict)
   payrollPeriod PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id], onDelete: SetNull)
-
   createdByUser  User? @relation("PayrollAdjustmentCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   approvedByUser User? @relation("PayrollAdjustmentApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
 
@@ -683,6 +1230,344 @@ model PayrollAdjustment {
   @@index([approvedByUserId])
   @@map("payroll_adjustments")
 }
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║            CLIENT & CONTRACT MANAGEMENT                 ║
+// ╚══════════════════════════════════════════════════════════╝
+
+// [NEW] Khách hàng / Nhà đầu tư
+model Client {
+  id           String       @id @default(cuid()) @db.VarChar(30)
+  clientCode   String?      @unique @map("client_code") @db.VarChar(50)   // Mã khách hàng nội bộ
+  clientType   ClientType   @map("client_type")
+  status       ClientStatus @default(PROSPECT)
+
+  // Thông tin cơ bản
+  companyName  String  @map("company_name") @db.VarChar(255)              // Tên công ty / cá nhân
+  shortName    String? @map("short_name") @db.VarChar(100)                // Tên viết tắt
+  taxCode      String? @map("tax_code") @db.VarChar(50)                   // Mã số thuế doanh nghiệp
+  industry     String? @db.VarChar(100)                                   // Ngành nghề
+  website      String? @db.VarChar(2048)
+
+  // Địa chỉ
+  addressLine1 String? @map("address_line_1") @db.VarChar(255)
+  addressLine2 String? @map("address_line_2") @db.VarChar(255)
+  city         String? @db.VarChar(100)
+  province     String? @db.VarChar(100)
+  country      String  @default("Việt Nam") @db.VarChar(100)
+  postalCode   String? @map("postal_code") @db.VarChar(20)
+
+  // Tài khoản ngân hàng (để thanh toán / nhận tiền)
+  bankName          String? @map("bank_name") @db.VarChar(191)
+  bankAccountNumber String? @map("bank_account_number") @db.VarChar(100)
+  bankAccountHolder String? @map("bank_account_holder") @db.VarChar(191)
+  bankBranch        String? @map("bank_branch") @db.VarChar(191)
+  bankSwiftCode     String? @map("bank_swift_code") @db.VarChar(20)
+
+  // Phân công nhân viên phụ trách
+  accountManagerId  String? @map("account_manager_id") @db.VarChar(30)
+
+  // Thống kê nhanh (denormalized để tăng tốc query dashboard)
+  totalContractValue   Decimal @default(0) @map("total_contract_value") @db.Decimal(18, 2)
+  totalInvoicedAmount  Decimal @default(0) @map("total_invoiced_amount") @db.Decimal(18, 2)
+  totalReceivedAmount  Decimal @default(0) @map("total_received_amount") @db.Decimal(18, 2)
+  outstandingBalance   Decimal @default(0) @map("outstanding_balance") @db.Decimal(18, 2)  // Còn nợ
+
+  notes    String? @db.Text
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  accountManager Employee? @relation("ClientAccountManager", fields: [accountManagerId], references: [id], onDelete: SetNull)
+
+  contacts   ClientContact[]
+  contracts  Contract[]
+  invoices   Invoice[]
+  payments   ClientPayment[]
+  documents  ClientDocument[]
+  projects   Project[]
+
+  @@index([status, isActive])
+  @@index([clientType])
+  @@index([accountManagerId])
+  @@index([companyName])
+  @@map("clients")
+}
+
+// [NEW] Người liên hệ phía khách hàng
+model ClientContact {
+  id       String @id @default(cuid()) @db.VarChar(30)
+  clientId String @map("client_id") @db.VarChar(30)
+
+  fullName    String  @map("full_name") @db.VarChar(191)
+  jobTitle    String? @map("job_title") @db.VarChar(191)  // Chức danh bên phía khách hàng
+  department  String? @db.VarChar(100)
+  email       String? @db.VarChar(191)
+  phoneNumber String? @map("phone_number") @db.VarChar(30)
+  phoneAlt    String? @map("phone_alt") @db.VarChar(30)  // Số điện thoại phụ
+
+  isPrimary   Boolean @default(false) @map("is_primary")  // Người liên hệ chính
+  isBilling   Boolean @default(false) @map("is_billing")  // Nhận hóa đơn
+  isTechnical Boolean @default(false) @map("is_technical") // Liên hệ kỹ thuật
+
+  notes    String? @db.Text
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, isActive])
+  @@index([email])
+  @@map("client_contacts")
+}
+
+// [NEW] Hợp đồng với khách hàng
+model Contract {
+  id             String @id @default(cuid()) @db.VarChar(30)
+  contractCode   String @unique @map("contract_code") @db.VarChar(50)
+  title          String @db.VarChar(255)
+  clientId       String @map("client_id") @db.VarChar(30)
+
+  contractType   ContractType   @map("contract_type")
+  status         ContractStatus @default(DRAFT)
+
+  // Giá trị tài chính
+  totalValue       Decimal  @map("total_value") @db.Decimal(18, 2)        // Tổng giá trị hợp đồng
+  currency         String   @default("VND") @db.VarChar(10)
+  vatRate          Decimal  @default(0.1) @map("vat_rate") @db.Decimal(4, 2) // Thuế GTGT (10%)
+  vatAmount        Decimal  @map("vat_amount") @db.Decimal(18, 2)
+  totalWithVat     Decimal  @map("total_with_vat") @db.Decimal(18, 2)     // Tổng kể cả thuế
+
+  // Điều khoản thanh toán
+  paymentTermDays  Int?     @map("payment_term_days")                      // Net 30, Net 60...
+  retainerAmount   Decimal? @map("retainer_amount") @db.Decimal(18, 2)    // Phí duy trì hàng tháng (nếu là retainer)
+
+  // Thời hạn
+  signedDate       DateTime? @map("signed_date") @db.Date
+  startDate        DateTime? @map("start_date") @db.Date
+  endDate          DateTime? @map("end_date") @db.Date
+  actualEndDate    DateTime? @map("actual_end_date") @db.Date
+
+  // Tracking tài chính
+  invoicedAmount   Decimal @default(0) @map("invoiced_amount") @db.Decimal(18, 2)
+  receivedAmount   Decimal @default(0) @map("received_amount") @db.Decimal(18, 2)
+  remainingAmount  Decimal @default(0) @map("remaining_amount") @db.Decimal(18, 2) // Còn phải thu
+
+  // Metadata
+  description      String? @db.Text
+  terms            String? @db.LongText  // Điều khoản hợp đồng
+  internalNotes    String? @map("internal_notes") @db.Text
+  contractFileUrl  String? @map("contract_file_url") @db.VarChar(2048)   // File scan hợp đồng
+
+  // Người ký / phụ trách nội bộ
+  signedByUserId    String? @map("signed_by_user_id") @db.VarChar(30)
+  handledByEmployeeId String? @map("handled_by_employee_id") @db.VarChar(30) // Nhân viên phụ trách
+  terminatedAt      DateTime? @map("terminated_at")
+  terminationReason String?   @map("termination_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client              Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  signedByUser        User?               @relation("ContractSignedBy", fields: [signedByUserId], references: [id], onDelete: SetNull)
+
+  amendments  ContractAmendment[]
+  projects    Project[]           @relation("ProjectContract")
+  invoices    Invoice[]
+  payments    ClientPayment[]
+
+  @@index([clientId, status])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([signedByUserId])
+  @@map("contracts")
+}
+
+// [NEW] Phụ lục hợp đồng (sửa đổi / bổ sung)
+model ContractAmendment {
+  id           String @id @default(cuid()) @db.VarChar(30)
+  contractId   String @map("contract_id") @db.VarChar(30)
+  amendmentCode String @unique @map("amendment_code") @db.VarChar(50) // Số phụ lục
+  title        String @db.VarChar(255)
+
+  status       ContractAmendmentStatus @default(DRAFT)
+
+  // Thay đổi so với hợp đồng gốc
+  changeDescription String? @map("change_description") @db.Text // Nội dung thay đổi
+  valueChange       Decimal? @map("value_change") @db.Decimal(18, 2) // Điều chỉnh giá trị (+/-)
+  endDateChange     DateTime? @map("end_date_change") @db.Date       // Điều chỉnh ngày kết thúc
+
+  signedDate      DateTime? @map("signed_date") @db.Date
+  effectiveDate   DateTime? @map("effective_date") @db.Date
+  fileUrl         String?   @map("file_url") @db.VarChar(2048)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+
+  @@index([contractId, status])
+  @@map("contract_amendments")
+}
+
+// [NEW] Hóa đơn gửi khách hàng
+model Invoice {
+  id           String @id @default(cuid()) @db.VarChar(30)
+  invoiceCode  String @unique @map("invoice_code") @db.VarChar(50)  // Số hóa đơn
+  clientId     String @map("client_id") @db.VarChar(30)
+  contractId   String? @map("contract_id") @db.VarChar(30)
+  projectId    String? @map("project_id") @db.VarChar(30)
+
+  status       InvoiceStatus @default(DRAFT)
+
+  issuedDate   DateTime  @map("issued_date") @db.Date
+  dueDate      DateTime  @map("due_date") @db.Date             // Hạn thanh toán
+  paidDate     DateTime? @map("paid_date") @db.Date
+
+  // Số tiền
+  subtotal     Decimal  @db.Decimal(18, 2)                     // Trước thuế
+  taxRate      Decimal  @default(0.1) @map("tax_rate") @db.Decimal(4, 2)
+  taxAmount    Decimal  @map("tax_amount") @db.Decimal(18, 2)
+  totalAmount  Decimal  @map("total_amount") @db.Decimal(18, 2)  // Tổng sau thuế
+  paidAmount   Decimal  @default(0) @map("paid_amount") @db.Decimal(18, 2) // Đã thanh toán
+  outstandingAmount Decimal @default(0) @map("outstanding_amount") @db.Decimal(18, 2) // Còn nợ
+
+  currency     String @default("VND") @db.VarChar(10)
+
+  // Thông tin hóa đơn VAT
+  vatInvoiceNumber String? @map("vat_invoice_number") @db.VarChar(50) // Số hóa đơn VAT (8 số)
+  vatInvoiceDate   DateTime? @map("vat_invoice_date") @db.Date
+  vatInvoiceSeries String? @map("vat_invoice_series") @db.VarChar(20)  // Ký hiệu hóa đơn
+
+  notes              String? @db.Text
+  paymentInstructions String? @map("payment_instructions") @db.Text
+
+  sentAt     DateTime? @map("sent_at")
+  viewedAt   DateTime? @map("viewed_at")
+  cancelledAt DateTime? @map("cancelled_at")
+  cancelReason String? @map("cancel_reason") @db.Text
+
+  createdByUserId String? @map("created_by_user_id") @db.VarChar(30)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  contract  Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdByUser User? @relation("InvoiceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  items      InvoiceItem[]
+  payments   ClientPayment[]
+  milestones ProjectMilestone[]  // Milestone nào gắn với hóa đơn này
+
+  @@index([clientId, status])
+  @@index([contractId])
+  @@index([projectId])
+  @@index([dueDate, status])
+  @@index([status])
+  @@map("invoices")
+}
+
+// [NEW] Chi tiết từng dòng trong hóa đơn
+model InvoiceItem {
+  id          String @id @default(cuid()) @db.VarChar(30)
+  invoiceId   String @map("invoice_id") @db.VarChar(30)
+
+  description  String  @db.VarChar(500)        // Mô tả dịch vụ / hàng hóa
+  quantity     Decimal @db.Decimal(10, 2)       // Số lượng
+  unit         String? @db.VarChar(50)          // Đơn vị (giờ, ngày, lần, cái...)
+  unitPrice    Decimal @map("unit_price") @db.Decimal(18, 2) // Đơn giá
+  amount       Decimal @db.Decimal(18, 2)        // Thành tiền = quantity * unitPrice
+  taxRate      Decimal @default(0.1) @map("tax_rate") @db.Decimal(4, 2)
+  taxAmount    Decimal @map("tax_amount") @db.Decimal(18, 2)
+  totalAmount  Decimal @map("total_amount") @db.Decimal(18, 2)
+  displayOrder Int     @default(0) @map("display_order")
+  notes        String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+// [NEW] Thanh toán nhận từ khách hàng
+model ClientPayment {
+  id          String @id @default(cuid()) @db.VarChar(30)
+  clientId    String @map("client_id") @db.VarChar(30)
+  contractId  String? @map("contract_id") @db.VarChar(30)
+  invoiceId   String? @map("invoice_id") @db.VarChar(30)   // Nullable: thanh toán có thể không gắn với hóa đơn cụ thể
+
+  paymentCode     String  @unique @map("payment_code") @db.VarChar(50)  // Mã biên lai nội bộ
+  amount          Decimal @db.Decimal(18, 2)
+  currency        String  @default("VND") @db.VarChar(10)
+  exchangeRate    Decimal @default(1) @map("exchange_rate") @db.Decimal(18, 6) // Tỷ giá nếu ngoại tệ
+  amountInVnd     Decimal @map("amount_in_vnd") @db.Decimal(18, 2)     // Quy đổi VND
+
+  paymentDate     DateTime @map("payment_date") @db.Date
+  paymentMethod   PaymentMethod @map("payment_method")
+  referenceNumber String?  @map("reference_number") @db.VarChar(191)   // Số tham chiếu ngân hàng
+  status          ClientPaymentStatus @default(COMPLETED)
+
+  // Tài khoản nhận tiền
+  receivedBankName    String? @map("received_bank_name") @db.VarChar(191)
+  receivedAccountNumber String? @map("received_account_number") @db.VarChar(100)
+
+  notes            String?  @db.Text
+  confirmedByUserId String? @map("confirmed_by_user_id") @db.VarChar(30)
+  confirmedAt      DateTime? @map("confirmed_at")
+  receiptUrl       String? @map("receipt_url") @db.VarChar(2048) // Biên lai
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  contract       Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  invoice        Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  confirmedByUser User?    @relation("PaymentConfirmedBy", fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, status])
+  @@index([contractId])
+  @@index([invoiceId])
+  @@index([paymentDate])
+  @@map("client_payments")
+}
+
+// [NEW] Tài liệu liên quan đến khách hàng
+model ClientDocument {
+  id          String @id @default(cuid()) @db.VarChar(30)
+  clientId    String @map("client_id") @db.VarChar(30)
+
+  documentType String  @map("document_type") @db.VarChar(50) // "NDA", "PROPOSAL", "REPORT", "OTHER"
+  title        String  @db.VarChar(255)
+  description  String? @db.Text
+  fileUrl      String  @map("file_url") @db.VarChar(2048)
+  fileSize     Int?    @map("file_size")   // bytes
+  mimeType     String? @map("mime_type") @db.VarChar(100)
+
+  uploadedByUserId String? @map("uploaded_by_user_id") @db.VarChar(30)
+  isConfidential   Boolean @default(false) @map("is_confidential") // Tài liệu mật
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client         Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  uploadedByUser User?  @relation("DocumentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, documentType])
+  @@index([uploadedByUserId])
+  @@map("client_documents")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║               AUTH & USER MANAGEMENT                    ║
+// ╚══════════════════════════════════════════════════════════╝
 
 model User {
   id                 String        @id @default(cuid()) @db.VarChar(30)
@@ -701,8 +1586,7 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  employee Employee? @relation("EmployeeUser", fields: [employeeId], references: [id], onDelete: SetNull)
-
+  employee   Employee? @relation("EmployeeUser", fields: [employeeId], references: [id], onDelete: SetNull)
   userRoles  UserRole[]
   authTokens AuthToken[]
   sessions   UserSession[]
@@ -716,6 +1600,14 @@ model User {
 
   payrollAdjustmentsCreated  PayrollAdjustment[] @relation("PayrollAdjustmentCreatedBy")
   payrollAdjustmentsApproved PayrollAdjustment[] @relation("PayrollAdjustmentApprovedBy")
+  payrollPeriodsApproved     PayrollPeriod[]     @relation("PayrollPeriodApprover")   // [NEW]
+
+  // Client domain [NEW]
+  contractsSigned    Contract[]      @relation("ContractSignedBy")
+  invoicesCreated    Invoice[]       @relation("InvoiceCreatedBy")
+  paymentsConfirmed  ClientPayment[] @relation("PaymentConfirmedBy")
+  documentsUploaded  ClientDocument[] @relation("DocumentUploadedBy")
+  expensesApproved   ProjectExpense[] @relation("ExpenseApprover") // [NEW]
 
   @@index([accountStatus, isActive])
   @@index([employeeId])
@@ -783,17 +1675,22 @@ model UserSession {
   @@map("user_sessions")
 }
 
+// ╔══════════════════════════════════════════════════════════╗
+// ║               NOTIFICATION & AUDIT                     ║
+// ╚══════════════════════════════════════════════════════════╝
+
 model Notification {
-  id                String           @id @default(cuid()) @db.VarChar(30)
-  recipientUserId   String           @map("recipient_user_id") @db.VarChar(30)
-  senderUserId      String?          @map("sender_user_id") @db.VarChar(30)
-  type              NotificationType
-  title             String           @db.VarChar(191)
-  message           String           @db.Text
-  relatedEntityType String?          @map("related_entity_type") @db.VarChar(50)
-  relatedEntityId   String?          @map("related_entity_id") @db.VarChar(30)
-  isRead            Boolean          @default(false) @map("is_read")
-  readAt            DateTime?        @map("read_at")
+  id              String           @id @default(cuid()) @db.VarChar(30)
+  recipientUserId String           @map("recipient_user_id") @db.VarChar(30)
+  senderUserId    String?          @map("sender_user_id") @db.VarChar(30)
+  type            NotificationType
+  title           String           @db.VarChar(191)
+  message         String           @db.Text
+  relatedEntityType String?        @map("related_entity_type") @db.VarChar(50)
+  relatedEntityId   String?        @map("related_entity_id") @db.VarChar(30)
+  actionUrl         String?        @map("action_url") @db.VarChar(2048) // [NEW] Deep link
+  isRead          Boolean          @default(false) @map("is_read")
+  readAt          DateTime?        @map("read_at")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
