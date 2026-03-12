@@ -1,18 +1,16 @@
 // ============================================================
-//  schema.prisma — v3.1  (HR + Payroll + Client Management)
+//  schema.prisma — v3.2  (HR + Payroll + Client Management)
 //
-//  THAY ĐỔI SO VỚI v3.0:
+//  THAY ĐỔI SO VỚI v3.1:
 //  ─────────────────────────────────────────────────────────
-//  ✅ User.notes → đổi thành adminNotes để rõ ý định
-//  ✅ AttendanceRecord thêm sourceRequestId (FK → AttendanceRequest)
-//     để truy nguyên bản ghi được tạo từ yêu cầu nào
-//  ✅ AttendanceRecord.adjustedByUserId thêm relation rõ ràng
-//  ✅ UserCompensation.otMultiplier → tách rõ 3 hệ số riêng
-//     (giữ nguyên như cũ — đã đúng)
-//  ✅ Notification thêm index (recipientUserId, type) cho query nhanh
-//  ✅ Sửa comment/annotation cho rõ nghiệp vụ
-//  ❌ KHÔNG thêm lại model Employee / EmployeeProfile
-//  ❌ KHÔNG thay đổi cấu trúc bảng core
+//  ✅ UserCompensation: thêm chu kỳ lương per-employee
+//     - payDayOfMonth     → ngày trả lương trong tháng (1–31)
+//     - payFrequency      → chu kỳ: MONTHLY | BIWEEKLY | WEEKLY
+//     - probationEndDate  → ngày kết thúc thử việc (tính ngày lên chính thức)
+//     - changeReason      → lý do thay đổi lương (tăng lương, lên chính thức...)
+//  ✅ Thêm enum PayFrequency
+//  ✅ NotificationType thêm COMPENSATION_CHANGED (báo nhân viên khi có thay đổi lương)
+//  ❌ KHÔNG thay đổi các model khác
 // ============================================================
 
 generator client {
@@ -184,6 +182,13 @@ enum SalaryType {
   HOURLY
 }
 
+// Chu kỳ trả lương — dùng trong UserCompensation
+enum PayFrequency {
+  MONTHLY    // Trả 1 lần/tháng (phổ biến nhất tại VN)
+  BIWEEKLY   // Trả 2 lần/tháng (VD: ngày 15 và ngày cuối tháng)
+  WEEKLY     // Trả theo tuần (thường cho lao động thời vụ, hourly)
+}
+
 enum SalaryComponentType {
   EARNING
   DEDUCTION
@@ -328,6 +333,7 @@ enum NotificationType {
   // Lương
   PAYROLL_READY // Kỳ lương sẵn sàng duyệt → Admin nhận
   PAYSLIP_AVAILABLE // Payslip đã có → nhân viên nhận
+  COMPENSATION_CHANGED // Lương/phụ cấp thay đổi → nhân viên nhận (tăng lương, lên chính thức...)
   // Hợp đồng / hóa đơn
   CONTRACT_SIGNED // Hợp đồng đã ký → Admin + Sales nhận
   CONTRACT_EXPIRING_SOON // HĐ sắp hết hạn → Admin + Sales nhận
@@ -357,8 +363,7 @@ enum AuditEntityType {
   PROJECT_EXPENSE
   PAYROLL_PERIOD
   USER_COMPENSATION
-  SALARY_COMPONENT
-  USER_SALARY_COMPONENT
+  SALARY_COMPONENT  USER_SALARY_COMPONENT
   PAYROLL_RECORD
   PAYROLL_ADJUSTMENT
   INSURANCE_POLICY
@@ -1183,15 +1188,55 @@ model PayrollPeriod {
 }
 
 // Cấu hình lương của từng User — lưu lịch sử thay đổi (isActive=false khi hết hiệu lực)
+//
+//  CHU KỲ LƯƠNG (pay schedule) được lưu trực tiếp tại đây vì mỗi lần thay đổi
+//  lương có thể đi kèm thay đổi lịch trả (VD: thử việc → chính thức thay đổi cả ngày trả).
+//
+//  Ưu tiên: nếu payDayOfMonth != null thì dùng giá trị này;
+//           nếu null thì fallback về PayrollPeriod.payDate (trả đồng loạt toàn công ty).
+//
+//  nextPayDate KHÔNG lưu DB — tính ở application layer:
+//    if (today <= payDayOfMonth of currentMonth) → nextPayDate = currentMonth/payDayOfMonth
+//    else → nextPayDate = nextMonth/payDayOfMonth
 model UserCompensation {
-  id                   String     @id @default(cuid()) @db.VarChar(30)
-  userId               String     @map("user_id") @db.VarChar(30)
-  salaryType           SalaryType @map("salary_type")
-  baseSalary           Decimal    @map("base_salary") @db.Decimal(18, 2)
-  probationSalary      Decimal?   @map("probation_salary") @db.Decimal(18, 2)
-  standardWorkingDays  Int?       @map("standard_working_days")
-  standardWorkingHours Decimal?   @map("standard_working_hours") @db.Decimal(5, 2)
-  currency             String     @default("VND") @db.VarChar(10)
+  id                   String       @id @default(cuid()) @db.VarChar(30)
+  userId               String       @map("user_id") @db.VarChar(30)
+  salaryType           SalaryType   @map("salary_type")
+  baseSalary           Decimal      @map("base_salary") @db.Decimal(18, 2)
+  probationSalary      Decimal?     @map("probation_salary") @db.Decimal(18, 2)
+  standardWorkingDays  Int?         @map("standard_working_days")
+  standardWorkingHours Decimal?     @map("standard_working_hours") @db.Decimal(5, 2)
+  currency             String       @default("VND") @db.VarChar(10)
+
+  // ── Chu kỳ & ngày trả lương riêng của nhân viên này ─────────────────
+  //
+  //  payFrequency: chu kỳ trả lương (default MONTHLY)
+  //  payDayOfMonth:
+  //    • MONTHLY   → ngày duy nhất trong tháng (VD: 10 = ngày 10 hàng tháng)
+  //    • BIWEEKLY  → ngày trả lần đầu trong tháng; lần 2 = cuối tháng tự động
+  //                  (VD: payDayOfMonth=15 → trả ngày 15 và ngày cuối tháng)
+  //    • WEEKLY    → không dùng payDayOfMonth; trả mỗi thứ Sáu
+  //    • null      → không override, dùng PayrollPeriod.payDate của công ty
+  //
+  //  probationEndDate: ngày kết thúc thử việc.
+  //    Sau ngày này hệ thống tự động đề xuất tạo UserCompensation mới
+  //    với baseSalary = probationSalary đã thỏa thuận → lên chính thức.
+  //    (Việc thực sự tạo record mới vẫn do HR xác nhận thủ công)
+  //
+  //  changeReason: lý do thay đổi lương lần này, lưu để hiển thị
+  //    trong lịch sử lương cho nhân viên & audit trail.
+  //    VD: "Tăng lương định kỳ Q1/2025", "Lên chính thức sau thử việc",
+  //        "Điều chỉnh theo thị trường", "Bổ nhiệm vị trí mới"
+  // ─────────────────────────────────────────────────────────────────────
+  payFrequency   PayFrequency @default(MONTHLY) @map("pay_frequency")
+  payDayOfMonth  Int?         @map("pay_day_of_month") @db.UnsignedTinyInt
+  // ^ 1–31; null = dùng PayrollPeriod.payDate
+
+  probationEndDate DateTime? @map("probation_end_date") @db.Date
+  // ^ Chỉ có giá trị khi record này là lương thử việc (probationSalary != null)
+
+  changeReason String? @map("change_reason") @db.VarChar(500)
+  // ^ Lý do thay đổi lương lần này — hiển thị cho nhân viên
 
   // Hệ số OT theo từng loại ngày
   overtimeRateWeekday Decimal @default(1.5) @map("overtime_rate_weekday") @db.Decimal(3, 1)
