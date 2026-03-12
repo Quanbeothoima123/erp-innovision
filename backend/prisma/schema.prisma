@@ -1,15 +1,16 @@
 // ============================================================
-//  schema.prisma — v3.2  (HR + Payroll + Client Management)
+//  schema.prisma — v3.3  (HR + Payroll + Client Management)
 //
-//  THAY ĐỔI SO VỚI v3.1:
+//  THAY ĐỔI SO VỚI v3.2:
 //  ─────────────────────────────────────────────────────────
-//  ✅ UserCompensation: thêm chu kỳ lương per-employee
-//     - payDayOfMonth     → ngày trả lương trong tháng (1–31)
-//     - payFrequency      → chu kỳ: MONTHLY | BIWEEKLY | WEEKLY
-//     - probationEndDate  → ngày kết thúc thử việc (tính ngày lên chính thức)
-//     - changeReason      → lý do thay đổi lương (tăng lương, lên chính thức...)
-//  ✅ Thêm enum PayFrequency
-//  ✅ NotificationType thêm COMPENSATION_CHANGED (báo nhân viên khi có thay đổi lương)
+//  🔴 FIX: datasource.db thêm url = env("DATABASE_URL")
+//  🔴 FIX: Đặt tên relation "AdjustmentEmployee" cho
+//          User ↔ PayrollAdjustment (ambiguous relation)
+//  ✅ Thêm model UserWorkShift
+//     → Gán ca làm việc mặc định cho nhân viên
+//     → Backend dùng để tính lateMinutes / earlyLeaveMinutes
+//  ✅ Thêm model SystemConfig
+//     → Key-value config hệ thống (tên cty, timezone, ...)
 //  ❌ KHÔNG thay đổi các model khác
 // ============================================================
 
@@ -511,6 +512,7 @@ model User {
   attendanceAdjusted AttendanceRecord[]  @relation("AttendanceAdjustedBy") // Admin/HR điều chỉnh thủ công
   attendanceRequests AttendanceRequest[] @relation("AttendanceRequester") // Nhân viên tự gửi
   attendanceReviewed AttendanceRequest[] @relation("AttendanceReviewer") // Admin/HR duyệt
+  userWorkShifts     UserWorkShift[]     // Ca làm việc mặc định
 
   // ── OT ────────────────────────────────────────────────────
   overtimeRequests  OvertimeRequest[] @relation("OvertimeRequester")
@@ -529,6 +531,7 @@ model User {
   payrollRecords         PayrollRecord[]
   payrollAdjCreated      PayrollAdjustment[]   @relation("AdjustmentCreatedBy")
   payrollAdjApproved     PayrollAdjustment[]   @relation("AdjustmentApprovedBy")
+  payrollAdjustments     PayrollAdjustment[]   @relation("AdjustmentEmployee")
   payrollPeriodsApproved PayrollPeriod[]       @relation("PayrollPeriodApprover")
 
   // ── Client / Contract ─────────────────────────────────────
@@ -542,7 +545,6 @@ model User {
   receivedNotifications Notification[]      @relation("NotificationRecipient")
   sentNotifications     Notification[]      @relation("NotificationSender")
   auditLogs             AuditLog[]          @relation("AuditActor")
-  payrollAdjustments    PayrollAdjustment[]
 
   @@index([accountStatus, employmentStatus])
   @@index([departmentId])
@@ -839,6 +841,7 @@ model WorkShift {
 
   attendanceRecords  AttendanceRecord[]
   attendanceRequests AttendanceRequest[]
+  userWorkShifts     UserWorkShift[]
 
   @@index([isActive])
   @@map("work_shifts")
@@ -1398,7 +1401,7 @@ model PayrollAdjustment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user          User           @relation("AdjustmentEmployee", fields: [userId], references: [id], onDelete: Restrict)
   payrollPeriod PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id], onDelete: SetNull)
   createdBy     User?          @relation("AdjustmentCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   approvedBy    User?          @relation("AdjustmentApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
@@ -1663,7 +1666,56 @@ model ClientDocument {
 }
 
 // ╔══════════════════════════════════════════════════════════╗
-// ║               NOTIFICATION & AUDIT                     ║
+// ║           WORK SCHEDULE & SYSTEM CONFIG                 ║
+// ╚══════════════════════════════════════════════════════════╝
+
+// Gán ca làm việc mặc định cho từng nhân viên.
+// Cần thiết để backend tính lateMinutes / earlyLeaveMinutes khi duyệt AttendanceRequest.
+//
+//  dayOfWeek: null = áp dụng tất cả ngày trong tuần
+//             1 = Thứ 2 ... 7 = Chủ Nhật
+//  Nếu cùng userId có nhiều row với dayOfWeek khác null → ca theo ngày cụ thể
+//  sẽ override ca mặc định (dayOfWeek = null).
+model UserWorkShift {
+  id            String    @id @default(cuid()) @db.VarChar(30)
+  userId        String    @map("user_id") @db.VarChar(30)
+  shiftId       String    @map("shift_id") @db.VarChar(30)
+  dayOfWeek     Int?      @map("day_of_week") @db.UnsignedTinyInt
+  // ^ null = mặc định tất cả ngày | 1 = Thứ 2 ... 7 = Chủ Nhật
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  isActive      Boolean   @default(true) @map("is_active")
+  notes         String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shift WorkShift @relation(fields: [shiftId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, shiftId, dayOfWeek, effectiveFrom])
+  @@index([userId, isActive])
+  @@index([shiftId])
+  @@map("user_work_shifts")
+}
+
+// Cấu hình hệ thống dạng key-value.
+// Dùng cho các giá trị vận hành có thể thay đổi mà không cần deploy lại.
+// Ví dụ: company_name, default_timezone, work_hours_per_day,
+//         default_annual_leave_days, max_failed_login_attempts, ...
+model SystemConfig {
+  id          String   @id @default(cuid()) @db.VarChar(30)
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  description String?  @db.VarChar(500)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("system_configs")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║         NOTIFICATION & AUDIT                            ║
 // ╚══════════════════════════════════════════════════════════╝
 
 model Notification {
