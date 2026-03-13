@@ -1,0 +1,1631 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║                        ENUMS                            ║
+// ╚══════════════════════════════════════════════════════════╝
+
+// ─── User / Account ───────────────────────────────────────
+
+enum AccountStatus {
+  PENDING // Mới tạo, chưa kích hoạt (chờ đặt mật khẩu lần đầu)
+  ACTIVE // Đang hoạt động
+  LOCKED // Khoá tạm thời (đăng nhập sai nhiều lần)
+  DISABLED // Admin vô hiệu hóa
+}
+
+enum AuthTokenType {
+  ACCOUNT_SETUP // Kích hoạt tài khoản lần đầu
+  PASSWORD_RESET // Quên mật khẩu
+}
+
+enum EmploymentStatus {
+  PROBATION // Đang thử việc
+  ACTIVE // Chính thức
+  ON_LEAVE // Đang nghỉ phép dài hạn
+  TERMINATED // Đã nghỉ việc
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+// ─── Leave ────────────────────────────────────────────────
+
+enum LeaveRequestStatus {
+  PENDING // Chờ duyệt
+  APPROVED // Đã duyệt
+  REJECTED // Từ chối
+  CANCELLED // Người dùng tự hủy
+}
+
+enum ApprovalStepType {
+  MANAGER // Bước 1: Manager trực tiếp duyệt
+  HR // Bước 2: HR duyệt cuối
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
+}
+
+// ─── Attendance ───────────────────────────────────────────
+
+// Trạng thái của 1 bản ghi chấm công đã được xác nhận/tạo
+enum AttendanceStatus {
+  PRESENT // Có mặt bình thường
+  ABSENT // Vắng mặt không phép
+  LEAVE // Nghỉ phép được duyệt
+  HOLIDAY // Ngày lễ
+  MANUAL_ADJUSTED // Admin/HR điều chỉnh thủ công
+}
+
+// Trạng thái của YÊU CẦU check-in / check-out do nhân viên gửi
+enum AttendanceRequestType {
+  CHECK_IN // Yêu cầu ghi nhận giờ vào
+  CHECK_OUT // Yêu cầu ghi nhận giờ ra
+}
+
+enum AttendanceRequestStatus {
+  PENDING // Chờ Admin/HR duyệt
+  APPROVED // Đã duyệt, đã ghi vào bản ghi chấm công
+  REJECTED // Từ chối
+}
+
+enum ShiftType {
+  MORNING // Ca sáng
+  AFTERNOON // Ca chiều
+  NIGHT // Ca đêm
+  FLEXIBLE // Linh hoạt
+  SPLIT // Ca kép
+}
+
+// ─── Overtime ─────────────────────────────────────────────
+
+enum OvertimeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// ─── Project ──────────────────────────────────────────────
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ProjectHealthStatus {
+  ON_TRACK
+  AT_RISK
+  DELAYED
+}
+
+enum ProjectAssignmentStatus {
+  ACTIVE
+  ENDED
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  OVERDUE
+}
+
+enum ProjectExpenseCategory {
+  LABOR
+  SOFTWARE
+  HARDWARE
+  TRAVEL
+  TRAINING
+  SUBCONTRACT
+  OTHER
+}
+
+enum ProjectExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+// ─── Payroll ──────────────────────────────────────────────
+
+enum PayrollPeriodStatus {
+  DRAFT
+  CALCULATING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum SalaryType {
+  MONTHLY
+  DAILY
+  HOURLY
+}
+
+enum SalaryComponentType {
+  EARNING
+  DEDUCTION
+}
+
+enum SalaryCalculationType {
+  FIXED
+  FORMULA
+  MANUAL
+}
+
+enum PayrollRecordStatus {
+  DRAFT
+  APPROVED
+  PAID
+  VOID
+}
+
+enum PayrollItemSourceType {
+  BASE
+  ALLOWANCE
+  BONUS
+  OVERTIME
+  ATTENDANCE
+  LEAVE
+  MANUAL
+  TAX
+  INSURANCE
+  ADVANCE
+}
+
+enum PayrollAdjustmentType {
+  BONUS
+  DEDUCTION
+  ADVANCE
+  REIMBURSEMENT
+}
+
+enum PayrollAdjustmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  APPLIED
+}
+
+enum InsurancePolicyType {
+  SOCIAL // BHXH
+  HEALTH // BHYT
+  UNEMPLOYMENT // BHTN
+  ACCIDENT // Tai nạn lao động
+}
+
+// ─── Client / Contract ────────────────────────────────────
+
+enum ClientType {
+  INDIVIDUAL
+  COMPANY
+  GOVERNMENT
+  NGO
+}
+
+enum ClientStatus {
+  PROSPECT
+  ACTIVE
+  INACTIVE
+  BLACKLISTED
+}
+
+enum ContractType {
+  FIXED_PRICE
+  TIME_AND_MATERIAL
+  RETAINER
+  MILESTONE_BASED
+  MIXED
+}
+
+enum ContractStatus {
+  DRAFT
+  PENDING_SIGN
+  ACTIVE
+  COMPLETED
+  TERMINATED
+  SUSPENDED
+  EXPIRED
+}
+
+enum ContractAmendmentStatus {
+  DRAFT
+  PENDING_SIGN
+  SIGNED
+  REJECTED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  DISPUTED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  CHECK
+  CREDIT_CARD
+  ONLINE
+  CRYPTO
+}
+
+enum ClientPaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ─── System ───────────────────────────────────────────────
+
+enum NotificationType {
+  // Chấm công
+  ATTENDANCE_CHECKIN_REQUEST // Nhân viên gửi yêu cầu check-in
+  ATTENDANCE_CHECKOUT_REQUEST // Nhân viên gửi yêu cầu check-out
+  ATTENDANCE_REQUEST_APPROVED // Yêu cầu chấm công được duyệt
+  ATTENDANCE_REQUEST_REJECTED // Yêu cầu chấm công bị từ chối
+  // Nghỉ phép
+  LEAVE_REQUEST_CREATED
+  LEAVE_REQUEST_APPROVED
+  LEAVE_REQUEST_REJECTED
+  LEAVE_BALANCE_LOW
+  // OT
+  OVERTIME_REQUEST_CREATED
+  OVERTIME_APPROVED
+  OVERTIME_REJECTED
+  // Dự án
+  PROJECT_ASSIGNED
+  PROJECT_STATUS_CHANGED
+  MILESTONE_DUE_SOON
+  // Lương
+  PAYROLL_READY
+  PAYSLIP_AVAILABLE
+  // Hợp đồng / hóa đơn
+  CONTRACT_SIGNED
+  CONTRACT_EXPIRING_SOON
+  INVOICE_SENT
+  PAYMENT_RECEIVED
+  INVOICE_OVERDUE
+  // Chung
+  GENERAL
+}
+
+enum AuditEntityType {
+  USER
+  USER_PROFILE
+  DEPARTMENT
+  JOB_TITLE
+  LEAVE_TYPE
+  LEAVE_REQUEST
+  LEAVE_BALANCE
+  ATTENDANCE_RECORD
+  ATTENDANCE_REQUEST
+  WORK_SHIFT
+  HOLIDAY
+  OVERTIME_REQUEST
+  PROJECT
+  PROJECT_ASSIGNMENT
+  PROJECT_MILESTONE
+  PROJECT_EXPENSE
+  PAYROLL_PERIOD
+  USER_COMPENSATION
+  SALARY_COMPONENT
+  USER_SALARY_COMPONENT
+  PAYROLL_RECORD
+  PAYROLL_ADJUSTMENT
+  INSURANCE_POLICY
+  TAX_POLICY
+  CLIENT
+  CLIENT_CONTACT
+  CONTRACT
+  CONTRACT_AMENDMENT
+  INVOICE
+  CLIENT_PAYMENT
+  CLIENT_DOCUMENT
+  USER_ROLE
+  NOTIFICATION
+}
+
+enum AuditActionType {
+  CREATE
+  UPDATE
+  DEACTIVATE
+  APPROVE
+  REJECT
+  ASSIGN
+  REMOVE
+  STATUS_CHANGE
+  SEND
+  PAYMENT
+  CANCEL
+  SIGN
+  LOGIN
+  LOGOUT
+  PASSWORD_SET
+  PASSWORD_RESET
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║              ORGANIZATIONAL MODELS                      ║
+// ╚══════════════════════════════════════════════════════════╝
+
+model Department {
+  id          String  @id @default(cuid()) @db.VarChar(30)
+  name        String  @unique @db.VarChar(191)
+  description String? @db.Text
+  // Trưởng phòng là một User (nhân viên trong công ty)
+  headUserId  String? @map("head_user_id") @db.VarChar(30)
+  isActive    Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  headUser User?  @relation("DepartmentHead", fields: [headUserId], references: [id], onDelete: SetNull)
+  members  User[] @relation("UserDepartment")
+
+  @@index([headUserId])
+  @@index([isActive])
+  @@map("departments")
+}
+
+model JobTitle {
+  id          String  @id @default(cuid()) @db.VarChar(30)
+  code        String? @unique @db.VarChar(50)
+  name        String  @unique @db.VarChar(191)
+  description String? @db.Text
+  isActive    Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users User[] @relation("UserJobTitle")
+
+  @@index([isActive])
+  @@map("job_titles")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║           USER (= ACCOUNT + NHÂN VIÊN)                  ║
+// ╚══════════════════════════════════════════════════════════╝
+//
+//  Mỗi User chính là một thành viên trong công ty.
+//  Admin tạo tài khoản → gán role → đó là nhân viên.
+//  Không có bảng Employee riêng biệt.
+
+model User {
+  id           String  @id @default(cuid()) @db.VarChar(30)
+  userCode     String? @unique @map("user_code") @db.VarChar(50) // Mã nhân viên VD: EMP001
+  email        String  @unique @db.VarChar(191)
+  passwordHash String? @map("password_hash") @db.VarChar(255)
+
+  fullName    String  @map("full_name") @db.VarChar(191)
+  phoneNumber String? @map("phone_number") @db.VarChar(30)
+  avatarUrl   String? @map("avatar_url") @db.VarChar(2048)
+
+  // Vị trí trong tổ chức
+  departmentId String? @map("department_id") @db.VarChar(30)
+  jobTitleId   String? @map("job_title_id") @db.VarChar(30)
+
+  // Manager trực tiếp (self-reference). Manager cũng là một User.
+  managerId String? @map("manager_id") @db.VarChar(30)
+
+  // Ngày vào làm (chỉ có sau khi được thêm vào hệ thống)
+  hireDate         DateTime?        @map("hire_date") @db.Date
+  employmentStatus EmploymentStatus @default(PROBATION) @map("employment_status")
+
+  // Trạng thái tài khoản
+  accountStatus      AccountStatus @default(PENDING) @map("account_status")
+  mustChangePassword Boolean       @default(true) @map("must_change_password")
+  lastLoginAt        DateTime?     @map("last_login_at")
+  failedLoginCount   Int           @default(0) @map("failed_login_count")
+  lockedUntil        DateTime?     @map("locked_until")
+
+  // Khi nghỉ việc
+  terminatedAt      DateTime? @map("terminated_at")
+  terminationReason String?   @map("termination_reason") @db.Text
+
+  // Người tạo tài khoản này (Admin/HR)
+  createdByUserId String? @map("created_by_user_id") @db.VarChar(30)
+
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ── Quan hệ tổ chức ──────────────────────────────────────
+  department        Department?  @relation("UserDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
+  jobTitle          JobTitle?    @relation("UserJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
+  manager           User?        @relation("UserManager", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates      User[]       @relation("UserManager")
+  headedDepartments Department[] @relation("DepartmentHead")
+  createdBy         User?        @relation("UserCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdUsers      User[]       @relation("UserCreatedBy")
+
+  // ── Auth ──────────────────────────────────────────────────
+  roles      UserRole[]
+  authTokens AuthToken[]
+  sessions   UserSession[]
+  profile    UserProfile?
+
+  // ── Leave ──────────────────────────────────────────────────
+  leaveRequests  LeaveRequest[]         @relation("LeaveRequester")
+  leaveApprovals LeaveRequestApproval[] @relation("LeaveApprover")
+  leaveBalances  LeaveBalance[]
+
+  // ── Attendance ─────────────────────────────────────────────
+  attendanceRecords  AttendanceRecord[]
+  attendanceRequests AttendanceRequest[] @relation("AttendanceRequester") // Nhân viên tự gửi
+  attendanceReviewed AttendanceRequest[] @relation("AttendanceReviewer") // Admin/HR duyệt
+
+  // ── OT ────────────────────────────────────────────────────
+  overtimeRequests  OvertimeRequest[] @relation("OvertimeRequester")
+  overtimeApprovals OvertimeRequest[] @relation("OvertimeApprover")
+
+  // ── Project ───────────────────────────────────────────────
+  projectAssignments  UserProjectAssignment[]
+  managedProjects     Project[]               @relation("ProjectManager")
+  milestoneOwnerships ProjectMilestone[]      @relation("MilestoneOwner")
+  projectExpenses     ProjectExpense[]        @relation("ExpenseSubmitter")
+  expensesApproved    ProjectExpense[]        @relation("ExpenseApprover")
+
+  // ── Payroll ───────────────────────────────────────────────
+  compensations          UserCompensation[]
+  userSalaryComponents   UserSalaryComponent[]
+  payrollRecords         PayrollRecord[]
+  payrollAdjCreated      PayrollAdjustment[]   @relation("AdjustmentCreatedBy")
+  payrollAdjApproved     PayrollAdjustment[]   @relation("AdjustmentApprovedBy")
+  payrollPeriodsApproved PayrollPeriod[]       @relation("PayrollPeriodApprover")
+
+  // ── Client / Contract ─────────────────────────────────────
+  managedClients    Client[]         @relation("ClientAccountManager")
+  contractsSigned   Contract[]       @relation("ContractSignedBy")
+  invoicesCreated   Invoice[]        @relation("InvoiceCreatedBy")
+  paymentsConfirmed ClientPayment[]  @relation("PaymentConfirmedBy")
+  documentsUploaded ClientDocument[] @relation("DocumentUploadedBy")
+
+  // ── System ────────────────────────────────────────────────
+  receivedNotifications Notification[]      @relation("NotificationRecipient")
+  sentNotifications     Notification[]      @relation("NotificationSender")
+  auditLogs             AuditLog[]          @relation("AuditActor")
+  payrollAdjustments    PayrollAdjustment[]
+
+  @@index([accountStatus, employmentStatus])
+  @@index([departmentId])
+  @@index([managerId])
+  @@index([email])
+  @@map("users")
+}
+
+// Thông tin cá nhân chi tiết — tách riêng vì nhạy cảm, chỉ HR/Admin xem
+model UserProfile {
+  id     String @id @default(cuid()) @db.VarChar(30)
+  userId String @unique @map("user_id") @db.VarChar(30)
+
+  // Nhân thân
+  dateOfBirth  DateTime? @map("date_of_birth") @db.Date
+  gender       Gender?
+  placeOfBirth String?   @map("place_of_birth") @db.VarChar(191)
+  nationality  String?   @default("Vietnamese") @db.VarChar(100)
+  ethnicity    String?   @db.VarChar(100)
+
+  // Địa chỉ
+  permanentAddress String? @map("permanent_address") @db.VarChar(500)
+  currentAddress   String? @map("current_address") @db.VarChar(500)
+  city             String? @db.VarChar(100)
+  province         String? @db.VarChar(100)
+
+  // Giấy tờ
+  nationalIdNumber     String?   @unique @map("national_id_number") @db.VarChar(50)
+  nationalIdIssueDate  DateTime? @map("national_id_issue_date") @db.Date
+  nationalIdIssuePlace String?   @map("national_id_issue_place") @db.VarChar(191)
+  passportNumber       String?   @map("passport_number") @db.VarChar(50)
+  passportExpiry       DateTime? @map("passport_expiry") @db.Date
+
+  // Thuế & bảo hiểm
+  taxCode               String?   @unique @map("tax_code") @db.VarChar(50)
+  socialInsuranceNumber String?   @unique @map("social_insurance_number") @db.VarChar(50)
+  healthInsuranceNumber String?   @map("health_insurance_number") @db.VarChar(50)
+  healthInsuranceExpiry DateTime? @map("health_insurance_expiry") @db.Date
+
+  // Ngân hàng
+  bankName          String? @map("bank_name") @db.VarChar(191)
+  bankBranch        String? @map("bank_branch") @db.VarChar(191)
+  bankAccountNumber String? @map("bank_account_number") @db.VarChar(100)
+  bankAccountHolder String? @map("bank_account_holder") @db.VarChar(191)
+
+  // Người thân
+  emergencyContactName  String? @map("emergency_contact_name") @db.VarChar(191)
+  emergencyContactPhone String? @map("emergency_contact_phone") @db.VarChar(30)
+  emergencyContactRel   String? @map("emergency_contact_rel") @db.VarChar(100)
+
+  // Giảm trừ thuế TNCN
+  dependantCount Int @default(0) @map("dependant_count")
+
+  // Trình độ học vấn
+  educationLevel String? @map("education_level") @db.VarChar(100)
+  educationMajor String? @map("education_major") @db.VarChar(191)
+  university     String? @db.VarChar(191)
+
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// ── Auth & Session ──────────────────────────────────────────
+
+model Role {
+  id          String  @id @default(cuid()) @db.VarChar(30)
+  code        String  @unique @db.VarChar(50) // ADMIN, HR, MANAGER, EMPLOYEE, SALES, ACCOUNTANT
+  name        String  @unique @db.VarChar(100)
+  description String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id     String @id @default(cuid()) @db.VarChar(30)
+  userId String @map("user_id") @db.VarChar(30)
+  roleId String @map("role_id") @db.VarChar(30)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model AuthToken {
+  id        String        @id @default(cuid()) @db.VarChar(30)
+  userId    String        @map("user_id") @db.VarChar(30)
+  tokenType AuthTokenType @map("token_type")
+  tokenHash String        @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime      @map("expires_at")
+  usedAt    DateTime?     @map("used_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, tokenType])
+  @@index([expiresAt])
+  @@map("auth_tokens")
+}
+
+model UserSession {
+  id               String    @id @default(cuid()) @db.VarChar(30)
+  userId           String    @map("user_id") @db.VarChar(30)
+  refreshTokenHash String    @unique @map("refresh_token_hash") @db.VarChar(255)
+  ipAddress        String?   @map("ip_address") @db.VarChar(64)
+  userAgent        String?   @map("user_agent") @db.VarChar(1024)
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("user_sessions")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║                   LEAVE (NGHỈ PHÉP)                     ║
+// ╚══════════════════════════════════════════════════════════╝
+
+model LeaveType {
+  id          String  @id @default(cuid()) @db.VarChar(30)
+  code        String  @unique @db.VarChar(50)
+  name        String  @unique @db.VarChar(191) // "Nghỉ phép năm", "Nghỉ ốm"...
+  description String? @db.Text
+  isPaid      Boolean @default(true) @map("is_paid") // Có hưởng lương không
+  isActive    Boolean @default(true) @map("is_active")
+
+  // Số ngày tối đa/năm theo chính sách (null = không giới hạn)
+  maxDaysPerYear   Decimal? @map("max_days_per_year") @db.Decimal(5, 2)
+  // Có cần document đính kèm không (VD: nghỉ ốm cần giấy bệnh viện)
+  requiresDocument Boolean  @default(false) @map("requires_document")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  leaveRequests LeaveRequest[]
+  leaveBalances LeaveBalance[]
+
+  @@index([isActive])
+  @@map("leave_types")
+}
+
+// Số dư phép của từng User theo năm
+model LeaveBalance {
+  id          String @id @default(cuid()) @db.VarChar(30)
+  userId      String @map("user_id") @db.VarChar(30)
+  leaveTypeId String @map("leave_type_id") @db.VarChar(30)
+  year        Int    @db.UnsignedSmallInt
+
+  entitledDays  Decimal @map("entitled_days") @db.Decimal(5, 2) // Ngày được cấp đầu năm
+  carriedDays   Decimal @default(0) @map("carried_days") @db.Decimal(5, 2) // Chuyển từ năm trước
+  adjustedDays  Decimal @default(0) @map("adjusted_days") @db.Decimal(5, 2) // Điều chỉnh thêm/bớt
+  usedDays      Decimal @default(0) @map("used_days") @db.Decimal(5, 2) // Đã dùng
+  pendingDays   Decimal @default(0) @map("pending_days") @db.Decimal(5, 2) // Đang chờ duyệt
+  remainingDays Decimal @default(0) @map("remaining_days") @db.Decimal(5, 2) // = entitled + carried + adjusted - used - pending
+
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, leaveTypeId, year])
+  @@index([userId, year])
+  @@map("leave_balances")
+}
+
+model LeaveRequest {
+  id          String @id @default(cuid()) @db.VarChar(30)
+  userId      String @map("user_id") @db.VarChar(30) // Người xin nghỉ
+  leaveTypeId String @map("leave_type_id") @db.VarChar(30)
+
+  startDate     DateTime @map("start_date") @db.Date
+  endDate       DateTime @map("end_date") @db.Date
+  totalDays     Decimal  @map("total_days") @db.Decimal(5, 2)
+  isHalfDay     Boolean  @default(false) @map("is_half_day")
+  halfDayPeriod String?  @map("half_day_period") @db.VarChar(10) // "MORNING" | "AFTERNOON"
+
+  reason      String? @db.Text
+  documentUrl String? @map("document_url") @db.VarChar(2048) // Giấy tờ đính kèm
+
+  status      LeaveRequestStatus @default(PENDING)
+  currentStep ApprovalStepType?  @map("current_step") // Đang chờ bước nào
+
+  submittedAt     DateTime  @default(now()) @map("submitted_at")
+  finalApprovedAt DateTime? @map("final_approved_at")
+  rejectedAt      DateTime? @map("rejected_at")
+  rejectionReason String?   @map("rejection_reason") @db.Text
+  cancelledAt     DateTime? @map("cancelled_at")
+  cancelReason    String?   @map("cancel_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User                   @relation("LeaveRequester", fields: [userId], references: [id], onDelete: Restrict)
+  leaveType LeaveType              @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  approvals LeaveRequestApproval[]
+
+  @@index([userId, status])
+  @@index([leaveTypeId])
+  @@index([startDate, endDate])
+  @@map("leave_requests")
+}
+
+// Bảng ghi lại từng bước duyệt đơn nghỉ phép (2 bước: Manager → HR)
+model LeaveRequestApproval {
+  id             String @id @default(cuid()) @db.VarChar(30)
+  leaveRequestId String @map("leave_request_id") @db.VarChar(30)
+  approverUserId String @map("approver_user_id") @db.VarChar(30) // Người duyệt (User)
+
+  stepType  ApprovalStepType @map("step_type") // MANAGER | HR
+  stepOrder Int              @map("step_order") // 1 hoặc 2
+  status    ApprovalStatus   @default(PENDING)
+
+  comment  String?   @db.Text
+  actionAt DateTime? @map("action_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  leaveRequest LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  approver     User         @relation("LeaveApprover", fields: [approverUserId], references: [id], onDelete: Restrict)
+
+  @@unique([leaveRequestId, stepType])
+  @@unique([leaveRequestId, stepOrder])
+  @@index([approverUserId, status])
+  @@map("leave_request_approvals")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║         ATTENDANCE (CHẤM CÔNG) — NGHIỆP VỤ MỚI         ║
+// ╚══════════════════════════════════════════════════════════╝
+//
+//  Luồng:
+//  1. Nhân viên bấm "Check-in" → tạo AttendanceRequest (type=CHECK_IN, status=PENDING)
+//  2. Admin/HR nhận notification → vào danh sách duyệt
+//  3. Duyệt → AttendanceRequest.status = APPROVED
+//              → AttendanceRecord.checkInAt được ghi / tạo mới
+//  4. Tương tự cho Check-out
+//  5. Admin/HR vẫn có thể điều chỉnh thủ công AttendanceRecord
+
+model Holiday {
+  id                 String   @id @default(cuid()) @db.VarChar(30)
+  name               String   @db.VarChar(191)
+  date               DateTime @db.Date
+  year               Int      @db.UnsignedSmallInt
+  isRecurring        Boolean  @default(false) @map("is_recurring")
+  description        String?  @db.Text
+  overtimeMultiplier Decimal  @default(3.0) @map("overtime_multiplier") @db.Decimal(3, 1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([date])
+  @@index([year])
+  @@map("holidays")
+}
+
+model WorkShift {
+  id                   String    @id @default(cuid()) @db.VarChar(30)
+  code                 String    @unique @db.VarChar(50)
+  name                 String    @unique @db.VarChar(191)
+  shiftType            ShiftType @map("shift_type")
+  startTime            String    @map("start_time") @db.VarChar(5) // "08:00"
+  endTime              String    @map("end_time") @db.VarChar(5) // "17:30"
+  breakMinutes         Int       @default(60) @map("break_minutes")
+  workMinutes          Int       @map("work_minutes")
+  isNightShift         Boolean   @default(false) @map("is_night_shift")
+  overtimeAfterMinutes Int       @default(0) @map("overtime_after_minutes")
+  isActive             Boolean   @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  attendanceRecords  AttendanceRecord[]
+  attendanceRequests AttendanceRequest[]
+
+  @@index([isActive])
+  @@map("work_shifts")
+}
+
+// Yêu cầu chấm công do NHÂN VIÊN tự gửi — chờ Admin/HR duyệt
+model AttendanceRequest {
+  id         String  @id @default(cuid()) @db.VarChar(30)
+  userId     String  @map("user_id") @db.VarChar(30) // Nhân viên gửi yêu cầu
+  reviewerId String? @map("reviewer_id") @db.VarChar(30) // Admin/HR duyệt
+
+  requestType AttendanceRequestType @map("request_type") // CHECK_IN | CHECK_OUT
+  requestedAt DateTime              @map("requested_at") // Thời điểm nhân viên muốn ghi nhận
+  workDate    DateTime              @map("work_date") @db.Date
+  shiftId     String?               @map("shift_id") @db.VarChar(30)
+
+  isRemoteWork Boolean @default(false) @map("is_remote_work")
+  note         String? @db.Text // Lý do (VD: "Vào cổng lúc 8:05 do tắc đường")
+  imageUrl     String? @map("image_url") @db.VarChar(2048) // Ảnh chụp màn hình/selfie (optional)
+
+  status       AttendanceRequestStatus @default(PENDING)
+  reviewedAt   DateTime?               @map("reviewed_at")
+  rejectReason String?                 @map("reject_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User       @relation("AttendanceRequester", fields: [userId], references: [id], onDelete: Restrict)
+  reviewer User?      @relation("AttendanceReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  shift    WorkShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([workDate])
+  @@index([requestType, status])
+  @@map("attendance_requests")
+}
+
+// Bản ghi chấm công chính thức (sau khi đã được duyệt hoặc admin tạo thủ công)
+model AttendanceRecord {
+  id      String  @id @default(cuid()) @db.VarChar(30)
+  userId  String  @map("user_id") @db.VarChar(30)
+  shiftId String? @map("shift_id") @db.VarChar(30)
+
+  workDate   DateTime  @map("work_date") @db.Date
+  checkInAt  DateTime? @map("check_in_at")
+  checkOutAt DateTime? @map("check_out_at")
+
+  totalWorkMinutes        Int? @map("total_work_minutes")
+  lateMinutes             Int  @default(0) @map("late_minutes")
+  earlyLeaveMinutes       Int  @default(0) @map("early_leave_minutes")
+  overtimeMinutes         Int  @default(0) @map("overtime_minutes")
+  overtimeApprovedMinutes Int  @default(0) @map("overtime_approved_minutes")
+
+  isHolidayWork Boolean @default(false) @map("is_holiday_work")
+  isWeekendWork Boolean @default(false) @map("is_weekend_work")
+  isRemoteWork  Boolean @default(false) @map("is_remote_work")
+
+  status AttendanceStatus @default(PRESENT)
+  note   String?          @db.Text
+
+  // Người điều chỉnh thủ công (nếu status = MANUAL_ADJUSTED)
+  adjustedByUserId String? @map("adjusted_by_user_id") @db.VarChar(30)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  shift WorkShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, workDate])
+  @@index([workDate])
+  @@index([userId, status])
+  @@map("attendance_records")
+}
+
+// Yêu cầu làm thêm giờ (nhân viên gửi trước, manager/HR duyệt)
+model OvertimeRequest {
+  id             String  @id @default(cuid()) @db.VarChar(30)
+  userId         String  @map("user_id") @db.VarChar(30)
+  approverUserId String? @map("approver_user_id") @db.VarChar(30)
+
+  workDate       DateTime @map("work_date") @db.Date
+  startTime      String   @map("start_time") @db.VarChar(5)
+  endTime        String   @map("end_time") @db.VarChar(5)
+  plannedMinutes Int      @map("planned_minutes")
+  actualMinutes  Int?     @map("actual_minutes")
+
+  isHoliday Boolean               @default(false) @map("is_holiday")
+  isWeekend Boolean               @default(false) @map("is_weekend")
+  reason    String?               @db.Text
+  status    OvertimeRequestStatus @default(PENDING)
+
+  submittedAt DateTime  @default(now()) @map("submitted_at")
+  actionAt    DateTime? @map("action_at")
+  comment     String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User  @relation("OvertimeRequester", fields: [userId], references: [id], onDelete: Restrict)
+  approver User? @relation("OvertimeApprover", fields: [approverUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([workDate])
+  @@index([approverUserId])
+  @@map("overtime_requests")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║                  PROJECT MODELS                         ║
+// ╚══════════════════════════════════════════════════════════╝
+
+model Project {
+  id          String  @id @default(cuid()) @db.VarChar(30)
+  projectCode String? @unique @map("project_code") @db.VarChar(50)
+  projectName String  @map("project_name") @db.VarChar(191)
+  description String? @db.Text
+
+  // Project Manager là một User (nhân viên trong công ty)
+  projectManagerUserId String? @map("project_manager_user_id") @db.VarChar(30)
+
+  clientId   String? @map("client_id") @db.VarChar(30)
+  contractId String? @map("contract_id") @db.VarChar(30)
+
+  status          ProjectStatus        @default(PLANNING)
+  priority        ProjectPriority?
+  healthStatus    ProjectHealthStatus? @map("health_status")
+  progressPercent Decimal              @default(0) @map("progress_percent") @db.Decimal(5, 2)
+
+  startDate     DateTime? @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+  actualEndDate DateTime? @map("actual_end_date") @db.Date
+
+  budgetAmount Decimal? @map("budget_amount") @db.Decimal(18, 2)
+  spentAmount  Decimal  @default(0) @map("spent_amount") @db.Decimal(18, 2)
+  currency     String   @default("VND") @db.VarChar(10)
+
+  contractValue  Decimal? @map("contract_value") @db.Decimal(18, 2)
+  invoicedAmount Decimal  @default(0) @map("invoiced_amount") @db.Decimal(18, 2)
+  receivedAmount Decimal  @default(0) @map("received_amount") @db.Decimal(18, 2)
+
+  closedAt    DateTime? @map("closed_at")
+  closureNote String?   @map("closure_note") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  projectManager User?     @relation("ProjectManager", fields: [projectManagerUserId], references: [id], onDelete: SetNull)
+  client         Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  contract       Contract? @relation("ProjectContract", fields: [contractId], references: [id], onDelete: SetNull)
+
+  assignments UserProjectAssignment[]
+  milestones  ProjectMilestone[]
+  expenses    ProjectExpense[]
+  invoices    Invoice[]
+
+  @@index([projectManagerUserId])
+  @@index([clientId])
+  @@index([contractId])
+  @@index([status])
+  @@map("projects")
+}
+
+model UserProjectAssignment {
+  id        String @id @default(cuid()) @db.VarChar(30)
+  userId    String @map("user_id") @db.VarChar(30)
+  projectId String @map("project_id") @db.VarChar(30)
+
+  roleInProject     String?                 @map("role_in_project") @db.VarChar(100)
+  allocationPercent Decimal?                @map("allocation_percent") @db.Decimal(5, 2)
+  hourlyRate        Decimal?                @map("hourly_rate") @db.Decimal(18, 2)
+  joinedAt          DateTime                @map("joined_at") @db.Date
+  leftAt            DateTime?               @map("left_at") @db.Date
+  status            ProjectAssignmentStatus @default(ACTIVE)
+  isBillable        Boolean                 @default(false) @map("is_billable")
+  notes             String?                 @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, projectId, joinedAt])
+  @@index([userId, status])
+  @@index([projectId, status])
+  @@map("user_project_assignments")
+}
+
+model ProjectMilestone {
+  id          String          @id @default(cuid()) @db.VarChar(30)
+  projectId   String          @map("project_id") @db.VarChar(30)
+  name        String          @db.VarChar(191)
+  description String?         @db.Text
+  ownerUserId String?         @map("owner_user_id") @db.VarChar(30) // Người phụ trách (User)
+  dueDate     DateTime?       @map("due_date") @db.Date
+  completedAt DateTime?       @map("completed_at")
+  status      MilestoneStatus @default(PENDING)
+  invoiceId   String?         @map("invoice_id") @db.VarChar(30)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  owner   User?    @relation("MilestoneOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([ownerUserId])
+  @@index([dueDate])
+  @@map("project_milestones")
+}
+
+model ProjectExpense {
+  id                String  @id @default(cuid()) @db.VarChar(30)
+  projectId         String  @map("project_id") @db.VarChar(30)
+  submittedByUserId String  @map("submitted_by_user_id") @db.VarChar(30)
+  approvedByUserId  String? @map("approved_by_user_id") @db.VarChar(30)
+
+  category    ProjectExpenseCategory @map("category")
+  title       String                 @db.VarChar(191)
+  description String?                @db.Text
+  amount      Decimal                @db.Decimal(18, 2)
+  currency    String                 @default("VND") @db.VarChar(10)
+  expenseDate DateTime               @map("expense_date") @db.Date
+  receiptUrl  String?                @map("receipt_url") @db.VarChar(2048)
+  status      ProjectExpenseStatus   @default(PENDING)
+
+  submittedAt  DateTime  @default(now()) @map("submitted_at")
+  approvedAt   DateTime? @map("approved_at")
+  rejectReason String?   @map("reject_reason") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  submittedBy User    @relation("ExpenseSubmitter", fields: [submittedByUserId], references: [id], onDelete: Restrict)
+  approvedBy  User?   @relation("ExpenseApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([submittedByUserId])
+  @@map("project_expenses")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║              PAYROLL & COMPENSATION                     ║
+// ╚══════════════════════════════════════════════════════════╝
+
+model InsurancePolicy {
+  id              String              @id @default(cuid()) @db.VarChar(30)
+  policyType      InsurancePolicyType @map("policy_type")
+  name            String              @db.VarChar(191)
+  employeeRate    Decimal             @map("employee_rate") @db.Decimal(5, 4)
+  employerRate    Decimal             @map("employer_rate") @db.Decimal(5, 4)
+  salaryCapAmount Decimal?            @map("salary_cap_amount") @db.Decimal(18, 2)
+  effectiveFrom   DateTime            @map("effective_from") @db.Date
+  effectiveTo     DateTime?           @map("effective_to") @db.Date
+  isActive        Boolean             @default(true) @map("is_active")
+  notes           String?             @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([policyType, isActive])
+  @@map("insurance_policies")
+}
+
+model TaxPolicy {
+  id                 String    @id @default(cuid()) @db.VarChar(30)
+  name               String    @db.VarChar(191)
+  year               Int       @db.UnsignedSmallInt
+  description        String?   @db.Text
+  isActive           Boolean   @default(true) @map("is_active")
+  personalDeduction  Decimal   @map("personal_deduction") @db.Decimal(18, 2) // Giảm trừ bản thân (11tr/tháng)
+  dependantDeduction Decimal   @map("dependant_deduction") @db.Decimal(18, 2) // Mỗi người phụ thuộc (4.4tr/tháng)
+  effectiveFrom      DateTime  @map("effective_from") @db.Date
+  effectiveTo        DateTime? @map("effective_to") @db.Date
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  brackets TaxBracket[]
+
+  @@index([year, isActive])
+  @@map("tax_policies")
+}
+
+model TaxBracket {
+  id           String   @id @default(cuid()) @db.VarChar(30)
+  taxPolicyId  String   @map("tax_policy_id") @db.VarChar(30)
+  bracketOrder Int      @map("bracket_order")
+  minIncome    Decimal  @map("min_income") @db.Decimal(18, 2)
+  maxIncome    Decimal? @map("max_income") @db.Decimal(18, 2) // null = không giới hạn
+  taxRate      Decimal  @map("tax_rate") @db.Decimal(5, 4)
+
+  taxPolicy TaxPolicy @relation(fields: [taxPolicyId], references: [id], onDelete: Cascade)
+
+  @@unique([taxPolicyId, bracketOrder])
+  @@index([taxPolicyId])
+  @@map("tax_brackets")
+}
+
+model PayrollPeriod {
+  id         String              @id @default(cuid()) @db.VarChar(30)
+  periodCode String              @unique @map("period_code") @db.VarChar(50) // VD: "2025-01"
+  month      Int                 @db.UnsignedTinyInt
+  year       Int                 @db.UnsignedSmallInt
+  startDate  DateTime            @map("start_date") @db.Date
+  endDate    DateTime            @map("end_date") @db.Date
+  payDate    DateTime?           @map("pay_date") @db.Date
+  status     PayrollPeriodStatus @default(DRAFT)
+
+  workingDaysInPeriod    Int? @map("working_days_in_period")
+  standardWorkingMinutes Int? @map("standard_working_minutes")
+
+  lockedAt   DateTime? @map("locked_at")
+  approvedAt DateTime? @map("approved_at")
+  paidAt     DateTime? @map("paid_at")
+
+  approvedByUserId String? @map("approved_by_user_id") @db.VarChar(30)
+  notes            String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  payrollRecords     PayrollRecord[]
+  payrollAdjustments PayrollAdjustment[]
+  approvedBy         User?               @relation("PayrollPeriodApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([month, year])
+  @@index([status])
+  @@map("payroll_periods")
+}
+
+// Cấu hình lương của từng User (theo thời kỳ — lưu lịch sử thay đổi lương)
+model UserCompensation {
+  id                   String     @id @default(cuid()) @db.VarChar(30)
+  userId               String     @map("user_id") @db.VarChar(30)
+  salaryType           SalaryType @map("salary_type")
+  baseSalary           Decimal    @map("base_salary") @db.Decimal(18, 2)
+  probationSalary      Decimal?   @map("probation_salary") @db.Decimal(18, 2) // Lương thử việc
+  standardWorkingDays  Int?       @map("standard_working_days")
+  standardWorkingHours Decimal?   @map("standard_working_hours") @db.Decimal(5, 2)
+  currency             String     @default("VND") @db.VarChar(10)
+
+  overtimeRateWeekday Decimal @default(1.5) @map("overtime_rate_weekday") @db.Decimal(3, 1)
+  overtimeRateWeekend Decimal @default(2.0) @map("overtime_rate_weekend") @db.Decimal(3, 1)
+  overtimeRateHoliday Decimal @default(3.0) @map("overtime_rate_holiday") @db.Decimal(3, 1)
+
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  isActive      Boolean   @default(true) @map("is_active")
+  notes         String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, effectiveFrom])
+  @@index([userId, isActive])
+  @@map("user_compensations")
+}
+
+// Danh mục các thành phần lương (dùng chung cho toàn công ty)
+model SalaryComponent {
+  id              String                @id @default(cuid()) @db.VarChar(30)
+  code            String                @unique @db.VarChar(50)
+  name            String                @unique @db.VarChar(191)
+  componentType   SalaryComponentType   @map("component_type")
+  calculationType SalaryCalculationType @map("calculation_type")
+  isTaxable       Boolean               @default(false) @map("is_taxable")
+  isInsurable     Boolean               @default(false) @map("is_insurable")
+  isActive        Boolean               @default(true) @map("is_active")
+  displayOrder    Int                   @default(0) @map("display_order")
+  description     String?               @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userSalaryComponents UserSalaryComponent[]
+  payrollRecordItems   PayrollRecordItem[]
+
+  @@index([componentType, isActive])
+  @@map("salary_components")
+}
+
+// Gán thành phần lương cụ thể cho từng User
+model UserSalaryComponent {
+  id                String    @id @default(cuid()) @db.VarChar(30)
+  userId            String    @map("user_id") @db.VarChar(30)
+  salaryComponentId String    @map("salary_component_id") @db.VarChar(30)
+  amount            Decimal   @db.Decimal(18, 2)
+  effectiveFrom     DateTime  @map("effective_from") @db.Date
+  effectiveTo       DateTime? @map("effective_to") @db.Date
+  isActive          Boolean   @default(true) @map("is_active")
+  notes             String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  salaryComponent SalaryComponent @relation(fields: [salaryComponentId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, salaryComponentId, effectiveFrom])
+  @@index([userId, isActive])
+  @@map("user_salary_components")
+}
+
+model PayrollRecord {
+  id              String @id @default(cuid()) @db.VarChar(30)
+  payrollPeriodId String @map("payroll_period_id") @db.VarChar(30)
+  userId          String @map("user_id") @db.VarChar(30)
+
+  baseSalary      Decimal  @map("base_salary") @db.Decimal(18, 2)
+  workingDays     Decimal? @map("working_days") @db.Decimal(5, 2)
+  paidLeaveDays   Decimal? @map("paid_leave_days") @db.Decimal(5, 2)
+  unpaidLeaveDays Decimal? @map("unpaid_leave_days") @db.Decimal(5, 2)
+  absentDays      Decimal? @map("absent_days") @db.Decimal(5, 2)
+  lateDays        Int      @default(0) @map("late_days")
+
+  overtimeWeekdayMinutes Int     @default(0) @map("overtime_weekday_minutes")
+  overtimeWeekendMinutes Int     @default(0) @map("overtime_weekend_minutes")
+  overtimeHolidayMinutes Int     @default(0) @map("overtime_holiday_minutes")
+  totalOvertimePay       Decimal @default(0) @map("total_overtime_pay") @db.Decimal(18, 2)
+
+  grossSalary     Decimal @map("gross_salary") @db.Decimal(18, 2)
+  totalAllowances Decimal @map("total_allowances") @db.Decimal(18, 2)
+  totalBonus      Decimal @map("total_bonus") @db.Decimal(18, 2)
+
+  socialInsuranceEmployee       Decimal @default(0) @map("social_insurance_employee") @db.Decimal(18, 2)
+  healthInsuranceEmployee       Decimal @default(0) @map("health_insurance_employee") @db.Decimal(18, 2)
+  unemploymentInsuranceEmployee Decimal @default(0) @map("unemployment_insurance_employee") @db.Decimal(18, 2)
+  personalIncomeTax             Decimal @default(0) @map("personal_income_tax") @db.Decimal(18, 2)
+  taxableIncome                 Decimal @default(0) @map("taxable_income") @db.Decimal(18, 2)
+
+  totalDeductions Decimal             @map("total_deductions") @db.Decimal(18, 2)
+  netSalary       Decimal             @map("net_salary") @db.Decimal(18, 2)
+  status          PayrollRecordStatus @default(DRAFT)
+
+  dailyRate  Decimal? @map("daily_rate") @db.Decimal(18, 2)
+  hourlyRate Decimal? @map("hourly_rate") @db.Decimal(18, 2)
+
+  generatedAt DateTime? @map("generated_at")
+  approvedAt  DateTime? @map("approved_at")
+  paidAt      DateTime? @map("paid_at")
+  paymentRef  String?   @map("payment_ref") @db.VarChar(191)
+
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  payrollPeriod PayrollPeriod       @relation(fields: [payrollPeriodId], references: [id], onDelete: Cascade)
+  user          User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items         PayrollRecordItem[]
+
+  @@unique([payrollPeriodId, userId])
+  @@index([userId, status])
+  @@index([payrollPeriodId, status])
+  @@map("payroll_records")
+}
+
+model PayrollRecordItem {
+  id                String                 @id @default(cuid()) @db.VarChar(30)
+  payrollRecordId   String                 @map("payroll_record_id") @db.VarChar(30)
+  salaryComponentId String?                @map("salary_component_id") @db.VarChar(30)
+  itemName          String                 @map("item_name") @db.VarChar(191)
+  itemType          SalaryComponentType    @map("item_type")
+  amount            Decimal                @db.Decimal(18, 2)
+  sourceType        PayrollItemSourceType? @map("source_type")
+  quantity          Decimal?               @db.Decimal(10, 2)
+  unitRate          Decimal?               @map("unit_rate") @db.Decimal(18, 2)
+  notes             String?                @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  payrollRecord   PayrollRecord    @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
+  salaryComponent SalaryComponent? @relation(fields: [salaryComponentId], references: [id], onDelete: SetNull)
+
+  @@index([payrollRecordId])
+  @@map("payroll_record_items")
+}
+
+model PayrollAdjustment {
+  id              String                  @id @default(cuid()) @db.VarChar(30)
+  userId          String                  @map("user_id") @db.VarChar(30)
+  payrollPeriodId String?                 @map("payroll_period_id") @db.VarChar(30)
+  adjustmentType  PayrollAdjustmentType   @map("adjustment_type")
+  amount          Decimal                 @db.Decimal(18, 2)
+  reason          String?                 @db.Text
+  status          PayrollAdjustmentStatus @default(PENDING)
+
+  isAdvance              Boolean @default(false) @map("is_advance")
+  advanceRecoveredAmount Decimal @default(0) @map("advance_recovered_amount") @db.Decimal(18, 2)
+  advanceFullyRecovered  Boolean @default(false) @map("advance_fully_recovered")
+
+  createdByUserId  String? @map("created_by_user_id") @db.VarChar(30)
+  approvedByUserId String? @map("approved_by_user_id") @db.VarChar(30)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  payrollPeriod PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id], onDelete: SetNull)
+  createdBy     User?          @relation("AdjustmentCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  approvedBy    User?          @relation("AdjustmentApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([payrollPeriodId])
+  @@map("payroll_adjustments")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║            CLIENT & CONTRACT MANAGEMENT                 ║
+// ╚══════════════════════════════════════════════════════════╝
+
+model Client {
+  id         String       @id @default(cuid()) @db.VarChar(30)
+  clientCode String?      @unique @map("client_code") @db.VarChar(50)
+  clientType ClientType   @map("client_type")
+  status     ClientStatus @default(PROSPECT)
+
+  companyName String  @map("company_name") @db.VarChar(255)
+  shortName   String? @map("short_name") @db.VarChar(100)
+  taxCode     String? @map("tax_code") @db.VarChar(50)
+  industry    String? @db.VarChar(100)
+  website     String? @db.VarChar(2048)
+  email       String? @db.VarChar(191)
+  phone       String? @db.VarChar(30)
+  address     String? @db.VarChar(500)
+  city        String? @db.VarChar(100)
+  country     String? @default("Vietnam") @db.VarChar(100)
+
+  // Người phụ trách tài khoản khách hàng (User trong công ty)
+  accountManagerUserId String? @map("account_manager_user_id") @db.VarChar(30)
+
+  // Tổng hợp tài chính (denormalized để query nhanh)
+  totalContractValue  Decimal @default(0) @map("total_contract_value") @db.Decimal(18, 2)
+  totalReceivedAmount Decimal @default(0) @map("total_received_amount") @db.Decimal(18, 2)
+  outstandingBalance  Decimal @default(0) @map("outstanding_balance") @db.Decimal(18, 2)
+
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  accountManager User?            @relation("ClientAccountManager", fields: [accountManagerUserId], references: [id], onDelete: SetNull)
+  contacts       ClientContact[]
+  contracts      Contract[]
+  projects       Project[]
+  payments       ClientPayment[]
+  documents      ClientDocument[]
+  invoices       Invoice[]
+
+  @@index([status])
+  @@index([accountManagerUserId])
+  @@map("clients")
+}
+
+model ClientContact {
+  id       String @id @default(cuid()) @db.VarChar(30)
+  clientId String @map("client_id") @db.VarChar(30)
+
+  fullName  String  @map("full_name") @db.VarChar(191)
+  jobTitle  String? @map("job_title") @db.VarChar(191)
+  email     String? @db.VarChar(191)
+  phone     String? @db.VarChar(30)
+  isPrimary Boolean @default(false) @map("is_primary")
+  notes     String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("client_contacts")
+}
+
+model Contract {
+  id           String         @id @default(cuid()) @db.VarChar(30)
+  contractCode String         @unique @map("contract_code") @db.VarChar(50)
+  clientId     String         @map("client_id") @db.VarChar(30)
+  contractType ContractType   @map("contract_type")
+  status       ContractStatus @default(DRAFT)
+
+  title       String  @db.VarChar(255)
+  description String? @db.Text
+
+  totalValue      Decimal @map("total_value") @db.Decimal(18, 2)
+  currency        String  @default("VND") @db.VarChar(10)
+  receivedAmount  Decimal @default(0) @map("received_amount") @db.Decimal(18, 2)
+  remainingAmount Decimal @default(0) @map("remaining_amount") @db.Decimal(18, 2)
+
+  startDate  DateTime  @map("start_date") @db.Date
+  endDate    DateTime  @map("end_date") @db.Date
+  signedDate DateTime? @map("signed_date") @db.Date
+
+  // Người ký hợp đồng (User trong công ty — thường là Admin/Director)
+  signedByUserId String? @map("signed_by_user_id") @db.VarChar(30)
+
+  terminationDate   DateTime? @map("termination_date") @db.Date
+  terminationReason String?   @map("termination_reason") @db.Text
+
+  fileUrl String? @map("file_url") @db.VarChar(2048)
+  notes   String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client     Client              @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  signedBy   User?               @relation("ContractSignedBy", fields: [signedByUserId], references: [id], onDelete: SetNull)
+  amendments ContractAmendment[]
+  projects   Project[]           @relation("ProjectContract")
+  invoices   Invoice[]
+  payments   ClientPayment[]
+
+  @@index([clientId, status])
+  @@index([endDate, status])
+  @@map("contracts")
+}
+
+model ContractAmendment {
+  id            String                  @id @default(cuid()) @db.VarChar(30)
+  contractId    String                  @map("contract_id") @db.VarChar(30)
+  amendmentCode String                  @map("amendment_code") @db.VarChar(50)
+  title         String                  @db.VarChar(255)
+  description   String?                 @db.Text
+  valueChange   Decimal?                @map("value_change") @db.Decimal(18, 2) // Thay đổi giá trị (+ hoặc -)
+  effectiveDate DateTime                @map("effective_date") @db.Date
+  status        ContractAmendmentStatus @default(DRAFT)
+  fileUrl       String?                 @map("file_url") @db.VarChar(2048)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+  @@map("contract_amendments")
+}
+
+model Invoice {
+  id          String        @id @default(cuid()) @db.VarChar(30)
+  invoiceCode String        @unique @map("invoice_code") @db.VarChar(50)
+  clientId    String        @map("client_id") @db.VarChar(30)
+  contractId  String?       @map("contract_id") @db.VarChar(30)
+  projectId   String?       @map("project_id") @db.VarChar(30)
+  status      InvoiceStatus @default(DRAFT)
+
+  issuedDate DateTime @map("issued_date") @db.Date
+  dueDate    DateTime @map("due_date") @db.Date
+
+  subtotal          Decimal @db.Decimal(18, 2)
+  taxAmount         Decimal @map("tax_amount") @db.Decimal(18, 2)
+  totalAmount       Decimal @map("total_amount") @db.Decimal(18, 2)
+  paidAmount        Decimal @default(0) @map("paid_amount") @db.Decimal(18, 2)
+  outstandingAmount Decimal @default(0) @map("outstanding_amount") @db.Decimal(18, 2)
+  currency          String  @default("VND") @db.VarChar(10)
+
+  notes           String?   @db.Text
+  createdByUserId String?   @map("created_by_user_id") @db.VarChar(30)
+  sentAt          DateTime? @map("sent_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client     Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  contract   Contract?          @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  project    Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdBy  User?              @relation("InvoiceCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  items      InvoiceItem[]
+  payments   ClientPayment[]
+  milestones ProjectMilestone[]
+
+  @@index([clientId, status])
+  @@index([contractId])
+  @@index([dueDate, status])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id        String @id @default(cuid()) @db.VarChar(30)
+  invoiceId String @map("invoice_id") @db.VarChar(30)
+
+  description  String  @db.VarChar(500)
+  quantity     Decimal @db.Decimal(10, 2)
+  unit         String? @db.VarChar(50)
+  unitPrice    Decimal @map("unit_price") @db.Decimal(18, 2)
+  amount       Decimal @db.Decimal(18, 2)
+  taxRate      Decimal @default(0.1) @map("tax_rate") @db.Decimal(4, 2)
+  taxAmount    Decimal @map("tax_amount") @db.Decimal(18, 2)
+  totalAmount  Decimal @map("total_amount") @db.Decimal(18, 2)
+  displayOrder Int     @default(0) @map("display_order")
+  notes        String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model ClientPayment {
+  id         String  @id @default(cuid()) @db.VarChar(30)
+  clientId   String  @map("client_id") @db.VarChar(30)
+  contractId String? @map("contract_id") @db.VarChar(30)
+  invoiceId  String? @map("invoice_id") @db.VarChar(30)
+
+  paymentCode     String              @unique @map("payment_code") @db.VarChar(50)
+  amount          Decimal             @db.Decimal(18, 2)
+  currency        String              @default("VND") @db.VarChar(10)
+  exchangeRate    Decimal             @default(1) @map("exchange_rate") @db.Decimal(18, 6)
+  amountInVnd     Decimal             @map("amount_in_vnd") @db.Decimal(18, 2)
+  paymentDate     DateTime            @map("payment_date") @db.Date
+  paymentMethod   PaymentMethod       @map("payment_method")
+  referenceNumber String?             @map("reference_number") @db.VarChar(191)
+  status          ClientPaymentStatus @default(COMPLETED)
+
+  receivedBankName      String? @map("received_bank_name") @db.VarChar(191)
+  receivedAccountNumber String? @map("received_account_number") @db.VarChar(100)
+
+  notes             String?   @db.Text
+  confirmedByUserId String?   @map("confirmed_by_user_id") @db.VarChar(30)
+  confirmedAt       DateTime? @map("confirmed_at")
+  receiptUrl        String?   @map("receipt_url") @db.VarChar(2048)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  contract        Contract? @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  invoice         Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  confirmedByUser User?     @relation("PaymentConfirmedBy", fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, status])
+  @@index([contractId])
+  @@index([invoiceId])
+  @@index([paymentDate])
+  @@map("client_payments")
+}
+
+model ClientDocument {
+  id       String @id @default(cuid()) @db.VarChar(30)
+  clientId String @map("client_id") @db.VarChar(30)
+
+  documentType     String  @map("document_type") @db.VarChar(50) // "NDA", "PROPOSAL", "REPORT", "OTHER"
+  title            String  @db.VarChar(255)
+  description      String? @db.Text
+  fileUrl          String  @map("file_url") @db.VarChar(2048)
+  fileSize         Int?    @map("file_size")
+  mimeType         String? @map("mime_type") @db.VarChar(100)
+  uploadedByUserId String? @map("uploaded_by_user_id") @db.VarChar(30)
+  isConfidential   Boolean @default(false) @map("is_confidential")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  client         Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  uploadedByUser User?  @relation("DocumentUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, documentType])
+  @@map("client_documents")
+}
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║               NOTIFICATION & AUDIT                     ║
+// ╚══════════════════════════════════════════════════════════╝
+
+model Notification {
+  id                String           @id @default(cuid()) @db.VarChar(30)
+  recipientUserId   String           @map("recipient_user_id") @db.VarChar(30)
+  senderUserId      String?          @map("sender_user_id") @db.VarChar(30)
+  type              NotificationType
+  title             String           @db.VarChar(191)
+  message           String           @db.Text
+  relatedEntityType String?          @map("related_entity_type") @db.VarChar(50)
+  relatedEntityId   String?          @map("related_entity_id") @db.VarChar(30)
+  actionUrl         String?          @map("action_url") @db.VarChar(2048)
+  isRead            Boolean          @default(false) @map("is_read")
+  readAt            DateTime?        @map("read_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  recipientUser User  @relation("NotificationRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  senderUser    User? @relation("NotificationSender", fields: [senderUserId], references: [id], onDelete: SetNull)
+
+  @@index([recipientUserId, isRead])
+  @@index([type])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String          @id @default(cuid()) @db.VarChar(30)
+  entityType  AuditEntityType @map("entity_type")
+  entityId    String          @map("entity_id") @db.VarChar(30)
+  actionType  AuditActionType @map("action_type")
+  actorUserId String?         @map("actor_user_id") @db.VarChar(30)
+
+  description String? @db.Text
+  oldValues   Json?   @map("old_values")
+  newValues   Json?   @map("new_values")
+  metadata    Json?
+
+  ipAddress String?  @map("ip_address") @db.VarChar(64)
+  userAgent String?  @map("user_agent") @db.VarChar(1024)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  actorUser User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}

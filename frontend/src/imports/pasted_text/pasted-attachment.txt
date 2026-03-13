@@ -1,0 +1,236 @@
+## BỐI CẢNH
+
+Schema Prisma vừa được nâng cấp lên **v3.3**. File `schema.text` đính kèm đã có 2 model mới:
+
+- **`UserWorkShift`** — gán ca làm việc mặc định cho từng nhân viên
+- **`SystemConfig`** — cấu hình hệ thống dạng key-value (ADMIN only)
+
+Nhiệm vụ của bạn: **nâng cấp giao diện hiện có** để cover 2 model mới này. Không thay đổi bất kỳ tính năng nào đang hoạt động — chỉ thêm mới.
+
+---
+
+## PHẦN 1 — MOCK DATA (src/app/data/mockData.ts)
+
+### 1.1 Thêm type và interface mới
+
+```ts
+export interface UserWorkShift {
+  id: string;
+  userId: string;
+  shiftId: string;
+  dayOfWeek: number | null; // null = tất cả ngày | 1=T2 ... 7=CN
+  effectiveFrom: string;    // ISO date
+  effectiveTo: string | null;
+  isActive: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface SystemConfig {
+  id: string;
+  key: string;
+  value: string;
+  description?: string;
+}
+```
+
+### 1.2 Thêm mock data mẫu cho `userWorkShifts`
+
+Tạo mảng export `userWorkShifts: UserWorkShift[]` với dữ liệu mẫu:
+- Gán ca sáng (shiftId trỏ tới ca MORNING) cho ít nhất 4–5 nhân viên có `dayOfWeek = null` (áp dụng tất cả ngày)
+- Gán ca chiều cho 2–3 nhân viên
+- Một vài nhân viên có lịch sử cũ (`isActive = false`, có `effectiveTo`)
+
+### 1.3 Thêm mock data mẫu cho `systemConfigs`
+
+Tạo mảng export `systemConfigs: SystemConfig[]` với các key mặc định:
+
+| key | value mẫu | description |
+|-----|-----------|-------------|
+| `company_name` | `TechVN` | Tên công ty hiển thị trên hệ thống |
+| `company_address` | `123 Nguyễn Huệ, Q.1, TP.HCM` | Địa chỉ công ty |
+| `default_timezone` | `Asia/Ho_Chi_Minh` | Múi giờ mặc định |
+| `work_hours_per_day` | `8` | Số giờ làm việc tiêu chuẩn mỗi ngày |
+| `work_days_per_week` | `5` | Số ngày làm việc mỗi tuần |
+| `default_annual_leave_days` | `12` | Số ngày phép năm mặc định khi tạo nhân viên mới |
+| `max_failed_login_attempts` | `5` | Số lần đăng nhập sai tối đa trước khi khoá tài khoản |
+| `session_timeout_minutes` | `480` | Thời gian session hết hạn (phút) |
+| `late_tolerance_minutes` | `10` | Số phút trễ được bỏ qua khi tính chấm công |
+| `payslip_visible_days_before_payday` | `3` | Nhân viên được xem payslip trước ngày trả lương bao nhiêu ngày |
+
+### 1.4 Thêm helper function
+
+```ts
+// Lấy ca làm việc mặc định đang active của một nhân viên (null nếu chưa gán)
+export const getActiveWorkShift = (userId: string): UserWorkShift | null => {
+  return userWorkShifts.find(s => s.userId === userId && s.isActive) ?? null;
+}
+
+// Lấy giá trị SystemConfig theo key
+export const getConfig = (key: string, fallback = ''): string => {
+  return systemConfigs.find(c => c.key === key)?.value ?? fallback;
+}
+```
+
+---
+
+## PHẦN 2 — NÂNG CẤP EmployeeDetailPage.tsx
+
+### Thêm tab mới "Ca làm việc" vào EmployeeDetail
+
+**Vị trí:** Thêm vào cuối mảng `tabs` hiện có, **chỉ hiện với Admin/HR**.
+
+```
+Tab key: 'work_shift'
+Tab label: 'Ca làm việc'
+Tab icon: Clock (lucide)
+```
+
+**Nội dung tab `work_shift`:**
+
+#### Phần trên — Ca hiện tại
+
+Card hiển thị ca đang active của nhân viên này (lookup từ `userWorkShifts` theo `userId`):
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Ca làm việc hiện tại                    [+ Đổi ca] │
+│                                                     │
+│  Tên ca: Ca Sáng                                    │
+│  Giờ: 08:00 → 17:30  |  Nghỉ giữa ca: 60 phút      │
+│  Áp dụng: Tất cả ngày trong tuần                    │
+│  Hiệu lực từ: 01/01/2025                            │
+└─────────────────────────────────────────────────────┘
+```
+
+Nếu chưa có ca → hiện empty state: icon Clock xám + text "Nhân viên này chưa được gán ca làm việc" + nút **"Gán ca làm việc"**
+
+#### Phần dưới — Lịch sử ca (bảng)
+
+Bảng nhỏ hiển thị `userWorkShifts` của nhân viên (bao gồm cả `isActive = false`):
+
+Cột: **Tên ca** | **Áp dụng ngày** | **Từ ngày** | **Đến ngày** | **Trạng thái** (badge Active/Kết thúc)
+
+#### Dialog "Gán / Đổi ca làm việc"
+
+Trigger: nút **"+ Đổi ca"** hoặc **"Gán ca làm việc"**
+
+Form gồm:
+- `shiftId` — dropdown chọn từ danh sách `workShifts` (hiện tên + giờ làm: "Ca Sáng — 08:00→17:30")
+- `dayOfWeek` — radio: **"Tất cả ngày"** (null) | **"Chọn ngày cụ thể"** → nếu chọn ngày cụ thể thì hiện 7 checkbox T2–CN
+- `effectiveFrom` — date picker (bắt buộc, mặc định hôm nay)
+- `notes` — textarea (tuỳ chọn)
+
+Khi submit: thêm record mới vào `userWorkShifts`, đánh dấu record cũ `isActive = false` + `effectiveTo = effectiveFrom - 1 ngày`.
+
+---
+
+## PHẦN 3 — NÂNG CẤP AttendancePage.tsx (form Check-in)
+
+### Pre-fill WorkShift khi nhân viên gửi check-in
+
+Trong form **"Gửi yêu cầu Check-in"** (hiện tại nhân viên phải tự chọn ca), thay đổi như sau:
+
+1. Khi mở form, gọi `getActiveWorkShift(currentUser.id)` để lấy ca mặc định
+2. **Pre-fill dropdown WorkShift** bằng ca mặc định đó
+3. Bên dưới dropdown, hiển thị dòng text nhỏ màu muted:
+   - Nếu có ca mặc định: `"Ca mặc định của bạn: Ca Sáng (08:00 – 17:30)"`
+   - Nếu chưa có ca mặc định: `"Bạn chưa có ca mặc định. Vui lòng chọn ca."`
+4. Nhân viên vẫn có thể tự đổi dropdown nếu muốn (không bắt buộc giữ ca mặc định)
+
+---
+
+## PHẦN 4 — NÂNG CẤP SystemPage.tsx
+
+### Thêm trang/component mới: `SystemConfigPage`
+
+**Route hiện tại cần thêm:** `system/config` → `SystemConfigPage`
+
+**Vị trí trong sidebar** (ADMIN only): Thêm mục **"Cấu hình hệ thống"** vào nhóm Hệ Thống, đặt trước "Tài khoản & Phân quyền":
+
+```
+⚙️ Hệ Thống
+   ├── 🔧 Cấu hình hệ thống    ← MỚI, path: /system/config
+   ├── 👤 Tài khoản & Phân quyền
+   ├── 🕐 Ca làm việc
+   ├── 📅 Ngày lễ
+   └── 📋 Nhật ký hệ thống
+```
+
+### Layout trang `SystemConfigPage`
+
+Header: "Cấu hình hệ thống" + subtitle "Quản lý các thông số vận hành của hệ thống"
+
+Chia config thành **4 nhóm card**, mỗi nhóm là một card riêng:
+
+---
+
+**Card 1 — Thông tin công ty** (icon: Building2)
+Keys: `company_name`, `company_address`
+
+**Card 2 — Thời gian & Lịch làm việc** (icon: Clock)
+Keys: `default_timezone`, `work_hours_per_day`, `work_days_per_week`, `late_tolerance_minutes`
+
+**Card 3 — Chính sách nhân sự** (icon: Users)
+Keys: `default_annual_leave_days`, `payslip_visible_days_before_payday`
+
+**Card 4 — Bảo mật** (icon: Shield)
+Keys: `max_failed_login_attempts`, `session_timeout_minutes`
+
+---
+
+**Layout mỗi row trong card:**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Tên công ty                                                 │
+│  Tên công ty hiển thị trên toàn bộ hệ thống     [TechVN] ✏️ │
+└──────────────────────────────────────────────────────────────┘
+```
+
+- Bình thường: hiện `value` dạng text + icon bút chì nhỏ bên phải
+- Click icon bút chì → **inline edit**: ô input xuất hiện tại chỗ thay thế text, với 2 nút [✓ Lưu] [✗ Huỷ]
+- Khi Lưu: cập nhật state + hiện toast "Đã lưu cấu hình"
+- Không có dialog popup — tất cả edit inline tại chỗ
+
+**Lưu ý UX:**
+- Key `default_timezone` → dropdown chọn timezone (chỉ cần các timezone VN + phổ biến: Asia/Ho_Chi_Minh, Asia/Bangkok, UTC, etc.)
+- Các key số (`work_hours_per_day`, `max_failed_login_attempts`, ...) → input type="number" với min/max hợp lý
+- Key `work_days_per_week` → dropdown 1–7
+- Không cho xóa config, không cho thêm config thủ công (danh sách key là cố định)
+
+---
+
+## PHẦN 5 — CẬP NHẬT ROUTING (routes.ts)
+
+Thêm route mới:
+```ts
+{ path: 'system/config', Component: SystemConfigPage }
+```
+
+Export `SystemConfigPage` từ `SystemPage.tsx`.
+
+---
+
+## PHẦN 6 — CẬP NHẬT LAYOUT (Layout.tsx)
+
+Trong hàm xây dựng sidebar items cho ADMIN/HR, thêm mục mới:
+
+```ts
+// Trong nhóm "Hệ Thống", trước các mục hiện có:
+{ label: 'Cấu hình hệ thống', path: '/system/config' }
+```
+
+Mục này **chỉ hiện với ADMIN** (không hiện với HR).
+
+---
+
+## NGUYÊN TẮC KHI CODE
+
+1. **Không xoá hoặc thay đổi** bất kỳ component/function/data nào đang có
+2. **Reuse component** hiện tại tối đa (Overlay, DlgHeader, DlgFooter, InfoRow, Field, Sel đã có trong EmployeeDetailPage và SystemPage)
+3. Tất cả text giao diện dùng **tiếng Việt**
+4. Badge/status dùng **màu nhất quán**: Active = xanh lá | Kết thúc = xám
+5. Mọi action không thể hoàn tác (đổi ca) phải có **confirmation dialog** trước khi thực hiện
+6. Empty state: icon xám + mô tả + nút CTA
+7. Toast notification sau mọi action thành công (dùng `sonner` đang có sẵn)
