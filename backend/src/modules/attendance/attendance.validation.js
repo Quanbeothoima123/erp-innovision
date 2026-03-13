@@ -182,6 +182,8 @@ const updateAttendanceRecordSchema = manualAdjustSchema
 const myAttendanceSchema = z.object({
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional(),
+  startDate: z.coerce.date().optional(), // alias cho fromDate
+  endDate: z.coerce.date().optional(),   // alias cho toDate
   month: z.coerce.number().int().min(1).max(12).optional(),
   year: z.coerce.number().int().min(2000).max(2100).optional(),
   ...pagination,

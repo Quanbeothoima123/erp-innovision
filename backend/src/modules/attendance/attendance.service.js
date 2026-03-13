@@ -485,6 +485,9 @@ async function deleteRecord(id) {
 // ── My Attendance ─────────────────────────────────────────────
 
 async function getMyAttendance(filters, userId) {
+  // Map alias startDate/endDate → fromDate/toDate
+  if (filters.startDate && !filters.fromDate) filters.fromDate = filters.startDate;
+  if (filters.endDate && !filters.toDate) filters.toDate = filters.endDate;
   // Nếu truyền month + year thì tính fromDate/toDate
   if (filters.month && filters.year) {
     filters.fromDate = new Date(filters.year, filters.month - 1, 1);

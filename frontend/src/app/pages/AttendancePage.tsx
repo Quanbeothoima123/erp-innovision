@@ -123,14 +123,14 @@ export function MyAttendancePage() {
         const [reqsRes, recsRes, statsRes] = await Promise.all([
           attendanceService.listRequests({ userId: uid, limit: 50 }),
           attendanceService.getMyAttendance({
-            startDate: `${calYear}-${pad(calMonth + 1)}-01`,
-            endDate: `${calYear}-${pad(calMonth + 1)}-31`,
+            fromDate: `${calYear}-${pad(calMonth + 1)}-01`,
+            toDate: `${calYear}-${pad(calMonth + 1)}-31`,
             limit: 100,
           }),
           attendanceService.getMyMonthlyStats(calYear, calMonth + 1),
         ]);
-        setMyReqs(reqsRes.data);
-        setMyRecords(recsRes.data);
+        setMyReqs(reqsRes.items ?? []);
+        setMyRecords(recsRes.items ?? []);
         setMonthStats(statsRes);
       } else {
         setMyReqs(mockReqs.filter(r => r.userId === uid) as unknown as ApiAttendanceRequest[]);
