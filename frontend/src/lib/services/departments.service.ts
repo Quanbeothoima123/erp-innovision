@@ -27,9 +27,17 @@ export interface ListDepartmentsParams {
   limit?: number;
 }
 
+// FIX: Backend paginatedResponse trả về { items, pagination } không phải { data, meta }
 export interface PaginatedDepartments {
-  data: ApiDepartment[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiDepartment[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 export interface CreateDepartmentPayload {

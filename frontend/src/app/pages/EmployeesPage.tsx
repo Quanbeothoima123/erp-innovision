@@ -139,9 +139,18 @@ export function EmployeesPage() {
           }),
           usersService.getUserStats(),
         ]);
-        setUsers(usersRes.data);
-        setTotalCount(usersRes.meta.total);
-        setStats({ total: statsRes.total, active: statsRes.active, probation: statsRes.probation, terminated: statsRes.terminated });
+        setUsers(usersRes.items);
+        setTotalCount(usersRes.pagination.total);
+        // Backend trả { total, byEmployment: [{employmentStatus, _count:{id}}], byAccount: [...] }
+        const byEmp = statsRes.byEmployment ?? [];
+        const getCount = (arr: typeof byEmp, key: string) =>
+          arr.find(x => x.employmentStatus === key)?._count?.id ?? 0;
+        setStats({
+          total: statsRes.total,
+          active: getCount(byEmp, 'ACTIVE'),
+          probation: getCount(byEmp, 'PROBATION'),
+          terminated: getCount(byEmp, 'TERMINATED'),
+        });
       } else {
         // Mock fallback
         let filtered = [...mockUsers] as unknown as ApiUser[];

@@ -23,13 +23,16 @@ export interface ListUsersParams {
   sortOrder?: "asc" | "desc";
 }
 
+// FIX: Backend paginatedResponse trả về { items, pagination } không phải { data, meta }
 export interface PaginatedUsers {
-  data: ApiUser[];
-  meta: {
+  items: ApiUser[];
+  pagination: {
     total: number;
     page: number;
     limit: number;
     totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
   };
 }
 
@@ -95,14 +98,12 @@ export interface UserProfile {
   university?: string;
 }
 
+// FIX: Map đúng theo những gì backend getUserStats thực sự trả về
+// Backend trả: { total, byEmployment: [{employmentStatus, _count:{id}}], byAccount: [...] }
 export interface UserStats {
   total: number;
-  active: number;
-  probation: number;
-  onLeave: number;
-  terminated: number;
-  pending: number;
-  newThisMonth: number;
+  byEmployment: Array<{ employmentStatus: string; _count: { id: number } }>;
+  byAccount: Array<{ accountStatus: string; _count: { id: number } }>;
 }
 
 // ─── Users API ───────────────────────────────────────────────

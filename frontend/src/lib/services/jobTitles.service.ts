@@ -27,9 +27,17 @@ export interface ListJobTitlesParams {
   limit?: number;
 }
 
+// FIX: Backend paginatedResponse trả về { items, pagination } không phải { data, meta }
 export interface PaginatedJobTitles {
-  data: ApiJobTitle[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiJobTitle[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 export interface CreateJobTitlePayload {

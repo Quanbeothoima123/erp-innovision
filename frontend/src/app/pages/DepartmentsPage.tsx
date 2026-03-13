@@ -74,7 +74,7 @@ export function DepartmentsPage() {
     try {
       if (USE_API) {
         const res = await departmentsService.listDepartments({ limit: 200 });
-        setDepts(res.data);
+        setDepts(res.items);
       } else {
         setDepts(mockDepts.map(d => ({
           id: d.id, name: d.name, description: d.description,
@@ -311,7 +311,7 @@ export function JobTitlesPage() {
     try {
       if (USE_API) {
         const res = await jobTitlesService.listJobTitles({ limit: 200 });
-        setJobs(res.data);
+        setJobs(res.items);
       } else {
         setJobs(mockJobTitles as ApiJobTitle[]);
       }
@@ -384,7 +384,7 @@ export function JobTitlesPage() {
   };
 
   const filtered = search
-    ? jobs.filter(j => j.name.toLowerCase().includes(search.toLowerCase()) || j.code.toLowerCase().includes(search.toLowerCase()))
+    ? jobs.filter(j => j.name.toLowerCase().includes(search.toLowerCase()) || (j.code ?? '').toLowerCase().includes(search.toLowerCase()))
     : jobs;
 
   return (
