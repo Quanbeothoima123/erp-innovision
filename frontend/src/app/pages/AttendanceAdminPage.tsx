@@ -5,7 +5,7 @@
 //   - TODAY no longer hardcoded
 //   - API integration for approve/reject
 // ================================================================
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   attendanceRequests as initialReqs,
@@ -24,21 +24,33 @@ import { ApiError } from '../../lib/apiClient';
 const USE_API = !!import.meta.env.VITE_API_URL;
 const TODAY = new Date().toISOString().split('T')[0];
 
-// Type helpers
+// Type helpers — handle both API (requestType/requestedAt) and mock (type/requestedTime) shapes
 function getReqType(r: unknown): string {
   const obj = r as Record<string, unknown>;
-  return (obj.type ?? obj.requestType ?? '') as string;
+  return (obj.requestType ?? obj.type ?? '') as string;
 }
 function getReqTime(r: unknown): string {
   const obj = r as Record<string, unknown>;
-  return (obj.requestedTime ?? obj.requestedAt ?? '') as string;
+  return (obj.requestedAt ?? obj.requestedTime ?? '') as string;
 }
 function getUserId(r: unknown): string {
-  return (r as Record<string, unknown>).userId as string;
+  const obj = r as Record<string, unknown>;
+  const u = obj.user as Record<string, unknown> | undefined;
+  return (u?.id ?? obj.userId ?? '') as string;
+}
+// Get display name — prefer embedded user object from API, fallback to mock lookup
+function getDisplayName(r: unknown, fallbackUsers: typeof users): string {
+  const obj = r as Record<string, unknown>;
+  const u = obj.user as { fullName?: string } | undefined;
+  if (u?.fullName) return u.fullName;
+  const uid = getUserId(r);
+  return fallbackUsers.find(x => x.id === uid)?.fullName ?? uid ?? '—';
 }
 function getWorkDate(r: unknown): string {
   const obj = r as Record<string, unknown>;
-  return (obj.workDate ?? getReqTime(r).split('T')[0] ?? '') as string;
+  const raw = (obj.workDate ?? getReqTime(r).split('T')[0] ?? '') as string;
+  // Normalize ISO date to YYYY-MM-DD for display
+  return raw ? raw.split('T')[0] : '';
 }
 
 const reqStatusColors: Record<string, string> = {
@@ -67,16 +79,43 @@ export function AttendanceAdminPage() {
   const [activeTab, setActiveTab] = useState<'approve' | 'adjust' | 'summary'>(
     can('ADMIN', 'HR') ? 'approve' : 'summary'
   );
-  const [records, setRecords] = useState(initialRecords);
-  const [reqs, setReqs] = useState(initialReqs);
+  const [records, setRecords] = useState<ApiAttendanceRecord[]>(USE_API ? [] : (initialRecords as unknown as ApiAttendanceRecord[]));
+  const [reqs, setReqs] = useState<ApiAttendanceRequest[]>(USE_API ? [] : (initialReqs as unknown as ApiAttendanceRequest[]));
+  const [loadingReqs, setLoadingReqs] = useState(false);
+
+  // Fetch thật từ API khi mount
+  const fetchReqs = useCallback(async () => {
+    if (!USE_API) return;
+    setLoadingReqs(true);
+    try {
+      const res = await attendanceService.listRequests({ limit: 200 });
+      setReqs(res.items);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Không tải được danh sách yêu cầu');
+    } finally { setLoadingReqs(false); }
+  }, []);
+
+  const fetchRecords = useCallback(async () => {
+    if (!USE_API) return;
+    try {
+      const d = new Date();
+      const startDate = new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString().split('T')[0];
+      const endDate = d.toISOString().split('T')[0];
+      const res = await attendanceService.listRecords({ startDate, endDate, limit: 500 });
+      setRecords(res.items);
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => { fetchReqs(); fetchRecords(); }, [fetchReqs, fetchRecords]);
 
   const onApprove = useCallback(async (reqId: string) => {
     try {
       if (USE_API) {
         await attendanceService.approveRequest(reqId);
         toast.success('Đã duyệt yêu cầu chấm công');
-        // In API mode, just update local status
-        setReqs(prev => prev.map(r => r.id === reqId ? { ...r, status: 'APPROVED' as const } : r));
+        // Refetch để cập nhật data thật từ server
+        await fetchReqs();
+        await fetchRecords();
         return;
       }
       // Mock mode
@@ -114,13 +153,13 @@ export function AttendanceAdminPage() {
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Duyệt thất bại');
     }
-  }, [reqs]);
+  }, [reqs, fetchReqs, fetchRecords]);
 
   const onReject = useCallback(async (reqId: string, reason: string) => {
     try {
       if (USE_API) {
         await attendanceService.rejectRequest(reqId, reason);
-        setReqs(prev => prev.map(r => r.id === reqId ? { ...r, status: 'REJECTED' as const } : r));
+        await fetchReqs();
       } else {
         setReqs(prev => prev.map(r => r.id === reqId ? { ...r, status: 'REJECTED' as const, reviewedAt: new Date().toISOString() } : r));
       }
@@ -128,7 +167,7 @@ export function AttendanceAdminPage() {
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Từ chối thất bại');
     }
-  }, []);
+  }, [fetchReqs]);
 
   const onApproveAll = useCallback((ids: string[]) => {
     ids.forEach(id => onApprove(id));
@@ -177,6 +216,11 @@ export function AttendanceAdminPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-[20px] font-semibold">Quản lý chấm công</h1>
+      {loadingReqs && (
+        <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+          <Loader2 size={14} className="animate-spin" /> Đang tải dữ liệu...
+        </div>
+      )}
 
       <div className="flex border-b border-border gap-1 overflow-x-auto">
         {tabs.map(t => (
@@ -211,8 +255,7 @@ function ApproveTab({ reqs, onApprove, onReject, onApproveAll }: {
   if (search) {
     const s = search.toLowerCase();
     displayed = displayed.filter(r => {
-      const u = users.find(u => u.id === getUserId(r));
-      return u?.fullName.toLowerCase().includes(s) || getWorkDate(r).includes(s);
+      return getDisplayName(r, users).toLowerCase().includes(s) || getWorkDate(r).includes(s);
     });
   }
   const pendingCheckins = displayed.filter(r => r.status === 'PENDING' && getReqType(r) === 'CHECK_IN');
@@ -264,10 +307,11 @@ function ApproveTab({ reqs, onApprove, onReject, onApproveAll }: {
       ) : (
         <div className="space-y-2">
           {shown.map(r => {
-            const u = users.find(u => u.id === getUserId(r));
+            const displayName = getDisplayName(r, users);
             const rType = getReqType(r);
             const rTime = getReqTime(r);
             const workDate = getWorkDate(r);
+            const noteText = (r as Record<string, unknown>).note as string | null;
             return (
               <div key={r.id} className="bg-card border border-border rounded-xl p-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -276,13 +320,13 @@ function ApproveTab({ reqs, onApprove, onReject, onApproveAll }: {
                       {rType === 'CHECK_IN' ? <LogIn size={15} /> : <LogOut size={15} />}
                     </div>
                     <div>
-                      <div className="text-[13px] font-medium">{u?.fullName ?? getUserId(r)}</div>
+                      <div className="text-[13px] font-medium">{displayName}</div>
                       <div className="text-[11px] text-muted-foreground">
                         {rType === 'CHECK_IN' ? 'Check-in' : 'Check-out'} · {rTime ? new Date(rTime).toLocaleString('vi-VN') : '—'}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">Ngày: {workDate}</div>
-                      {(r as Record<string, unknown>).note && (
-                        <div className="text-[11px] italic text-muted-foreground">{String((r as Record<string, unknown>).note)}</div>
+                      <div className="text-[11px] text-muted-foreground">Ngày: {workDate ? new Date(workDate).toLocaleDateString('vi-VN') : '—'}</div>
+                      {noteText && (
+                        <div className="text-[11px] italic text-muted-foreground">{noteText}</div>
                       )}
                     </div>
                   </div>
@@ -339,12 +383,14 @@ function AdjustTab({ records, onAdjust }: { records: typeof initialRecords; onAd
   const [editForm, setEditForm] = useState({ checkInAt: '', checkOutAt: '', status: 'PRESENT', note: '' });
 
   const filtered = useMemo(() => {
-    let r = records.filter(rec => rec.workDate >= dateFrom && rec.workDate <= dateTo);
+    // workDate from API may be ISO with time — normalize to date-only for comparison
+    const normDate = (d: string) => d ? d.split('T')[0] : d;
+    let r = records.filter(rec => normDate(rec.workDate) >= dateFrom && normDate(rec.workDate) <= dateTo);
     if (search) {
       const s = search.toLowerCase();
       r = r.filter(rec => {
-        const u = users.find(u => u.id === rec.userId);
-        return u?.fullName.toLowerCase().includes(s);
+        const name = rec.user?.fullName ?? users.find(u => u.id === rec.userId)?.fullName ?? '';
+        return name.toLowerCase().includes(s);
       });
     }
     return r.sort((a, b) => b.workDate.localeCompare(a.workDate));
@@ -389,13 +435,14 @@ function AdjustTab({ records, onAdjust }: { records: typeof initialRecords; onAd
             <div className="text-center py-10 text-muted-foreground text-[13px]">Không có bản ghi nào trong khoảng thời gian này</div>
           )}
           {filtered.map(r => {
-            const u = users.find(u => u.id === r.userId);
-            const fmtT = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—';
+            const displayName = r.user?.fullName ?? users.find(u => u.id === r.userId)?.fullName ?? r.userId ?? '—';
+            const displayCode = r.user?.userCode ?? users.find(u => u.id === r.userId)?.userCode ?? '';
+            const fmtT = (iso?: string | null) => iso ? new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—';
             return (
               <div key={r.id} className="grid sm:grid-cols-[1fr_100px_120px_120px_80px_80px_40px] gap-3 px-4 py-3 items-center hover:bg-muted/30 transition">
                 <div>
-                  <div className="text-[13px]">{u?.fullName ?? r.userId}</div>
-                  <div className="text-[11px] text-muted-foreground">{u?.userCode}</div>
+                  <div className="text-[13px]">{displayName}</div>
+                  <div className="text-[11px] text-muted-foreground">{displayCode}</div>
                 </div>
                 <div className="text-[12px]">{new Date(r.workDate).toLocaleDateString('vi-VN')}</div>
                 <div className="text-[12px]">{fmtT(r.checkInAt)}</div>
@@ -421,7 +468,7 @@ function AdjustTab({ records, onAdjust }: { records: typeof initialRecords; onAd
               <button onClick={() => setEditRecord(null)} className="p-1.5 rounded-lg hover:bg-accent"><X size={15} /></button>
             </div>
             <div className="bg-muted/50 rounded-lg p-3 text-[12px]">
-              <div>{users.find(u => u.id === editRecord.userId)?.fullName} — {new Date(editRecord.workDate).toLocaleDateString('vi-VN')}</div>
+              <div>{editRecord.user?.fullName ?? users.find(u => u.id === editRecord.userId)?.fullName ?? editRecord.userId ?? '—'} — {new Date(editRecord.workDate).toLocaleDateString('vi-VN')}</div>
             </div>
             {[
               { label: 'Giờ check-in', key: 'checkInAt' },
@@ -473,23 +520,24 @@ function SummaryTab({ records }: { records: typeof initialRecords }) {
     });
 
     const deptMap: Record<string, { name: string; present: number; absent: number; leave: number; totalMinutes: number; lateMinutes: number; employees: Set<string> }> = {};
-    users.forEach(u => {
-      const dept = getDepartmentById(u.departmentId);
-      if (!deptMap[u.departmentId]) {
-        deptMap[u.departmentId] = { name: dept?.name ?? u.departmentId, present: 0, absent: 0, leave: 0, totalMinutes: 0, lateMinutes: 0, employees: new Set() };
-      }
-      deptMap[u.departmentId].employees.add(u.id);
-    });
+
+    // Build dept map from actual records (using embedded user/dept info)
     monthRecords.forEach(r => {
-      const u = users.find(u => u.id === r.userId);
-      if (!u) return;
-      const d = deptMap[u.departmentId];
-      if (!d) return;
-      if (r.status === 'PRESENT' || r.status === 'MANUAL_ADJUSTED') d.present++;
-      else if (r.status === 'ABSENT') d.absent++;
-      else if (r.status === 'LEAVE') d.leave++;
-      d.totalMinutes += r.totalWorkMinutes ?? 0;
-      d.lateMinutes += r.lateMinutes ?? 0;
+      const embeddedUser = (r as Record<string, unknown>).user as { id?: string; fullName?: string; departmentId?: string; department?: { id?: string; name?: string } } | undefined;
+      const mockUser = users.find(u => u.id === (r.userId ?? embeddedUser?.id));
+      const deptId = embeddedUser?.department?.id ?? mockUser?.departmentId ?? 'unknown';
+      const deptName = embeddedUser?.department?.name ?? getDepartmentById(mockUser?.departmentId ?? '')?.name ?? deptId;
+      const userId = embeddedUser?.id ?? r.userId ?? r.id;
+
+      if (!deptMap[deptId]) {
+        deptMap[deptId] = { name: deptName, present: 0, absent: 0, leave: 0, totalMinutes: 0, lateMinutes: 0, employees: new Set() };
+      }
+      deptMap[deptId].employees.add(userId);
+      if (r.status === 'PRESENT' || r.status === 'MANUAL_ADJUSTED') deptMap[deptId].present++;
+      else if (r.status === 'ABSENT') deptMap[deptId].absent++;
+      else if (r.status === 'LEAVE') deptMap[deptId].leave++;
+      deptMap[deptId].totalMinutes += r.totalWorkMinutes ?? 0;
+      deptMap[deptId].lateMinutes += r.lateMinutes ?? 0;
     });
 
     return Object.values(deptMap).sort((a, b) => a.name.localeCompare(b.name));

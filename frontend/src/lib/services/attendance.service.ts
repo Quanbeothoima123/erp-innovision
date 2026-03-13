@@ -24,9 +24,9 @@ export type ShiftType =
 
 export interface ApiAttendanceRecord {
   id: string;
-  userId: string;
+  userId?: string;
   workDate: string;
-  shiftId: string | null;
+  shiftId?: string | null;
   checkInAt: string | null;
   checkOutAt: string | null;
   status: AttendanceStatus;
@@ -34,22 +34,27 @@ export interface ApiAttendanceRecord {
   lateMinutes: number | null;
   earlyLeaveMinutes: number | null;
   note: string | null;
-  user?: { id: string; fullName: string; userCode: string };
+  user?: { id: string; fullName: string; userCode: string } | null;
   shift?: { id: string; name: string } | null;
 }
 
 export interface ApiAttendanceRequest {
   id: string;
-  userId: string;
-  type: AttendanceRequestType;
-  requestedTime: string;
-  reason: string | null;
+  userId?: string;
+  // Backend mapper returns requestType/requestedAt/workDate
+  requestType?: AttendanceRequestType;
+  requestedAt?: string;
+  workDate?: string;
+  // Legacy mock field aliases (kept for mock mode)
+  type?: AttendanceRequestType;
+  requestedTime?: string;
+  note: string | null;
   status: AttendanceRequestStatus;
   reviewedAt: string | null;
-  reviewNote: string | null;
-  reviewedBy: string | null;
+  rejectReason: string | null;
   createdAt: string;
-  user?: { id: string; fullName: string; userCode: string };
+  user?: { id: string; fullName: string; userCode: string } | null;
+  reviewer?: { id: string; fullName: string } | null;
   reviewer?: { id: string; fullName: string } | null;
 }
 
