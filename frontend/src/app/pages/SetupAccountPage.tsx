@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Lock, Eye, EyeOff, ShieldCheck, Check, X, AlertTriangle, CheckCircle } from 'lucide-react';
+import * as authService from '../../lib/services/auth.service';
+import { ApiError } from '../../lib/apiClient';
 
 export function SetupAccountPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -11,18 +16,11 @@ export function SetupAccountPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Simulate token validation from URL
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
   const [tokenError, setTokenError] = useState('');
 
   useEffect(() => {
-    // Simulate: if no token or token is "expired", show error
     if (!token) {
       setTokenError('Không tìm thấy token kích hoạt. Vui lòng kiểm tra lại link trong email.');
-    } else if (token === 'expired') {
-      setTokenError('Link kích hoạt đã hết hạn hoặc đã được sử dụng. Vui lòng liên hệ Admin để được cấp lại.');
     }
   }, [token]);
 
@@ -35,20 +33,35 @@ export function SetupAccountPage() {
   ];
   const allPassed = checks.every(c => c.ok);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!password) { setError('Vui lòng nhập mật khẩu'); return; }
     if (password !== confirm) { setError('Mật khẩu xác nhận không khớp'); return; }
     if (!allPassed) { setError('Mật khẩu chưa đạt đủ yêu cầu'); return; }
+    if (!token) { setError('Token không hợp lệ'); return; }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // POST /api/auth/setup-account → { token, password, confirmPassword }
+      await authService.setupAccount({ token, password, confirmPassword: confirm });
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2500);
-    }, 1200);
+      // Đã đăng nhập luôn (setupAccount trả về tokens), chuyển về dashboard
+      setTimeout(() => navigate('/'), 2500);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        // Token hết hạn hoặc đã dùng → hiện tokenError thay vì inline error
+        if (err.status === 400) {
+          setTokenError(err.message);
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError('Kích hoạt thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Success state
@@ -65,7 +78,7 @@ export function SetupAccountPage() {
           <div className="bg-card rounded-2xl shadow-lg border border-border p-8 text-center">
             <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
             <h2 className="text-[18px] mb-2">Tài khoản đã được kích hoạt!</h2>
-            <p className="text-muted-foreground text-[14px]">Đang chuyển hướng đến trang đăng nhập...</p>
+            <p className="text-muted-foreground text-[14px]">Đang chuyển hướng vào hệ thống...</p>
             <div className="mt-4 flex justify-center">
               <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
             </div>
@@ -83,9 +96,11 @@ export function SetupAccountPage() {
             <Lock size={32} />
           </div>
           <h1 className="text-[24px]">Thiết lập mật khẩu</h1>
-          <p className="text-muted-foreground text-[14px] mt-1">
-            Chào mừng bạn đến với TechVN. Hãy tạo mật khẩu để kích hoạt tài khoản.
-          </p>
+          {!tokenError && (
+            <p className="text-muted-foreground text-[14px] mt-1">
+              Chào mừng bạn đến với TechVN. Hãy tạo mật khẩu để kích hoạt tài khoản.
+            </p>
+          )}
         </div>
 
         <div className="bg-card rounded-2xl shadow-lg border border-border p-6">
@@ -166,9 +181,7 @@ export function SetupAccountPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <>
-                    <ShieldCheck size={16} /> Kích hoạt tài khoản
-                  </>
+                  <><ShieldCheck size={16} /> Kích hoạt tài khoản</>
                 )}
               </button>
             </form>

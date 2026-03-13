@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Lock, Eye, EyeOff, ShieldCheck, Check, X, AlertTriangle, CheckCircle } from 'lucide-react';
+import * as authService from '../../lib/services/auth.service';
+import { ApiError } from '../../lib/apiClient';
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -13,15 +18,9 @@ export function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [tokenError, setTokenError] = useState('');
 
-  // Simulate token validation from URL
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
-
   useEffect(() => {
     if (!token) {
       setTokenError('Không tìm thấy token đặt lại mật khẩu. Vui lòng kiểm tra lại link trong email.');
-    } else if (token === 'expired') {
-      setTokenError('Link đã hết hạn. Vui lòng yêu cầu link mới.');
     }
   }, [token]);
 
@@ -34,19 +33,34 @@ export function ResetPasswordPage() {
   ];
   const allPassed = checks.every(c => c.ok);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!password) { setError('Vui lòng nhập mật khẩu mới'); return; }
     if (password !== confirm) { setError('Mật khẩu xác nhận không khớp'); return; }
     if (!allPassed) { setError('Mật khẩu chưa đạt đủ yêu cầu'); return; }
+    if (!token) { setError('Token không hợp lệ'); return; }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // POST /api/auth/reset-password → { token, password, confirmPassword }
+      await authService.resetPassword({ token, password, confirmPassword: confirm });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2500);
-    }, 1200);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        // Token hết hạn / đã dùng / không tồn tại → hiện tokenError
+        if (err.status === 400) {
+          setTokenError(err.message);
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError('Đặt lại mật khẩu thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Success state
@@ -166,9 +180,7 @@ export function ResetPasswordPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <>
-                    <ShieldCheck size={16} /> Xác nhận mật khẩu mới
-                  </>
+                  <><ShieldCheck size={16} /> Xác nhận mật khẩu mới</>
                 )}
               </button>
             </form>

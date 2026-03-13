@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Mail, ArrowLeft, Send, CheckCircle } from 'lucide-react';
+import * as authService from '../../lib/services/auth.service';
+import { ApiError } from '../../lib/apiClient';
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -25,28 +27,40 @@ export function ForgotPasswordPage() {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const sendRequest = async (targetEmail: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      // POST /api/auth/forgot-password → { email }
+      // Backend luôn trả về 200 dù email có tồn tại hay không (bảo mật)
+      await authService.forgotPassword({ email: targetEmail });
+      setSent(true);
+      startCountdown();
+    } catch (err) {
+      // Chỉ hiện lỗi nếu thực sự có lỗi server (network, 500...)
+      if (err instanceof ApiError && err.status >= 500) {
+        setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+      } else if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Gửi email thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!email) { setError('Vui lòng nhập email'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Email không hợp lệ'); return; }
-
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setSent(true);
-      startCountdown();
-    }, 1200);
+    await sendRequest(email);
   };
 
-  const handleResend = () => {
-    if (countdown > 0) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      startCountdown();
-    }, 1000);
+  const handleResend = async () => {
+    if (countdown > 0 || loading) return;
+    await sendRequest(email);
   };
 
   return (
@@ -87,13 +101,9 @@ export function ForgotPasswordPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : countdown > 0 ? (
-                  <>
-                    <Send size={16} /> Gửi lại ({countdown}s)
-                  </>
+                  <><Send size={16} /> Gửi lại ({countdown}s)</>
                 ) : (
-                  <>
-                    <Send size={16} /> Gửi lại
-                  </>
+                  <><Send size={16} /> Gửi lại</>
                 )}
               </button>
             </div>
@@ -124,9 +134,7 @@ export function ForgotPasswordPage() {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <>
-                    <Send size={16} /> Gửi link đặt lại
-                  </>
+                  <><Send size={16} /> Gửi link đặt lại</>
                 )}
               </button>
             </form>
