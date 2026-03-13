@@ -7,6 +7,7 @@ const departmentsRoutes = require("../modules/departments/departments.routes");
 const jobTitlesRoutes = require("../modules/job-titles/job-titles.routes");
 const attendanceRoutes = require("../modules/attendance/attendance.routes");
 const leaveRoutes = require("../modules/leave/leave.routes");
+const overtimeRoutes = require("../modules/overtime/overtime.routes");
 const router = Router();
 
 // ── Module routes ────────────────────────────────────────────
@@ -16,7 +17,7 @@ router.use("/departments", departmentsRoutes);
 router.use("/job-titles", jobTitlesRoutes);
 router.use("/attendance", attendanceRoutes);
 router.use("/leave", leaveRoutes);
-// router.use('/overtime', overtimeRoutes);
+router.use("/overtime", overtimeRoutes);
 // router.use('/payroll', payrollRoutes);
 // router.use('/projects', projectRoutes);
 // router.use('/clients', clientRoutes);
