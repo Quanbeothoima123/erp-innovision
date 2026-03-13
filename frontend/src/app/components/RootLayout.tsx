@@ -5,19 +5,42 @@ import { useEffect } from 'react';
 import { Toaster } from 'sonner';
 
 function AuthGuard() {
-  const { currentUser } = useAuth();
+  // FIX: lấy thêm `initializing` để không redirect khi đang restore session
+  const { currentUser, initializing } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    // Chờ AuthContext restore token xong mới kiểm tra
+    if (initializing) return;
+
     if (!currentUser && location.pathname !== '/login') {
-      navigate('/login');
+      navigate('/login', { replace: true });
+      return;
     }
+
     // Redirect to change-password if mustChangePassword is true
-    if (currentUser && currentUser.mustChangePassword && location.pathname !== '/change-password' && location.pathname !== '/login') {
-      navigate('/change-password');
+    if (
+      currentUser &&
+      currentUser.mustChangePassword &&
+      location.pathname !== '/change-password' &&
+      location.pathname !== '/login'
+    ) {
+      navigate('/change-password', { replace: true });
     }
-  }, [currentUser, navigate, location.pathname]);
+  }, [currentUser, navigate, location.pathname, initializing]);
+
+  // Hiển thị màn hình loading trong khi restore session
+  if (initializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Đang tải...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <Outlet />;
 }
