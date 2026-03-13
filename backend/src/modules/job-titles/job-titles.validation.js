@@ -10,7 +10,8 @@ const listJobTitlesSchema = z.object({
     .transform((v) => v === 'true')
     .optional(),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(50),
+  // FIX: tăng max lên 500 để frontend có thể load toàn bộ danh sách
+  limit: z.coerce.number().int().min(1).max(500).default(50),
   sortBy: z.enum(['name', 'code', 'createdAt']).default('name'),
   sortOrder: z.enum(['asc', 'desc']).default('asc'),
 });

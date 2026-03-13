@@ -34,8 +34,15 @@ function validate(schema, source = "body") {
       );
     }
 
-    // Gán data đã được parse/coerce vào request
-    req[source] = result.data;
+    // FIX: req.query là getter-only trong Express — không thể gán trực tiếp.
+    // Dùng Object.defineProperty để override, hoặc lưu parsed data vào req.validated
+    if (source === "query" || source === "params") {
+      // Merge parsed data vào object gốc thay vì gán lại
+      Object.assign(req[source], result.data);
+    } else {
+      req[source] = result.data;
+    }
+
     next();
   };
 }

@@ -12,9 +12,10 @@ const listDepartmentsSchema = z.object({
   includeStats: z
     .enum(["true", "false"])
     .transform((v) => v === "true")
-    .optional(), // Có kèm số lượng nhân viên không
+    .optional(),
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(50),
+  // FIX: tăng max lên 500 để frontend có thể load toàn bộ danh sách
+  limit: z.coerce.number().int().min(1).max(500).default(50),
   sortBy: z.enum(["name", "createdAt"]).default("name"),
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
@@ -27,7 +28,7 @@ const createDepartmentSchema = z.object({
     .max(191, "Tên phòng ban không được quá 191 ký tự")
     .trim(),
   description: z.string().max(5000).optional().nullable(),
-  headUserId: z.string().optional().nullable(), // Trưởng phòng (User.id)
+  headUserId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
 });
 
@@ -38,9 +39,6 @@ const updateDepartmentSchema = z.object({
   headUserId: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
 });
-
-// ── DELETE /departments/:id — chỉ cần confirm không còn NV ──
-// Không cần schema, xử lý hết ở service
 
 module.exports = {
   listDepartmentsSchema,
