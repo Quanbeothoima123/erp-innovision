@@ -89,8 +89,8 @@ export interface ListLeaveRequestsParams {
 }
 
 export interface PaginatedLeaveRequests {
-  data: ApiLeaveRequest[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiLeaveRequest[];
+  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
 }
 
 export interface ListBalancesParams {
@@ -102,8 +102,8 @@ export interface ListBalancesParams {
 }
 
 export interface PaginatedBalances {
-  data: ApiLeaveBalance[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiLeaveBalance[];
+  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
 }
 
 // ─── Leave Types ─────────────────────────────────────────────
@@ -111,7 +111,7 @@ export interface PaginatedBalances {
 export async function listLeaveTypes(params?: {
   search?: string;
   isActive?: boolean;
-}): Promise<{ data: ApiLeaveType[] }> {
+}): Promise<{ items: ApiLeaveType[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
   return api.get("/leave/types", { params: params as Record<string, string> });
 }
 
@@ -221,14 +221,21 @@ export async function approveRequest(
   id: string,
   note?: string,
 ): Promise<ApiLeaveRequest> {
-  return api.post<ApiLeaveRequest>(`/leave/requests/${id}/approve`, { note });
+  // Backend expects: { comment?: string }
+  return api.post<ApiLeaveRequest>(`/leave/requests/${id}/approve`, {
+    comment: note ?? null,
+  });
 }
 
 export async function rejectRequest(
   id: string,
   note?: string,
 ): Promise<ApiLeaveRequest> {
-  return api.post<ApiLeaveRequest>(`/leave/requests/${id}/reject`, { note });
+  // Backend expects: { rejectionReason: string (min 5 chars) }
+  const rejectionReason = (note && note.trim().length >= 5)
+    ? note.trim()
+    : (note?.trim() || "Không được duyệt bởi HR/Quản lý");
+  return api.post<ApiLeaveRequest>(`/leave/requests/${id}/reject`, { rejectionReason });
 }
 
 // ─── Pending Approvals ────────────────────────────────────────

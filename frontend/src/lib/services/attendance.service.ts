@@ -152,9 +152,22 @@ export async function listRequests(
 export async function createRequest(payload: {
   type: AttendanceRequestType;
   requestedTime: string;
+  workDate?: string;
+  shiftId?: string | null;
+  isRemoteWork?: boolean;
   reason?: string;
 }): Promise<ApiAttendanceRequest> {
-  return api.post<ApiAttendanceRequest>("/attendance/requests", payload);
+  // Backend expects: requestType, requestedAt, workDate (required)
+  const now = new Date(payload.requestedTime);
+  const workDate = payload.workDate ?? now.toISOString().split("T")[0];
+  return api.post<ApiAttendanceRequest>("/attendance/requests", {
+    requestType: payload.type,
+    requestedAt: payload.requestedTime,
+    workDate,
+    shiftId: payload.shiftId ?? null,
+    isRemoteWork: payload.isRemoteWork ?? false,
+    note: payload.reason ?? null,
+  });
 }
 
 export async function getRequestById(
@@ -167,8 +180,9 @@ export async function approveRequest(
   id: string,
   reviewNote?: string,
 ): Promise<ApiAttendanceRequest> {
+  // Backend schema: { note?: string }
   return api.post<ApiAttendanceRequest>(`/attendance/requests/${id}/approve`, {
-    reviewNote,
+    note: reviewNote ?? null,
   });
 }
 
@@ -176,8 +190,9 @@ export async function rejectRequest(
   id: string,
   reviewNote?: string,
 ): Promise<ApiAttendanceRequest> {
+  // Backend schema: { rejectReason: string (min 5 chars, required) }
   return api.post<ApiAttendanceRequest>(`/attendance/requests/${id}/reject`, {
-    reviewNote,
+    rejectReason: reviewNote ?? "Không được duyệt",
   });
 }
 

@@ -84,7 +84,7 @@ export function LeaveRequestsPage() {
     setLoadingReqs(true);
     try {
       const res = await leaveService.listRequests({ limit: 100 });
-      setReqs(res.data);
+      setReqs(res.items);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Không tải được danh sách đơn nghỉ');
     } finally { setLoadingReqs(false); }
@@ -587,7 +587,7 @@ export function LeaveBalancesPage() {
     try {
       if (USE_API) {
         const res = await leaveService.listBalances({ year, limit: 200 });
-        setBalances(res.data);
+        setBalances(res.items);
       } else {
         setBalances(initialBalances.map(b => ({
           ...b,

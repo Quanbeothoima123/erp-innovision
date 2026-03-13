@@ -444,7 +444,7 @@ export function ShiftsPage() {
     try {
       if (USE_API) {
         const res = await attendanceService.listShifts({ limit: 100 });
-        setShifts(res.data);
+        setShifts(res.items);
       } else {
         setShifts(mockShifts as unknown as ApiWorkShift[]);
       }
@@ -616,7 +616,7 @@ export function HolidaysPage() {
     try {
       if (USE_API) {
         const res = await attendanceService.listHolidays({ year, limit: 100 });
-        setHolidays(res.data);
+        setHolidays(res.items);
       } else {
         setHolidays((mockHolidays as Holiday[]).filter(h => new Date(h.date).getFullYear() === year));
       }
