@@ -5,7 +5,7 @@ const { z } = require("zod");
 // ── Shared ────────────────────────────────────────────────────
 const pagination = {
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce.number().int().min(1).max(500).default(20),
 };
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -115,8 +115,11 @@ const listAttendanceRequestsSchema = z.object({
   userId: z.string().optional(), // Admin/HR filter theo nhân viên
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
   requestType: z.enum(["CHECK_IN", "CHECK_OUT"]).optional(),
+  type: z.enum(["CHECK_IN", "CHECK_OUT"]).optional(), // alias
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional(),
+  startDate: z.coerce.date().optional(), // alias cho fromDate
+  endDate: z.coerce.date().optional(),   // alias cho toDate
   departmentId: z.string().optional(),
   ...pagination,
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
@@ -143,6 +146,8 @@ const listAttendanceRecordsSchema = z.object({
   departmentId: z.string().optional(),
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional(),
+  startDate: z.coerce.date().optional(), // alias cho fromDate
+  endDate: z.coerce.date().optional(),   // alias cho toDate
   status: z
     .enum(["PRESENT", "ABSENT", "LEAVE", "HOLIDAY", "MANUAL_ADJUSTED"])
     .optional(),

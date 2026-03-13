@@ -162,6 +162,10 @@ async function deleteHoliday(id) {
 // ╚══════════════════════════════════════════════════════════╝
 
 async function listRequests(filters, requestingUser) {
+  // Map alias startDate/endDate → fromDate/toDate
+  if (filters.startDate && !filters.fromDate) filters.fromDate = filters.startDate;
+  if (filters.endDate && !filters.toDate) filters.toDate = filters.endDate;
+  if (filters.type && !filters.requestType) filters.requestType = filters.type;
   // Nhân viên chỉ xem của chính mình
   const isHrOrAdmin = _isHrOrAdmin(requestingUser);
   if (!isHrOrAdmin) {
@@ -384,6 +388,9 @@ async function rejectRequest(requestId, reviewerId, rejectReason) {
 // ╚══════════════════════════════════════════════════════════╝
 
 async function listRecords(filters, requestingUser) {
+  // Map alias startDate/endDate → fromDate/toDate
+  if (filters.startDate && !filters.fromDate) filters.fromDate = filters.startDate;
+  if (filters.endDate && !filters.toDate) filters.toDate = filters.endDate;
   if (!_isHrOrAdmin(requestingUser)) {
     filters.userId = requestingUser.id;
   }
