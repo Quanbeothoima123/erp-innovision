@@ -108,14 +108,15 @@ export interface ListRequestsParams {
   limit?: number;
 }
 
+// FIX: Backend paginatedResponse trả về { items, pagination } không phải { data, meta }
 export interface PaginatedRecords {
-  data: ApiAttendanceRecord[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiAttendanceRecord[];
+  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
 }
 
 export interface PaginatedRequests {
-  data: ApiAttendanceRequest[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiAttendanceRequest[];
+  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
 }
 
 // ─── My Attendance ───────────────────────────────────────────
@@ -230,8 +231,8 @@ export async function listShifts(params?: {
   page?: number;
   limit?: number;
 }): Promise<{
-  data: ApiWorkShift[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiWorkShift[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
 }> {
   return api.get("/attendance/shifts", {
     params: params as Record<string, string>,
@@ -285,8 +286,8 @@ export async function listHolidays(params?: {
   page?: number;
   limit?: number;
 }): Promise<{
-  data: ApiHoliday[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
+  items: ApiHoliday[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
 }> {
   return api.get("/attendance/holidays", {
     params: params as Record<string, string>,
