@@ -23,9 +23,10 @@ export function useMockAuth(): AuthContextType {
   const login = useCallback(async (email: string, _password: string) => {
     const u = users.find((u) => u.email === email);
     if (u && u.accountStatus === "ACTIVE") {
-      setCurrentUser(
-        u as unknown as import("./AuthContext").AuthContextType["currentUser"],
-      );
+      setCurrentUser({
+        ...u,
+        avatarUrl: u.avatarUrl ?? undefined,
+      } as User);
       setPasswordChanged(false);
       return { success: true };
     }
