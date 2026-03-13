@@ -149,7 +149,7 @@ export function EmployeeDetailPage() {
     if (USE_API) {
       departmentsService.getDepartmentOptions().then(setDeptOptions).catch(() => {});
       jobTitlesService.getJobTitleOptions().then(setJobOptions).catch(() => {});
-      usersService.listUsers({ limit: 200 }).then(r => setAllUsersForSelect(r.data)).catch(() => {});
+      usersService.listUsers({ limit: 200 }).then(r => setAllUsersForSelect(r.items)).catch(() => {});
     } else {
       setDeptOptions(mockDepts.map(d => ({ id: d.id, name: d.name })));
       setJobOptions(mockJobTitles.map(j => ({ id: j.id, name: j.name, code: j.code })));
@@ -551,7 +551,7 @@ function EditUserForm({ user, deptOptions, jobOptions, allUsers, onSave, saving,
     departmentId: user.departmentId,
     jobTitleId: user.jobTitleId,
     managerId: user.managerId ?? '',
-    hireDate: user.hireDate,
+    hireDate: user.hireDate ? user.hireDate.split('T')[0] : '',
     employmentStatus: user.employmentStatus,
   });
   return (
@@ -618,7 +618,7 @@ function EditProfileForm({ profile, onSave, saving, onCancel }: {
   onCancel: () => void;
 }) {
   const [f, setF] = useState({
-    dateOfBirth: profile?.dateOfBirth ?? '',
+    dateOfBirth: profile?.dateOfBirth ? profile.dateOfBirth.split('T')[0] : '',
     gender: profile?.gender ?? '',
     nationalIdNumber: profile?.nationalIdNumber ?? '',
     taxCode: profile?.taxCode ?? '',
