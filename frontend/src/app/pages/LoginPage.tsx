@@ -219,6 +219,15 @@ export function LoginPage() {
                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                <div className="flex justify-end mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/forgot-password')}
+                    className="text-blue-400 hover:text-blue-300 text-xs transition-colors"
+                  >
+                    Quên mật khẩu?
+                  </button>
+                </div>
               </div>
 
               {error && (
