@@ -14,7 +14,10 @@ function AuthGuard() {
     // Chờ AuthContext restore token xong mới kiểm tra
     if (initializing) return;
 
-    if (!currentUser && location.pathname !== '/login') {
+    const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/setup-account'];
+    const isPublic = publicRoutes.some(r => location.pathname.startsWith(r));
+
+    if (!currentUser && !isPublic) {
       navigate('/login', { replace: true });
       return;
     }
