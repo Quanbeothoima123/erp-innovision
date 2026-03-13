@@ -2,14 +2,19 @@
 
 const { Router } = require("express");
 const authRoutes = require("../modules/auth/auth.routes");
+const usersRoutes = require("../modules/users/users.routes");
+const departmentsRoutes = require("../modules/departments/departments.routes");
+const jobTitlesRoutes = require("../modules/job-titles/job-titles.routes");
 
 const router = Router();
 
 // ── Module routes ────────────────────────────────────────────
 router.use("/auth", authRoutes);
+router.use("/users", usersRoutes);
+router.use("/departments", departmentsRoutes);
+router.use("/job-titles", jobTitlesRoutes);
 
 // Các module sau sẽ thêm vào đây:
-// router.use('/users', userRoutes);
 // router.use('/departments', departmentRoutes);
 // router.use('/attendance', attendanceRoutes);
 // router.use('/leave', leaveRoutes);
