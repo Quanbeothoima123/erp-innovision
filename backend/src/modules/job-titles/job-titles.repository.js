@@ -2,10 +2,11 @@
 
 const { prisma } = require('../../config/db');
 
-// ── List ─────────────────────────────────────────────────────
-
 async function findMany({ search, isActive, sortBy = 'name', sortOrder = 'asc', page = 1, limit = 50 }) {
-  const skip = (page - 1) * limit;
+  // FIX: Prisma yêu cầu Int — coerce phòng trường hợp nhận string từ query
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 50;
+  const skip = (pageNum - 1) * limitNum;
 
   const where = {
     ...(search && {
@@ -23,14 +24,12 @@ async function findMany({ search, isActive, sortBy = 'name', sortOrder = 'asc', 
       where,
       orderBy: { [sortBy]: sortOrder },
       skip,
-      take: limit,
+      take: limitNum,
     }),
   ]);
 
   return { jobTitles, total };
 }
-
-// ── Find one ─────────────────────────────────────────────────
 
 async function findById(id) {
   return prisma.jobTitle.findUnique({ where: { id } });
@@ -44,15 +43,11 @@ async function findByCode(code) {
   return prisma.jobTitle.findUnique({ where: { code } });
 }
 
-// ── Count users ───────────────────────────────────────────────
-
 async function countActiveUsers(jobTitleId) {
   return prisma.user.count({
     where: { jobTitleId, employmentStatus: { not: 'TERMINATED' } },
   });
 }
-
-// ── Create / Update / Delete ──────────────────────────────────
 
 async function create(data) {
   return prisma.jobTitle.create({ data });
@@ -69,8 +64,6 @@ async function deactivate(id) {
 async function hardDelete(id) {
   return prisma.jobTitle.delete({ where: { id } });
 }
-
-// ── All active (dùng cho dropdown) ───────────────────────────
 
 async function findAllActive() {
   return prisma.jobTitle.findMany({

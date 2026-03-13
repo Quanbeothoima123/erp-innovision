@@ -2,8 +2,6 @@
 
 const { prisma } = require("../../config/db");
 
-// ── Include chuẩn ────────────────────────────────────────────
-
 const DEPARTMENT_INCLUDE = {
   headUser: {
     select: {
@@ -15,8 +13,6 @@ const DEPARTMENT_INCLUDE = {
   },
 };
 
-// ── List ─────────────────────────────────────────────────────
-
 async function findMany({
   search,
   isActive,
@@ -25,7 +21,10 @@ async function findMany({
   page = 1,
   limit = 50,
 }) {
-  const skip = (page - 1) * limit;
+  // FIX: Prisma yêu cầu Int — coerce phòng trường hợp nhận string từ query
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 50;
+  const skip = (pageNum - 1) * limitNum;
 
   const where = {
     ...(search && { name: { contains: search } }),
@@ -39,14 +38,12 @@ async function findMany({
       include: DEPARTMENT_INCLUDE,
       orderBy: { [sortBy]: sortOrder },
       skip,
-      take: limit,
+      take: limitNum,
     }),
   ]);
 
   return { departments, total };
 }
-
-// ── Find one ─────────────────────────────────────────────────
 
 async function findById(id) {
   return prisma.department.findUnique({
@@ -59,11 +56,6 @@ async function findByName(name) {
   return prisma.department.findUnique({ where: { name } });
 }
 
-// ── Count members ─────────────────────────────────────────────
-
-/**
- * Đếm số nhân viên còn làm việc trong phòng ban
- */
 async function countActiveMembers(departmentId) {
   return prisma.user.count({
     where: {
@@ -73,9 +65,6 @@ async function countActiveMembers(departmentId) {
   });
 }
 
-/**
- * Lấy stats từng phòng ban: số NV active, PROBATION, ON_LEAVE
- */
 async function getDepartmentMemberStats(departmentId) {
   const stats = await prisma.user.groupBy({
     by: ["employmentStatus"],
@@ -89,9 +78,6 @@ async function getDepartmentMemberStats(departmentId) {
   }, {});
 }
 
-/**
- * Lấy danh sách nhân viên trong phòng ban (gọn)
- */
 async function findMembers(departmentId) {
   return prisma.user.findMany({
     where: {
@@ -110,13 +96,8 @@ async function findMembers(departmentId) {
   });
 }
 
-// ── Create / Update / Delete ──────────────────────────────────
-
 async function create(data) {
-  return prisma.department.create({
-    data,
-    include: DEPARTMENT_INCLUDE,
-  });
+  return prisma.department.create({ data, include: DEPARTMENT_INCLUDE });
 }
 
 async function update(id, data) {
@@ -127,9 +108,6 @@ async function update(id, data) {
   });
 }
 
-/**
- * Deactivate thay vì xóa cứng nếu còn nhân viên
- */
 async function deactivate(id) {
   return prisma.department.update({
     where: { id },
@@ -137,14 +115,9 @@ async function deactivate(id) {
   });
 }
 
-/**
- * Xóa cứng — chỉ dùng khi không còn nhân viên nào
- */
 async function hardDelete(id) {
   return prisma.department.delete({ where: { id } });
 }
-
-// ── All active (dùng cho dropdown) ───────────────────────────
 
 async function findAllActive() {
   return prisma.department.findMany({
