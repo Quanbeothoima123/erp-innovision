@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   leaveRequests as initialLeaveRequests, leaveBalances as initialBalances, leaveBalances,
@@ -8,9 +8,13 @@ import type { LeaveRequest, LeaveRequestStatus, LeaveRequestApproval, LeaveBalan
 import {
   Plus, Check, X, Search, CalendarDays, AlertTriangle,
   User, FileText, Ban, ListChecks, Shield, ArrowRight,
-  CheckCircle2, MessageSquare, Info,
+  CheckCircle2, MessageSquare, Info, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import * as leaveService from '../../lib/services/leave.service';
+import { ApiError } from '../../lib/apiClient';
+
+const USE_API = !!import.meta.env.VITE_API_URL;
 
 // ─── Constants ────────────────────────────────────────────────────
 const statusColors: Record<LeaveRequestStatus, string> = {
@@ -37,10 +41,33 @@ const emptyForm = {
 // ═══════════════════════════════════════════════════════════════════
 export function LeaveRequestsPage() {
   const { currentUser, can } = useAuth();
-  const [reqs, setReqs] = useState<LeaveRequest[]>(initialLeaveRequests);
-  const [balances, setBalances] = useState<LeaveBalance[]>(initialBalances);
+  const [reqs, setReqs] = useState<LeaveRequest[]>(USE_API ? [] : initialLeaveRequests);
+  const [balances, setBalances] = useState<LeaveBalance[]>(USE_API ? [] : initialBalances);
+  const [loadingReqs, setLoadingReqs] = useState(USE_API);
   const [showForm, setShowForm] = useState(false);
   const [detailReq, setDetailReq] = useState<LeaveRequest | null>(null);
+
+  // ── API: fetch requests ────────────────────────────────────
+  const fetchReqs = useCallback(async () => {
+    if (!USE_API) return;
+    setLoadingReqs(true);
+    try {
+      const res = await leaveService.listRequests({ limit: 100 });
+      setReqs(res.data as unknown as LeaveRequest[]);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Không tải được danh sách đơn nghỉ');
+    } finally { setLoadingReqs(false); }
+  }, []);
+
+  const fetchBalances = useCallback(async () => {
+    if (!USE_API) return;
+    try {
+      const data = await leaveService.getMyBalances();
+      setBalances(data as unknown as LeaveBalance[]);
+    } catch { /**/ }
+  }, []);
+
+  useEffect(() => { fetchReqs(); fetchBalances(); }, [fetchReqs, fetchBalances]);
 
   const isAdmin = can('ADMIN');
   const isHR = can('HR');
@@ -82,95 +109,71 @@ export function LeaveRequestsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
 
   // ─── Approval logic: 2-step MANAGER → HR ─────────────
-  const handleApproveStep = useCallback((reqId: string, step: 'MANAGER' | 'HR', comment: string) => {
+  const handleApproveStep = useCallback(async (reqId: string, step: 'MANAGER' | 'HR', comment: string) => {
+    if (USE_API) {
+      try {
+        await leaveService.approveRequest(reqId, comment || undefined);
+        toast.success(`Đã duyệt bước ${step === 'MANAGER' ? '1 (Quản lý)' : '2 (HR)'}`);
+        fetchReqs();
+      } catch (err) { toast.error(err instanceof ApiError ? err.message : 'Lỗi duyệt đơn'); }
+      return;
+    }
     setReqs(prev => prev.map(r => {
       if (r.id !== reqId) return r;
-
       const updatedApprovals = [...r.approvals];
       const stepIdx = updatedApprovals.findIndex(a => a.stepType === step && a.status === 'PENDING');
-
       if (stepIdx >= 0) {
-        updatedApprovals[stepIdx] = {
-          ...updatedApprovals[stepIdx],
-          status: 'APPROVED',
-          comment: comment || undefined,
-          actionAt: new Date().toISOString(),
-          approverUserId: currentUser!.id,
-        };
+        updatedApprovals[stepIdx] = { ...updatedApprovals[stepIdx], status: 'APPROVED', comment: comment || undefined, actionAt: new Date().toISOString(), approverUserId: currentUser!.id };
       } else {
-        // Add approval entry if missing
-        updatedApprovals.push({
-          approverUserId: currentUser!.id,
-          stepType: step,
-          stepOrder: step === 'MANAGER' ? 1 : 2,
-          status: 'APPROVED',
-          comment: comment || undefined,
-          actionAt: new Date().toISOString(),
-        });
+        updatedApprovals.push({ approverUserId: currentUser!.id, stepType: step, stepOrder: step === 'MANAGER' ? 1 : 2, status: 'APPROVED', comment: comment || undefined, actionAt: new Date().toISOString() });
       }
-
       if (step === 'MANAGER') {
-        // Move to HR step
-        const hrApproval: LeaveRequestApproval = {
-          approverUserId: 'user-hr-mgr',
-          stepType: 'HR',
-          stepOrder: 2,
-          status: 'PENDING',
-        };
-        // Only add HR step if not already there
-        if (!updatedApprovals.find(a => a.stepType === 'HR')) {
-          updatedApprovals.push(hrApproval);
-        }
+        if (!updatedApprovals.find(a => a.stepType === 'HR')) updatedApprovals.push({ approverUserId: 'user-hr-mgr', stepType: 'HR', stepOrder: 2, status: 'PENDING' });
         return { ...r, approvals: updatedApprovals, currentStep: 'HR' as const };
       } else {
-        // HR approved → final APPROVED, update balance
         updateBalanceOnApprove(r);
         return { ...r, approvals: updatedApprovals, status: 'APPROVED' as const, currentStep: null };
       }
     }));
     toast.success(`Đã duyệt bước ${step === 'MANAGER' ? '1 (Quản lý)' : '2 (HR)'}`);
-  }, [currentUser]);
+  }, [currentUser, fetchReqs]);
 
-  const handleRejectStep = useCallback((reqId: string, step: 'MANAGER' | 'HR', comment: string) => {
+  const handleRejectStep = useCallback(async (reqId: string, step: 'MANAGER' | 'HR', comment: string) => {
     if (!comment.trim()) { toast.error('Vui lòng nhập lý do từ chối'); return; }
-
+    if (USE_API) {
+      try {
+        await leaveService.rejectRequest(reqId, comment);
+        toast.success('Đã từ chối đơn nghỉ phép');
+        fetchReqs();
+      } catch (err) { toast.error(err instanceof ApiError ? err.message : 'Lỗi từ chối đơn'); }
+      return;
+    }
     setReqs(prev => prev.map(r => {
       if (r.id !== reqId) return r;
-
       const updatedApprovals = [...r.approvals];
       const stepIdx = updatedApprovals.findIndex(a => a.stepType === step && a.status === 'PENDING');
-
-      if (stepIdx >= 0) {
-        updatedApprovals[stepIdx] = {
-          ...updatedApprovals[stepIdx],
-          status: 'REJECTED',
-          comment,
-          actionAt: new Date().toISOString(),
-          approverUserId: currentUser!.id,
-        };
-      } else {
-        updatedApprovals.push({
-          approverUserId: currentUser!.id,
-          stepType: step,
-          stepOrder: step === 'MANAGER' ? 1 : 2,
-          status: 'REJECTED',
-          comment,
-          actionAt: new Date().toISOString(),
-        });
-      }
-
+      if (stepIdx >= 0) { updatedApprovals[stepIdx] = { ...updatedApprovals[stepIdx], status: 'REJECTED', comment, actionAt: new Date().toISOString(), approverUserId: currentUser!.id }; }
+      else { updatedApprovals.push({ approverUserId: currentUser!.id, stepType: step, stepOrder: step === 'MANAGER' ? 1 : 2, status: 'REJECTED', comment, actionAt: new Date().toISOString() }); }
       return { ...r, approvals: updatedApprovals, status: 'REJECTED' as const, currentStep: null };
     }));
-    toast.success(`Đã từ chối đơn nghỉ phép`);
-  }, [currentUser]);
+    toast.success('Đã từ chối đơn nghỉ phép');
+  }, [currentUser, fetchReqs]);
 
-  const handleCancel = useCallback((reqId: string) => {
-    setReqs(prev => prev.map(r => {
-      if (r.id !== reqId || r.status !== 'PENDING') return r;
-      return { ...r, status: 'CANCELLED' as const, currentStep: null };
-    }));
-    toast.success('Đã huỷ đơn nghỉ phép');
-  }, []);
+  const handleCancel = useCallback(async (reqId: string) => {
+    if (USE_API) {
+      try {
+        await leaveService.cancelRequest(reqId);
+        toast.success('Đã huỷ đơn nghỉ phép');
+        fetchReqs();
+      } catch (err) { toast.error(err instanceof ApiError ? err.message : 'Lỗi huỷ đơn'); }
+    } else {
+      setReqs(prev => prev.map(r => {
+        if (r.id !== reqId || r.status !== 'PENDING') return r;
+        return { ...r, status: 'CANCELLED' as const, currentStep: null };
+      }));
+      toast.success('Đã huỷ đơn nghỉ phép');
+    }
+  }, [fetchReqs]);
 
   // Update balance when leave is approved
   const updateBalanceOnApprove = useCallback((req: LeaveRequest) => {
@@ -235,28 +238,49 @@ export function LeaveRequestsPage() {
       approvals: [managerApproval],
     };
 
-    setReqs(prev => [newReq, ...prev]);
+    if (USE_API) {
+      try {
+        await leaveService.createRequest({
+          leaveTypeId: form.leaveTypeId,
+          startDate: form.startDate,
+          endDate: form.endDate,
+          isHalfDay: form.isHalfDay,
+          halfDayPeriod: form.isHalfDay ? form.halfDayPeriod : undefined,
+          reason: form.reason || undefined,
+        });
+        toast.success('Đã gửi đơn nghỉ phép — chờ Quản lý duyệt bước 1');
+        fetchReqs(); fetchBalances();
+        return true;
+      } catch (err) {
+        toast.error(err instanceof ApiError ? err.message : 'Gửi đơn nghỉ thất bại');
+        return false;
+      }
+    }
 
-    // Update pending balance
+    setReqs(prev => [newReq, ...prev]);
     setBalances(prev => prev.map(b => {
       if (b.userId === currentUser!.id && b.leaveTypeId === form.leaveTypeId && b.year === 2025) {
         return { ...b, pendingDays: b.pendingDays + diffDays };
       }
       return b;
     }));
-
     toast.success('Đã gửi đơn nghỉ phép — chờ Quản lý duyệt bước 1');
     return true;
-  }, [currentUser, balances]);
+  }, [currentUser, balances, fetchReqs, fetchBalances]);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-[20px]">Quản lý nghỉ phép</h1>
+        <h1 className="text-[20px] font-semibold">Quản lý nghỉ phép</h1>
         <button onClick={() => setShowForm(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700">
           <Plus size={16} /> Tạo đơn nghỉ
         </button>
       </div>
+      {loadingReqs && (
+        <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+          <Loader2 size={18} className="animate-spin" /><span className="text-[13px]">Đang tải dữ liệu...</span>
+        </div>
+      )}
 
       {/* 2-step flow explanation */}
       <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-[12px] text-blue-700 dark:text-blue-400">
@@ -1111,8 +1135,21 @@ function ApprovalTimelineStep({ stepNumber, stepLabel, approval, isActive, isLas
 export function LeaveBalancesPage() {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
+  const [apiBalances, setApiBalances] = useState<import('../data/mockData').LeaveBalance[]>([]);
+  const [loading, setLoading] = useState(USE_API);
 
-  const filtered = leaveBalances.filter(b => {
+  useEffect(() => {
+    if (!USE_API) return;
+    setLoading(true);
+    leaveService.listBalances({ limit: 200 })
+      .then(res => setApiBalances(res.data as unknown as import('../data/mockData').LeaveBalance[]))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const sourceBalances = USE_API ? apiBalances : leaveBalances;
+
+  const filtered = sourceBalances.filter(b => {
     const u = getUserById(b.userId);
     const lt = getLeaveTypeById(b.leaveTypeId);
     if (deptFilter && u?.departmentId !== deptFilter) return false;
@@ -1207,5 +1244,3 @@ export function LeaveBalancesPage() {
     </div>
   );
 }
-
-
