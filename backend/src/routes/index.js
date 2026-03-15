@@ -12,6 +12,8 @@ const payrollRoutes = require("../modules/payroll/payroll.routes");
 const projectRoutes = require("../modules/projects/projects.routes");
 const clientRoutes = require("../modules/clients/clients.routes");
 const reportRoutes = require("../modules/reports/reports.routes");
+const notificationRoutes = require("../modules/notifications/notifications.routes");
+const systemRoutes = require("../modules/system/system.routes");
 const router = Router();
 
 // ── Module routes ────────────────────────────────────────────
@@ -25,10 +27,8 @@ router.use("/overtime", overtimeRoutes);
 router.use("/payroll", payrollRoutes);
 router.use("/projects", projectRoutes);
 router.use("/clients", clientRoutes);
-// router.use('/contracts', contractRoutes);
-// router.use('/invoices', invoiceRoutes);
 router.use("/reports", reportRoutes);
-// router.use('/notifications', notificationRoutes);
-// router.use('/system', systemRoutes);
+router.use("/notifications", notificationRoutes);
+router.use("/system", systemRoutes);
 
 module.exports = router;
