@@ -261,6 +261,11 @@ export function Layout() {
           path: "/reports/attendance",
         });
         reportChildren.push({ label: "Nghỉ phép", path: "/reports/leave" });
+        reportChildren.push({ label: "Bảng lương", path: "/reports/payroll" });
+        reportChildren.push({
+          label: "Tăng ca (OT)",
+          path: "/reports/overtime",
+        });
       }
       if (can("ADMIN", "ACCOUNTANT", "MANAGER")) {
         reportChildren.push({ label: "Tài chính", path: "/reports/finance" });

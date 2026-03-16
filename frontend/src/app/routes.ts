@@ -45,6 +45,8 @@ import {
   FinanceReportPage,
   ProjectReportPage,
   LeaveReportPage,
+  PayrollReportPage,
+  OvertimeReportPage,
 } from "./pages/ReportsPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -94,6 +96,8 @@ export const router = createBrowserRouter([
           { path: "reports/finance", Component: FinanceReportPage },
           { path: "reports/projects", Component: ProjectReportPage },
           { path: "reports/leave", Component: LeaveReportPage },
+          { path: "reports/payroll", Component: PayrollReportPage },
+          { path: "reports/overtime", Component: OvertimeReportPage },
           { path: "system/config", Component: SystemConfigPage },
           { path: "system/accounts", Component: AccountsPage },
           { path: "system/departments", Component: DepartmentsPage },

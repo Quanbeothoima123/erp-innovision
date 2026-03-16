@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
-import { getUserById, departments, workShifts as initialShifts, holidays as initialHolidays, systemConfigs as initialConfigs } from '../data/mockData';
-import type { RoleCode, AuditLog, WorkShift, ShiftType, Holiday, SystemConfig } from '../data/mockData';
-import { useEmployeeData } from '../context/EmployeeContext';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import * as systemService from '../../lib/services/system.service';
+import type { ApiAuditLog, ApiSystemConfig } from '../../lib/services/system.service';
+import { ApiError } from '../../lib/apiClient';
 import {
   Shield, Lock, RotateCcw, X, Search, Plus, Edit2, Trash2, Check,
   Eye, EyeOff, UserCheck, UserX, KeyRound, ChevronDown, ArrowRight,
@@ -659,342 +659,186 @@ const entityIcons: Record<string, React.ReactNode> = {
 };
 
 export function AuditLogPage() {
-  const { allAuditLogs } = useEmployeeData();
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const { can } = useAuth();
+  const [logs, setLogs] = useState<ApiAuditLog[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<ApiAuditLog | null>(null);
   const [entityFilter, setEntityFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
-  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
+  const [search, setSearch] = useState('');
 
-  let filtered = allAuditLogs;
-  if (entityFilter) filtered = filtered.filter(l => l.entityType === entityFilter);
-  if (actionFilter) filtered = filtered.filter(l => l.actionType === actionFilter);
-  if (searchTerm) {
-    const s = searchTerm.toLowerCase();
-    filtered = filtered.filter(l => l.description.toLowerCase().includes(s) || l.actionType.toLowerCase().includes(s) || (getUserById(l.actorUserId)?.fullName || '').toLowerCase().includes(s));
-  }
-  filtered = [...filtered].sort((a, b) => sortDir === 'desc' ? b.createdAt.localeCompare(a.createdAt) : a.createdAt.localeCompare(b.createdAt));
+  const fetchLogs = useCallback(async (p = 1) => {
+    setLoading(true);
+    try {
+      const res = await systemService.listAuditLogs({
+        page: p, limit: 30,
+        ...(entityFilter && { entityType: entityFilter }),
+        ...(actionFilter && { actionType: actionFilter }),
+      });
+      setLogs(res.items);
+      setTotal(res.pagination.total);
+      setTotalPages(res.pagination.totalPages);
+      setPage(res.pagination.page);
+    } catch (err) {
+      if (err instanceof ApiError) toast.error(err.message);
+    } finally { setLoading(false); }
+  }, [entityFilter, actionFilter]);
 
-  const entityTypes = [...new Set(allAuditLogs.map(l => l.entityType))].sort();
-  const actionTypes = [...new Set(allAuditLogs.map(l => l.actionType))].sort();
-  const hasFilters = entityFilter || actionFilter || searchTerm;
+  useEffect(() => { fetchLogs(1); }, [fetchLogs]);
 
-  // Group by date for timeline
-  const groupedByDate = useMemo(() => {
-    const map = new Map<string, AuditLog[]>();
-    filtered.forEach(l => {
-      const d = l.createdAt.slice(0, 10);
-      if (!map.has(d)) map.set(d, []);
-      map.get(d)!.push(l);
-    });
-    return map;
-  }, [filtered]);
+  const displayed = useMemo(() => {
+    if (!search) return logs;
+    const s = search.toLowerCase();
+    return logs.filter(l => l.description.toLowerCase().includes(s) || l.actor?.fullName.toLowerCase().includes(s));
+  }, [logs, search]);
+
+  const actionTypeColors: Record<string, string> = {
+    CREATE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    UPDATE: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+    DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    STATUS_CHANGE: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+    TERMINATE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    PASSWORD_RESET: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    LOGIN: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+    LOGOUT: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400',
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-[20px]">Nhật ký kiểm toán</h1>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-border overflow-hidden">
-            <button onClick={() => setViewMode('table')} className={`px-3 py-1.5 text-[12px] ${viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-accent'}`}>Bảng</button>
-            <button onClick={() => setViewMode('timeline')} className={`px-3 py-1.5 text-[12px] ${viewMode === 'timeline' ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-accent'}`}>Timeline</button>
-          </div>
-          <button onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')} className="p-2 rounded-lg border border-border hover:bg-accent" title={sortDir === 'desc' ? 'Mới nhất trước' : 'Cũ nhất trước'}>
-            {sortDir === 'desc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
-          </button>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-[20px] flex items-center gap-2"><ScrollText size={20} /> Nhat ky he thong</h1>
+        <button onClick={() => fetchLogs(page)} disabled={loading} className="p-2 border border-border rounded-lg hover:bg-accent">
+          <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Tìm theo mô tả, hành động, người thực hiện..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+          <input type="text" placeholder="Tim mo ta, actor..." value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
         </div>
-        <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
-          <option value="">Tất cả đối tượng</option>
-          {entityTypes.map(t => <option key={t} value={t}>{t}</option>)}
+        <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
+          <option value="">Tat ca entity</option>
+          {['USER','DEPARTMENT','LEAVE','ATTENDANCE','OVERTIME','PAYROLL','PROJECT','CONTRACT','INVOICE'].map(e => (
+            <option key={e} value={e}>{e}</option>
+          ))}
         </select>
-        <select value={actionFilter} onChange={e => setActionFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
-          <option value="">Tất cả hành động</option>
-          {actionTypes.map(t => <option key={t} value={t}>{t}</option>)}
+        <select value={actionFilter} onChange={e => setActionFilter(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
+          <option value="">Tat ca action</option>
+          {['CREATE','UPDATE','DELETE','STATUS_CHANGE','LOGIN','LOGOUT','PASSWORD_RESET','TERMINATE'].map(a => (
+            <option key={a} value={a}>{a}</option>
+          ))}
         </select>
-        {hasFilters && (
-          <button onClick={() => { setSearchTerm(''); setEntityFilter(''); setActionFilter(''); }} className="px-3 py-2 rounded-lg border border-border text-[13px] text-muted-foreground hover:bg-accent">Xoá lọc</button>
-        )}
       </div>
 
-      {/* TABLE VIEW */}
-      {viewMode === 'table' && (
+      {loading ? (
+        <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
+          <Loader2 size={18} className="animate-spin" /> <span className="text-[13px]">Dang tai...</span>
+        </div>
+      ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">Thời gian</th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">Người thực hiện</th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">Đối tượng</th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">Hành động</th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">Mô tả</th>
-                  <th className="text-center px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">Dữ liệu</th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">IP</th>
+            <table className="w-full text-[13px]">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">Thoi gian</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">Actor</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">Hanh dong</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">Entity</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">Mo ta</th>
+                  <th className="px-4 py-3 w-12" />
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(log => {
-                  const actor = getUserById(log.actorUserId);
-                  const hasDiff = !!log.oldValues || !!log.newValues;
-                  return (
-                    <tr key={log.id} onClick={() => setSelectedLog(log)} className="border-b border-border last:border-0 hover:bg-accent/50 cursor-pointer transition-colors">
-                      <td className="px-4 py-3 text-[12px] whitespace-nowrap">{new Date(log.createdAt).toLocaleString('vi-VN')}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">{actor?.fullName.split(' ').slice(-1)[0][0]}</div>
-                          <span className="text-[13px]">{actor?.fullName}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <div className="flex items-center gap-1">
-                          {entityIcons[log.entityType] || <FileText size={14} />}
-                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted">{log.entityType}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${actionColors[log.actionType] || 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'}`}>{log.actionType}</span>
-                      </td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground max-w-[300px] truncate">{log.description}</td>
-                      <td className="px-4 py-3 text-center hidden md:table-cell">
-                        {hasDiff && <span className="text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Có diff</span>}
-                      </td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">{log.ipAddress}</td>
-                    </tr>
-                  );
-                })}
-                {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground text-[13px]">Không tìm thấy nhật ký nào</td></tr>
+                {displayed.map(log => (
+                  <tr key={log.id} className="border-t border-border hover:bg-accent/30 cursor-pointer"
+                    onClick={() => setSelectedLog(log)}>
+                    <td className="px-4 py-3 text-[11px] text-muted-foreground whitespace-nowrap">
+                      {new Date(log.createdAt).toLocaleString('vi-VN')}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-[12px]">{log.actor?.fullName ?? 'System'}</div>
+                      {log.actor && <div className="text-[10px] text-muted-foreground">{log.actor.userCode}</div>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={"text-[10px] px-1.5 py-0.5 rounded " + (actionTypeColors[log.actionType] ?? 'bg-gray-100 text-gray-600')}>
+                        {log.actionType}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">{log.entityType}</td>
+                    <td className="px-4 py-3 text-[12px] max-w-[300px] truncate">{log.description}</td>
+                    <td className="px-4 py-3 text-center">
+                      <Eye size={13} className="text-muted-foreground" />
+                    </td>
+                  </tr>
+                ))}
+                {displayed.length === 0 && (
+                  <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">Chua co du lieu</td></tr>
                 )}
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border">{filtered.length} bản ghi</div>
-        </div>
-      )}
-
-      {/* TIMELINE VIEW */}
-      {viewMode === 'timeline' && (
-        <div className="space-y-6">
-          {Array.from(groupedByDate.entries()).map(([date, logs]) => (
-            <div key={date}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="px-3 py-1 rounded-lg bg-primary text-primary-foreground text-[12px]">
-                  {new Date(date).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}
-                </div>
-                <span className="text-[11px] text-muted-foreground">{logs.length} thao tác</span>
-                <div className="flex-1 border-t border-border" />
+          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
+            <span>{total} ban ghi</span>
+            {totalPages > 1 && (
+              <div className="flex gap-2">
+                <button onClick={() => fetchLogs(page - 1)} disabled={page <= 1}
+                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent">Truoc</button>
+                <span className="px-2 py-1 text-[11px]">{page}/{totalPages}</span>
+                <button onClick={() => fetchLogs(page + 1)} disabled={page >= totalPages}
+                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent">Sau</button>
               </div>
-              <div className="relative ml-4 border-l-2 border-border pl-6 space-y-4">
-                {logs.map(log => {
-                  const actor = getUserById(log.actorUserId);
-                  const hasDiff = !!log.oldValues || !!log.newValues;
-                  return (
-                    <div key={log.id} className="relative" onClick={() => setSelectedLog(log)}>
-                      {/* Timeline dot */}
-                      <div className={`absolute -left-[31px] w-4 h-4 rounded-full border-2 border-card ${log.actionType === 'DELETE' || log.actionType === 'REJECT' || log.actionType === 'TERMINATE' ? 'bg-red-500' : log.actionType === 'APPROVE' || log.actionType === 'CREATE' ? 'bg-green-500' : 'bg-blue-500'}`} />
-
-                      <div className="bg-card border border-border rounded-xl p-3 cursor-pointer hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between flex-wrap gap-1">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">{actor?.fullName.split(' ').slice(-1)[0][0]}</div>
-                            <span className="text-[13px]">{actor?.fullName}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${actionColors[log.actionType] || 'bg-gray-100 text-gray-700'}`}>{log.actionType}</span>
-                            <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted flex items-center gap-0.5">{entityIcons[log.entityType] || <FileText size={10} />} {log.entityType}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {hasDiff && <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">diff</span>}
-                            <span className="text-[11px] text-muted-foreground">{new Date(log.createdAt).toLocaleTimeString('vi-VN')}</span>
-                          </div>
-                        </div>
-                        <p className="text-[12px] text-muted-foreground mt-1">{log.description}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground text-[13px]">Không tìm thấy nhật ký nào</div>
-          )}
-        </div>
-      )}
-
-      {/* LOG DETAIL DIALOG with enhanced diff */}
-      {selectedLog && (
-        <Overlay onClose={() => setSelectedLog(null)}>
-          <DlgHeader title="Chi tiết nhật ký kiểm toán" onClose={() => setSelectedLog(null)} />
-          <div className="p-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <InfoBox label="Thời gian" value={new Date(selectedLog.createdAt).toLocaleString('vi-VN')} />
-              <InfoBox label="Người thực hiện" value={getUserById(selectedLog.actorUserId)?.fullName || '—'} />
-              <InfoBox label="Đối tượng" value={selectedLog.entityType} />
-              <div className="bg-muted/50 rounded-lg p-3">
-                <div className="text-[11px] text-muted-foreground">Hành động</div>
-                <span className={`text-[11px] px-2 py-0.5 rounded-full ${actionColors[selectedLog.actionType] || ''}`}>{selectedLog.actionType}</span>
-              </div>
-              <div className="col-span-2"><InfoBox label="Mô tả" value={selectedLog.description} /></div>
-              <InfoBox label="Địa chỉ IP" value={selectedLog.ipAddress} />
-            </div>
-
-            {/* Enhanced Diff View */}
-            {(selectedLog.oldValues || selectedLog.newValues) && (
-              <div className="border border-border rounded-xl overflow-hidden">
-                <div className="px-4 py-2.5 bg-muted/50 border-b border-border text-[13px] flex items-center gap-1">
-                  <ArrowUpDown size={14} /> So sánh thay đổi
-                </div>
-                <div className="grid grid-cols-2 divide-x divide-border">
-                  <div className="px-4 py-2 bg-red-50/50 dark:bg-red-900/5">
-                    <div className="text-[11px] text-red-500 mb-2 flex items-center gap-1"><ArrowUp size={10} /> Giá trị cũ</div>
-                    {selectedLog.oldValues ? (
-                      <div className="space-y-1.5">
-                        {Object.entries(selectedLog.oldValues).map(([key, val]) => {
-                          const newVal = selectedLog.newValues?.[key];
-                          const changed = newVal !== undefined && JSON.stringify(val) !== JSON.stringify(newVal);
-                          return (
-                            <div key={key} className={`text-[12px] ${changed ? 'bg-red-100/80 dark:bg-red-900/15 px-2 py-1 rounded' : ''}`}>
-                              <span className="text-muted-foreground">{key}:</span>{' '}
-                              <span className={changed ? 'line-through text-red-500' : ''}>{JSON.stringify(val)}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-[12px] text-muted-foreground italic">Không có dữ liệu</div>
-                    )}
-                  </div>
-                  <div className="px-4 py-2 bg-green-50/50 dark:bg-green-900/5">
-                    <div className="text-[11px] text-green-500 mb-2 flex items-center gap-1"><ArrowDown size={10} /> Giá trị mới</div>
-                    {selectedLog.newValues ? (
-                      <div className="space-y-1.5">
-                        {Object.entries(selectedLog.newValues).map(([key, val]) => {
-                          const oldVal = selectedLog.oldValues?.[key];
-                          const changed = oldVal !== undefined && JSON.stringify(val) !== JSON.stringify(oldVal);
-                          return (
-                            <div key={key} className={`text-[12px] ${changed ? 'bg-green-100/80 dark:bg-green-900/15 px-2 py-1 rounded' : ''}`}>
-                              <span className="text-muted-foreground">{key}:</span>{' '}
-                              <span className={changed ? 'text-green-600' : ''}>{JSON.stringify(val)}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-[12px] text-muted-foreground italic">Không có dữ liệu</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Raw JSON fallback */}
-            {(selectedLog.oldValues || selectedLog.newValues) && (
-              <details className="text-[12px]">
-                <summary className="text-muted-foreground cursor-pointer hover:text-foreground">Xem dữ liệu gốc (JSON)</summary>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  {selectedLog.oldValues && (
-                    <div>
-                      <div className="text-[11px] text-red-500 mb-1">oldValues:</div>
-                      <pre className="bg-red-50 dark:bg-red-900/10 rounded-lg p-2 text-[10px] overflow-x-auto max-h-40">{JSON.stringify(selectedLog.oldValues, null, 2)}</pre>
-                    </div>
-                  )}
-                  {selectedLog.newValues && (
-                    <div>
-                      <div className="text-[11px] text-green-500 mb-1">newValues:</div>
-                      <pre className="bg-green-50 dark:bg-green-900/10 rounded-lg p-2 text-[10px] overflow-x-auto max-h-40">{JSON.stringify(selectedLog.newValues, null, 2)}</pre>
-                    </div>
-                  )}
-                </div>
-              </details>
             )}
           </div>
-        </Overlay>
+        </div>
+      )}
+
+      {selectedLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setSelectedLog(null)} />
+          <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h3 className="text-[16px]">Chi tiet nhat ky</h3>
+              <button onClick={() => setSelectedLog(null)} className="p-1 rounded hover:bg-accent"><X size={18} /></button>
+            </div>
+            <div className="p-4 space-y-3 text-[13px]">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Thoi gian', value: new Date(selectedLog.createdAt).toLocaleString('vi-VN') },
+                  { label: 'Actor', value: selectedLog.actor?.fullName ?? 'System' },
+                  { label: 'Hanh dong', value: selectedLog.actionType },
+                  { label: 'Entity', value: selectedLog.entityType },
+                  { label: 'Entity ID', value: selectedLog.entityId ?? '—' },
+                  { label: 'IP', value: selectedLog.ipAddress ?? '—' },
+                ].map(f => (
+                  <div key={f.label}>
+                    <div className="text-[11px] text-muted-foreground">{f.label}</div>
+                    <div>{f.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="text-[11px] text-muted-foreground mb-1">Mo ta</div>
+                <div className="bg-muted/30 rounded-lg p-3 text-[12px]">{selectedLog.description}</div>
+              </div>
+            </div>
+            <div className="flex justify-end p-4 border-t border-border">
+              <button onClick={() => setSelectedLog(null)} className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent">Dong</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-
-// ─── Shared Components ──────────────────────────────────────
-function Overlay({ children, onClose, narrow }: { children: React.ReactNode; onClose: () => void; narrow?: boolean }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className={`relative bg-card border border-border rounded-2xl shadow-xl w-full ${narrow ? 'max-w-sm' : 'max-w-2xl'} max-h-[90vh] overflow-y-auto`}>{children}</div>
-    </div>
-  );
-}
-
-function DlgHeader({ title, onClose }: { title: string; onClose: () => void }) {
-  return (
-    <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-      <h3 className="text-[16px]">{title}</h3>
-      <button onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={18} /></button>
-    </div>
-  );
-}
-
-function InfoBox({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-muted/50 rounded-lg p-3">
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className="text-[13px] mt-0.5 break-words">{value}</div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SYSTEM CONFIG PAGE (ADMIN ONLY)
-// ═══════════════════════════════════════════════════════════════
-
-const CONFIG_LABELS: Record<string, string> = {
-  company_name: 'Tên công ty',
-  company_address: 'Địa chỉ công ty',
-  default_timezone: 'Múi giờ mặc định',
-  work_hours_per_day: 'Giờ làm việc/ngày',
-  work_days_per_week: 'Ngày làm việc/tuần',
-  default_annual_leave_days: 'Ngày phép năm mặc định',
-  max_failed_login_attempts: 'Lần đăng nhập sai tối đa',
-  session_timeout_minutes: 'Hết hạn session (phút)',
-  late_tolerance_minutes: 'Phút trễ chấp nhận',
-  payslip_visible_days_before_payday: 'Xem payslip trước (ngày)',
-};
-
-const TIMEZONE_OPTIONS = [
-  'Asia/Ho_Chi_Minh', 'Asia/Bangkok', 'Asia/Singapore', 'Asia/Tokyo',
-  'Asia/Seoul', 'Asia/Shanghai', 'UTC', 'Europe/London', 'America/New_York',
-];
-
-interface ConfigGroup {
-  title: string;
-  icon: React.ReactNode;
-  keys: string[];
-}
-
-const CONFIG_GROUPS: ConfigGroup[] = [
-  { title: 'Thông tin công ty', icon: <Building2 size={18} />, keys: ['company_name', 'company_address'] },
-  { title: 'Thời gian & Lịch làm việc', icon: <Clock size={18} />, keys: ['default_timezone', 'work_hours_per_day', 'work_days_per_week', 'late_tolerance_minutes'] },
-  { title: 'Chính sách nhân sự', icon: <Users size={18} />, keys: ['default_annual_leave_days', 'payslip_visible_days_before_payday'] },
-  { title: 'Bảo mật', icon: <Shield size={18} />, keys: ['max_failed_login_attempts', 'session_timeout_minutes'] },
-];
-
-const NUMBER_CONFIGS: Record<string, { min: number; max: number }> = {
-  work_hours_per_day: { min: 1, max: 24 },
-  work_days_per_week: { min: 1, max: 7 },
-  default_annual_leave_days: { min: 0, max: 365 },
-  max_failed_login_attempts: { min: 1, max: 20 },
-  session_timeout_minutes: { min: 5, max: 1440 },
-  late_tolerance_minutes: { min: 0, max: 60 },
-  payslip_visible_days_before_payday: { min: 0, max: 30 },
-};
 
 export function SystemConfigPage() {
   const { addAuditLog } = useEmployeeData();

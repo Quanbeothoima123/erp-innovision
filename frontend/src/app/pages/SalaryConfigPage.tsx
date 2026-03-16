@@ -523,11 +523,6 @@ function CompensationFormDialog({
       standardWorkingDays: form.standardWorkingDays
         ? parseInt(form.standardWorkingDays)
         : null,
-      standardWorkingHours: null, // ← thêm
-      currency: "VND", // ← thêm
-      payFrequency: "MONTHLY", // ← thêm
-      payDayOfMonth: null, // ← thêm
-      probationEndDate: null, // ← thêm
       effectiveFrom: form.effectiveFrom,
       effectiveTo: form.effectiveTo || null,
       changeReason: form.changeReason || null,
