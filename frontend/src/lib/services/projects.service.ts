@@ -218,8 +218,9 @@ export async function listProjects(
   });
 }
 
-export async function getMyProjects(): Promise<ApiProject[]> {
-  return api.get<ApiProject[]>("/projects/my");
+/** Backend trả về ApiAssignment[] (assignments của user), không phải ApiProject[] */
+export async function getMyProjects(): Promise<ApiAssignment[]> {
+  return api.get<ApiAssignment[]>("/projects/my");
 }
 
 export async function createProject(payload: {
@@ -340,13 +341,20 @@ export async function endAssignment(
 
 // ─── Milestones ────────────────────────────────────────────────
 
+/** Backend dùng paginatedResponse → trả { items, pagination }
+ *  Ta extract .items ngay trong service để consumer nhận ApiMilestone[] */
 export async function getMilestones(
   id: string,
   params?: { status?: MilestoneStatus; overdueOnly?: boolean },
 ): Promise<ApiMilestone[]> {
-  return api.get<ApiMilestone[]>(`/projects/${id}/milestones`, {
-    params: params as Record<string, string>,
-  });
+  const res = await api.get<Paginated<ApiMilestone> | ApiMilestone[]>(
+    `/projects/${id}/milestones`,
+    {
+      params: params as Record<string, string>,
+    },
+  );
+  // Nếu backend trả paginated thì lấy .items, nếu trả array thì dùng thẳng
+  return Array.isArray(res) ? res : (res as Paginated<ApiMilestone>).items;
 }
 
 export async function createMilestone(
