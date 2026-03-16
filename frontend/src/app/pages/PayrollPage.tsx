@@ -1,378 +1,433 @@
-import { useState, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
+// ================================================================
+// PAYROLL PAGE — Module 7 (Full API integration)
+// Replaces all mockData with real API via payroll.service
+// ================================================================
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
-  payrollPeriods as initialPeriods, payrollAdjustments as initialAdjustments,
-  insurancePolicies as initialInsurance, taxPolicies as initialTax,
-  userCompensations, userSalaryComponents, overtimeRequests,
-  attendanceRecords, users,
-  getUserById, getDepartmentById, formatFullVND, formatVND,
-  getNextPayDate, getActiveCompensation, payFrequencyLabels, getPayDayLabel,
-} from '../data/mockData';
+  DollarSign,
+  Download,
+  X,
+  Check,
+  Plus,
+  Search,
+  Loader2,
+  Clock,
+  TrendingUp,
+  ArrowRight,
+  Edit3,
+  Shield,
+  Users,
+  Calculator,
+  Receipt,
+  Wallet,
+  Eye,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  RefreshCw,
+  Ban,
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import * as payrollService from "../../lib/services/payroll.service";
 import type {
-  PayrollPeriod, PayrollRecord, PayrollRecordItem, PayrollPeriodStatus,
-  PayrollAdjustment, PayrollAdjustmentType,
-  InsurancePolicy, TaxPolicy, TaxBracket,
-} from '../data/mockData';
-import {
-  DollarSign, Download, X, Check, Plus, Search, Loader2,
-  Clock, TrendingUp, ArrowRight, Edit3,
-  Shield, Users, Calculator, Receipt, Wallet, Eye,
-  ChevronDown, ChevronUp, Info,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
-} from 'recharts';
+  ApiPayrollPeriod,
+  ApiPayrollRecord,
+  ApiAdjustment,
+  ApiCompensation,
+  PeriodStatus,
+  AdjustmentType,
+  AdjustmentStatus,
+} from "../../lib/services/payroll.service";
+import { ApiError } from "../../lib/apiClient";
 
-// ═══════════════════════════════════════════════════════════════
-// Shared constants
-// ═══════════════════════════════════════════════════════════════
-const periodStatusColors: Record<PayrollPeriodStatus, string> = {
-  DRAFT: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
-  CALCULATING: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  APPROVED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  PAID: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  CANCELLED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+// ─── Helpers ──────────────────────────────────────────────────────
+const fmtVND = (n: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(n);
+const fmtVNDShort = (n: number) => {
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}tỷ`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(0)}tr`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(0)}k`;
+  return `${n}`;
+};
+const fmtDate = (d: string | null) =>
+  d ? new Date(d).toLocaleDateString("vi-VN") : "—";
+
+// ─── Constants ────────────────────────────────────────────────────
+const periodStatusColors: Record<PeriodStatus, string> = {
+  DRAFT: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
+  CALCULATING:
+    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  APPROVED:
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  CANCELLED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 const periodStatusLabels: Record<string, string> = {
-  DRAFT: 'Bản nháp', CALCULATING: 'Đang tính', APPROVED: 'Đã duyệt', PAID: 'Đã chi trả', CANCELLED: 'Đã huỷ',
+  DRAFT: "Bản nháp",
+  CALCULATING: "Đang tính",
+  APPROVED: "Đã duyệt",
+  PAID: "Đã chi trả",
+  CANCELLED: "Đã huỷ",
 };
-const adjustTypeLabels: Record<PayrollAdjustmentType, string> = { BONUS: 'Thưởng', DEDUCTION: 'Khấu trừ', ADVANCE: 'Tạm ứng' };
-const adjustTypeColors: Record<PayrollAdjustmentType, string> = {
-  BONUS: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  DEDUCTION: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  ADVANCE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+const adjustTypeLabels: Record<AdjustmentType, string> = {
+  BONUS: "Thưởng",
+  DEDUCTION: "Khấu trừ",
+  ADVANCE: "Tạm ứng",
+  REIMBURSEMENT: "Hoàn tiền",
 };
-const adjustStatusLabels: Record<string, string> = { PENDING: 'Chờ duyệt', APPROVED: 'Đã duyệt', REJECTED: 'Từ chối', APPLIED: 'Đã áp dụng' };
+const adjustTypeColors: Record<AdjustmentType, string> = {
+  BONUS: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  DEDUCTION: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  ADVANCE: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  REIMBURSEMENT:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
+};
+const adjustStatusLabels: Record<string, string> = {
+  PENDING: "Chờ duyệt",
+  APPROVED: "Đã duyệt",
+  REJECTED: "Từ chối",
+  APPLIED: "Đã áp dụng",
+};
 const adjustStatusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  APPROVED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  APPLIED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  PENDING:
+    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+  APPROVED:
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  REJECTED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  APPLIED:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
 };
-const PIE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const PIE_COLORS = [
+  "#22c55e",
+  "#3b82f6",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#06b6d4",
+];
 
-// ═══════════════════════════════════════════════════════════════
-// calcPayroll helper (matches mockData logic)
-// ═══════════════════════════════════════════════════════════════
-const calcPayroll = (base: number, allowances: number, workDays: number, daysInPeriod: number, otMinutes: number, bonus: number) => {
-  const earnedBase = (base / daysInPeriod) * workDays;
-  const hourlyRate = base / daysInPeriod / 8;
-  const otPay = (otMinutes / 60) * 1.5 * hourlyRate;
-  const gross = earnedBase + allowances + otPay + bonus;
-  const insBase = Math.min(base, 36000000);
-  const bhxh = insBase * 0.08;
-  const bhyt = insBase * 0.015;
-  const bhtn = insBase * 0.01;
-  const taxableIncome = gross - bhxh - bhyt - bhtn - 11000000;
-  let tax = 0;
-  if (taxableIncome > 0) {
-    if (taxableIncome <= 5000000) tax = taxableIncome * 0.05;
-    else if (taxableIncome <= 10000000) tax = 250000 + (taxableIncome - 5000000) * 0.1;
-    else if (taxableIncome <= 18000000) tax = 750000 + (taxableIncome - 10000000) * 0.15;
-    else if (taxableIncome <= 32000000) tax = 1950000 + (taxableIncome - 18000000) * 0.2;
-    else if (taxableIncome <= 52000000) tax = 4750000 + (taxableIncome - 32000000) * 0.25;
-    else if (taxableIncome <= 80000000) tax = 9750000 + (taxableIncome - 52000000) * 0.3;
-    else tax = 18150000 + (taxableIncome - 80000000) * 0.35;
-  }
-  const totalDeductions = bhxh + bhyt + bhtn + (tax > 0 ? tax : 0);
-  const net = gross - totalDeductions;
-  return { earnedBase, grossSalary: gross, totalAllowances: allowances, totalBonus: bonus, totalOvertimePay: otPay, socialInsuranceEmployee: bhxh, healthInsuranceEmployee: bhyt, unemploymentInsuranceEmployee: bhtn, personalIncomeTax: tax > 0 ? tax : 0, totalDeductions, netSalary: net };
-};
-
-// Get latest baseSalary for a user
-const getBaseSalary = (userId: string): number => {
-  const comps = userCompensations.filter(c => c.userId === userId).sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
-  return comps.length > 0 ? comps[0].baseSalary : 15000000;
-};
-
-// Get user's allowances total
-const getAllowancesTotal = (userId: string): number => {
-  return userSalaryComponents.filter(c => c.userId === userId && c.isActive).reduce((s, c) => s + c.amount, 0);
-};
-
-// Get user's OT minutes for a month
-const getOTMinutes = (userId: string, month: number, year: number): number => {
-  return overtimeRequests
-    .filter(r => r.userId === userId && r.status === 'APPROVED')
-    .filter(r => {
-      const d = new Date(r.workDate);
-      return d.getMonth() + 1 === month && d.getFullYear() === year;
-    })
-    .reduce((s, r) => s + (r.actualMinutes || r.plannedMinutes), 0);
-};
-
-// Get user's working days for a month (from attendance)
-const getWorkingDays = (userId: string, month: number, year: number): number => {
-  const recs = attendanceRecords.filter(r => r.userId === userId && r.status === 'APPROVED');
-  const days = new Set(recs.filter(r => {
-    const d = new Date(r.date);
-    return d.getMonth() + 1 === month && d.getFullYear() === year;
-  }).map(r => r.date));
-  return days.size || 22; // fallback to 22
-};
-
-// ═══════════════════════════════════════════════════════════════
-// 1. PayrollPage — Kỳ lương (main)
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 1. PayrollPage — HR/Admin kỳ lương
+// ═══════════════════════════════════════════════════════════════════
 export function PayrollPage() {
   const { currentUser, can } = useAuth();
-  const [periods, setPeriods] = useState<PayrollPeriod[]>(initialPeriods);
-  const [selectedPeriod, setSelectedPeriod] = useState<PayrollPeriod | null>(null);
-  const [selectedPayslip, setSelectedPayslip] = useState<PayrollRecord | null>(null);
-  const [showCreatePeriod, setShowCreatePeriod] = useState(false);
+  const isAdminHR = can("ADMIN", "HR");
+  const canManage = isAdminHR || can("ACCOUNTANT");
 
-  const isAdminHR = can('ADMIN', 'HR');
-  const isAccountant = can('ACCOUNTANT');
-  const canManage = isAdminHR || isAccountant;
-
-  // Employee view: personal payslips
+  // Employee view
   if (!canManage) {
-    return <EmployeePayslipView userId={currentUser!.id} periods={periods} />;
+    return <EmployeePayslipView />;
   }
+  return <HRPayrollView />;
+}
 
-  // Summary for charts
-  const chartData = periods.filter(p => p.records.length > 0).map((p, idx) => ({
-    id: `chart-${p.id}`,
-    name: `T${p.month}/${p.year}${periods.filter(pp => pp.month === p.month && pp.year === p.year && pp.records.length > 0).length > 1 ? ` (${p.periodCode})` : ''}`,
-    gross: p.records.reduce((s, r) => s + r.grossSalary, 0),
-    net: p.records.reduce((s, r) => s + r.netSalary, 0),
-    deductions: p.records.reduce((s, r) => s + r.totalDeductions, 0),
-    ot: p.records.reduce((s, r) => s + r.totalOvertimePay, 0),
-  }));
+// ─── HR/Admin view ─────────────────────────────────────────────────
+function HRPayrollView() {
+  const { can } = useAuth();
+  const isAdmin = can("ADMIN");
 
-  // Total stats from latest paid period
-  const latestPaid = periods.find(p => p.status === 'PAID' && p.records.length > 0);
-  const stats = latestPaid ? {
-    totalGross: latestPaid.records.reduce((s, r) => s + r.grossSalary, 0),
-    totalNet: latestPaid.records.reduce((s, r) => s + r.netSalary, 0),
-    totalDeductions: latestPaid.records.reduce((s, r) => s + r.totalDeductions, 0),
-    totalOT: latestPaid.records.reduce((s, r) => s + r.totalOvertimePay, 0),
-    totalBonus: latestPaid.records.reduce((s, r) => s + r.totalBonus, 0),
-    employees: latestPaid.records.length,
-  } : null;
+  const [periods, setPeriods] = useState<ApiPayrollPeriod[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<ApiPayrollPeriod | null>(
+    null,
+  );
+  const [showCreate, setShowCreate] = useState(false);
 
-  const handleCreatePeriod = (month: number, year: number, workingDays: number) => {
-    const exists = periods.find(p => p.month === month && p.year === year);
-    if (exists) { toast.error('Kỳ lương đã tồn tại'); return; }
-    const newPeriod: PayrollPeriod = {
-      id: `pp-new-${Date.now()}`,
-      periodCode: `${year}-${String(month).padStart(2, '0')}`,
-      month, year,
-      status: 'DRAFT',
-      workingDaysInPeriod: workingDays,
-      records: [],
-    };
-    setPeriods(prev => [...prev, newPeriod].sort((a, b) => a.periodCode.localeCompare(b.periodCode)));
-    setShowCreatePeriod(false);
-    toast.success(`Đã tạo kỳ lương T${month}/${year}`);
-  };
-
-  const handleCalculate = (periodId: string) => {
-    setPeriods(prev => prev.map(p => {
-      if (p.id !== periodId) return p;
-      // Generate payroll records for active employees
-      const activeUsers = users.filter(u => u.employmentStatus === 'ACTIVE' && u.roles.some(r => ['EMPLOYEE', 'MANAGER', 'HR'].includes(r)));
-      const records: PayrollRecord[] = activeUsers.map((u, i) => {
-        const base = getBaseSalary(u.id);
-        const allowances = getAllowancesTotal(u.id);
-        const otMin = getOTMinutes(u.id, p.month, p.year);
-        const workDays = getWorkingDays(u.id, p.month, p.year);
-        const bonus = initialAdjustments
-          .filter(a => a.userId === u.id && a.type === 'BONUS' && (a.periodId === p.id || !a.periodId) && (a.status === 'APPROVED' || a.status === 'APPLIED'))
-          .reduce((s, a) => s + a.amount, 0);
-        const deductAdj = initialAdjustments
-          .filter(a => a.userId === u.id && a.type === 'DEDUCTION' && (a.periodId === p.id || !a.periodId) && (a.status === 'APPROVED' || a.status === 'APPLIED'))
-          .reduce((s, a) => s + a.amount, 0);
-
-        const calc = calcPayroll(base, allowances, workDays, p.workingDaysInPeriod, otMin, bonus);
-
-        const items: PayrollRecordItem[] = [
-          { itemName: 'Lương cơ bản', itemType: 'EARNING', sourceType: 'BASE', amount: calc.earnedBase },
-          { itemName: 'Tổng phụ cấp', itemType: 'EARNING', sourceType: 'ALLOWANCE', amount: allowances },
-        ];
-        if (calc.totalOvertimePay > 0) items.push({ itemName: 'Lương làm thêm giờ', itemType: 'EARNING', sourceType: 'OVERTIME', amount: calc.totalOvertimePay });
-        if (bonus > 0) items.push({ itemName: 'Thưởng', itemType: 'EARNING', sourceType: 'BONUS', amount: bonus });
-        items.push({ itemName: 'BHXH (8%)', itemType: 'DEDUCTION', sourceType: 'INSURANCE', amount: calc.socialInsuranceEmployee });
-        items.push({ itemName: 'BHYT (1.5%)', itemType: 'DEDUCTION', sourceType: 'INSURANCE', amount: calc.healthInsuranceEmployee });
-        items.push({ itemName: 'BHTN (1%)', itemType: 'DEDUCTION', sourceType: 'INSURANCE', amount: calc.unemploymentInsuranceEmployee });
-        if (calc.personalIncomeTax > 0) items.push({ itemName: 'Thuế TNCN', itemType: 'DEDUCTION', sourceType: 'TAX', amount: calc.personalIncomeTax });
-        if (deductAdj > 0) items.push({ itemName: 'Khấu trừ điều chỉnh', itemType: 'DEDUCTION', sourceType: 'ADJUSTMENT', amount: deductAdj });
-
-        const finalNet = calc.netSalary - deductAdj;
-
-        return {
-          id: `pr-calc-${i}-${Date.now()}`,
-          payrollPeriodId: p.id,
-          userId: u.id,
-          baseSalary: base,
-          workingDays: workDays,
-          grossSalary: calc.grossSalary,
-          totalAllowances: allowances,
-          totalBonus: bonus,
-          totalOvertimePay: calc.totalOvertimePay,
-          socialInsuranceEmployee: calc.socialInsuranceEmployee,
-          healthInsuranceEmployee: calc.healthInsuranceEmployee,
-          unemploymentInsuranceEmployee: calc.unemploymentInsuranceEmployee,
-          personalIncomeTax: calc.personalIncomeTax,
-          totalDeductions: calc.totalDeductions + deductAdj,
-          netSalary: finalNet,
-          status: 'CALCULATED',
-          items,
-        };
+  const fetchPeriods = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await payrollService.listPeriods({
+        limit: 50,
+        sortOrder: "desc",
       });
+      setPeriods(res.items);
+    } catch (err) {
+      if (err instanceof ApiError) toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      return { ...p, status: 'CALCULATING' as const, records };
+  useEffect(() => {
+    fetchPeriods();
+  }, [fetchPeriods]);
+
+  const handleCreate = async (payload: {
+    month: number;
+    year: number;
+    startDate: string;
+    endDate: string;
+    workingDaysInPeriod: number;
+  }) => {
+    try {
+      await payrollService.createPeriod(payload);
+      toast.success(`Đã tạo kỳ lương T${payload.month}/${payload.year}`);
+      setShowCreate(false);
+      fetchPeriods();
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Không thể tạo kỳ lương",
+      );
+    }
+  };
+
+  const handleCalculate = async (id: string) => {
+    try {
+      toast.info("Đang tính lương...");
+      await payrollService.calculatePeriod(id);
+      toast.success("Tính lương hoàn tất");
+      fetchPeriods();
+      // Refresh selected period if open
+      setSelectedPeriod((prev) => (prev?.id === id ? null : prev));
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi tính lương");
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      await payrollService.approvePeriod(id);
+      toast.success("Đã duyệt kỳ lương");
+      fetchPeriods();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Không thể duyệt");
+    }
+  };
+
+  const handleMarkPaid = async (id: string) => {
+    try {
+      await payrollService.markPeriodPaid(id);
+      toast.success("Đã đánh dấu chi trả thành công");
+      fetchPeriods();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Không thể cập nhật");
+    }
+  };
+
+  const handleCancel = async (id: string) => {
+    if (!isAdmin) {
+      toast.error("Chỉ Admin mới có thể huỷ kỳ lương");
+      return;
+    }
+    try {
+      await payrollService.cancelPeriod(id);
+      toast.success("Đã huỷ kỳ lương");
+      fetchPeriods();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Không thể huỷ");
+    }
+  };
+
+  // Chart data from periods that have records
+  const chartData = [...periods]
+    .filter((p) => p.recordCount > 0)
+    .reverse()
+    .slice(-6)
+    .map((p) => ({
+      name: `T${p.month}/${String(p.year).slice(-2)}`,
+      count: p.recordCount,
     }));
-    // Simulate calc time
-    setTimeout(() => {
-      setPeriods(prev => prev.map(p => p.id === periodId ? { ...p, status: 'APPROVED' as const } : p));
-      toast.success('Tính lương hoàn tất — đã chuyển sang trạng thái Đã duyệt');
-    }, 1500);
-    toast.info('Đang tính lương...');
-  };
-
-  const handleApprove = (periodId: string) => {
-    setPeriods(prev => prev.map(p => p.id === periodId ? { ...p, status: 'APPROVED' as const } : p));
-    toast.success('Đã duyệt kỳ lương');
-  };
-
-  const handlePay = (periodId: string) => {
-    setPeriods(prev => prev.map(p => p.id === periodId ? {
-      ...p,
-      status: 'PAID' as const,
-      records: p.records.map(r => ({ ...r, status: 'PAID' })),
-    } : p));
-    toast.success('Đã đánh dấu chi trả thành công');
-  };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-[20px]">Quản lý kỳ lương</h1>
-        <button onClick={() => setShowCreatePeriod(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700">
-          <Plus size={16} /> Tạo kỳ lương
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={fetchPeriods}
+            className="px-3 py-2 border border-border rounded-lg text-[13px] hover:bg-accent flex items-center gap-1"
+          >
+            <RefreshCw size={14} /> Làm mới
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+          >
+            <Plus size={16} /> Tạo kỳ lương
+          </button>
+        </div>
       </div>
 
-      {/* Summary stats from latest paid */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-          {[
-            { label: 'Tổng Gross', value: formatVND(stats.totalGross), color: 'text-foreground', icon: <Calculator size={12} /> },
-            { label: 'Tổng NET', value: formatVND(stats.totalNet), color: 'text-green-600', icon: <Wallet size={12} /> },
-            { label: 'Tổng khấu trừ', value: formatVND(stats.totalDeductions), color: 'text-red-500', icon: <Shield size={12} /> },
-            { label: 'Tổng OT', value: formatVND(stats.totalOT), color: 'text-blue-600', icon: <Clock size={12} /> },
-            { label: 'Tổng thưởng', value: formatVND(stats.totalBonus), color: 'text-amber-600', icon: <TrendingUp size={12} /> },
-            { label: 'Nhân viên', value: stats.employees.toString(), color: 'text-foreground', icon: <Users size={12} /> },
-          ].map(s => (
-            <div key={s.label} className="bg-card border border-border rounded-xl p-3">
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">{s.icon} {s.label}</div>
-              <div className={`text-[16px] mt-0.5 ${s.color}`}>{s.value}</div>
-              <div className="text-[9px] text-muted-foreground">Kỳ {latestPaid?.periodCode}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Flow guide */}
+      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2 text-[12px] text-blue-700 dark:text-blue-400">
+        <Info size={14} className="shrink-0" />
+        <span>
+          Quy trình: <strong>Bản nháp</strong> → <strong>Tính lương</strong> →{" "}
+          <strong>Duyệt</strong> → <strong>Đánh dấu chi trả</strong>
+        </span>
+      </div>
 
-      {/* Chart */}
-      {chartData.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[13px] text-muted-foreground mb-3">Biểu đồ chi phí lương theo kỳ</div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={chartData} barCategoryGap="20%">
-              <CartesianGrid key="grid" strokeDasharray="3 3" stroke="var(--color-border)" />
-              <XAxis key="xaxis" dataKey="name" fontSize={11} tick={{ fill: 'var(--color-muted-foreground)' }} />
-              <YAxis key="yaxis" fontSize={11} tick={{ fill: 'var(--color-muted-foreground)' }} tickFormatter={v => formatVND(v)} />
-              <Tooltip key="tooltip" formatter={(value: number) => formatFullVND(value)} contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-card)' }} />
-              <Bar key="bar-gross" dataKey="gross" name="Gross" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              <Bar key="bar-net" dataKey="net" name="NET" fill="#22c55e" radius={[4, 4, 0, 0]} />
-              <Bar key="bar-deductions" dataKey="deductions" name="Khấu trừ" fill="#ef4444" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      {loading ? (
+        <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+          <Loader2 size={20} className="animate-spin" />{" "}
+          <span className="text-[13px]">Đang tải...</span>
         </div>
-      )}
-
-      {/* Period Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {periods.map(p => {
-          const totalNet = p.records.reduce((s, r) => s + r.netSalary, 0);
-          const totalGross = p.records.reduce((s, r) => s + r.grossSalary, 0);
-          return (
-            <div key={p.id} onClick={() => setSelectedPeriod(p)} className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[16px]">T{p.month}/{p.year}</span>
-                <span className={`text-[11px] px-2 py-0.5 rounded-full ${periodStatusColors[p.status]}`}>
-                  {p.status === 'CALCULATING' && <Loader2 size={10} className="inline mr-1 animate-spin" />}
-                  {periodStatusLabels[p.status]}
-                </span>
+      ) : (
+        <>
+          {/* Chart */}
+          {chartData.length > 0 && (
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="text-[13px] text-muted-foreground mb-3">
+                Số nhân viên theo kỳ lương
               </div>
-              <div className="text-[12px] text-muted-foreground">{p.records.length} nhân viên • {p.workingDaysInPeriod} ngày</div>
-              {p.records.length > 0 && (
-                <div className="mt-2 flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] text-muted-foreground">Gross</div>
-                    <div className="text-[14px]">{formatVND(totalGross)}</div>
-                  </div>
-                  <ArrowRight size={14} className="text-muted-foreground" />
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground">NET</div>
-                    <div className="text-[14px] text-green-600">{formatVND(totalNet)}</div>
-                  </div>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={chartData} barCategoryGap="30%">
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border)"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    fontSize={11}
+                    tick={{ fill: "var(--color-muted-foreground)" }}
+                  />
+                  <YAxis
+                    fontSize={11}
+                    tick={{ fill: "var(--color-muted-foreground)" }}
+                    allowDecimals={false}
+                  />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                  <Bar
+                    dataKey="count"
+                    name="Nhân viên"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Period cards */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {periods.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => setSelectedPeriod(p)}
+                className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[16px]">
+                    T{p.month}/{p.year}
+                  </span>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full ${periodStatusColors[p.status]}`}
+                  >
+                    {p.status === "CALCULATING" && (
+                      <Loader2 size={10} className="inline mr-1 animate-spin" />
+                    )}
+                    {periodStatusLabels[p.status]}
+                  </span>
                 </div>
-              )}
-              {/* Status progress bar */}
-              <div className="mt-3 flex gap-1">
-                {['DRAFT', 'CALCULATING', 'APPROVED', 'PAID'].map((s, i) => (
-                  <div key={s} className={`flex-1 h-1 rounded ${['DRAFT', 'CALCULATING', 'APPROVED', 'PAID'].indexOf(p.status) >= i ? 'bg-blue-500' : 'bg-border'}`} />
-                ))}
+                <div className="text-[12px] text-muted-foreground">
+                  {p.recordCount} nhân viên • {p.workingDaysInPeriod ?? "—"}{" "}
+                  ngày • {p.periodCode}
+                </div>
+                {p.payDate && (
+                  <div className="text-[11px] text-muted-foreground mt-1">
+                    Ngày trả: {fmtDate(p.payDate)}
+                  </div>
+                )}
+                {/* Progress bar */}
+                <div className="mt-3 flex gap-1">
+                  {(["DRAFT", "CALCULATING", "APPROVED", "PAID"] as const).map(
+                    (s, i) => (
+                      <div
+                        key={s}
+                        className={`flex-1 h-1 rounded ${["DRAFT", "CALCULATING", "APPROVED", "PAID"].indexOf(p.status) >= i ? "bg-blue-500" : "bg-border"}`}
+                      />
+                    ),
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            ))}
+            {periods.length === 0 && (
+              <div className="col-span-3 text-center py-12 text-muted-foreground">
+                <Receipt size={40} className="mx-auto mb-2 opacity-30" />
+                <div className="text-[14px]">Chưa có kỳ lương nào</div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
-      {/* Period Detail Modal */}
-      {selectedPeriod && !selectedPayslip && (
+      {/* Period detail modal */}
+      {selectedPeriod && (
         <PeriodDetailModal
-          period={periods.find(p => p.id === selectedPeriod.id) || selectedPeriod}
+          period={selectedPeriod}
           onClose={() => setSelectedPeriod(null)}
           onCalculate={handleCalculate}
           onApprove={handleApprove}
-          onPay={handlePay}
-          onViewPayslip={setSelectedPayslip}
+          onMarkPaid={handleMarkPaid}
+          onCancel={handleCancel}
         />
       )}
 
-      {/* Payslip Modal */}
-      {selectedPayslip && <PayslipDialog record={selectedPayslip} onClose={() => setSelectedPayslip(null)} />}
-
-      {/* Create Period Dialog */}
-      {showCreatePeriod && <CreatePeriodDialog onClose={() => setShowCreatePeriod(false)} onCreate={handleCreatePeriod} />}
+      {/* Create period dialog */}
+      {showCreate && (
+        <CreatePeriodDialog
+          onClose={() => setShowCreate(false)}
+          onCreate={handleCreate}
+        />
+      )}
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 // Employee Payslip View
-// ═══════════════════════════════════════════════════════════════
-function EmployeePayslipView({ userId, periods }: { userId: string; periods: PayrollPeriod[] }) {
-  const [selectedPayslip, setSelectedPayslip] = useState<PayrollRecord | null>(null);
+// ═══════════════════════════════════════════════════════════════════
+function EmployeePayslipView() {
+  const [records, setRecords] = useState<ApiPayrollRecord[]>([]);
+  const [compensation, setCompensation] = useState<ApiCompensation | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<ApiPayrollRecord | null>(
+    null,
+  );
 
-  const myRecords = periods.flatMap(p =>
-    p.records.filter(r => r.userId === userId).map(r => ({ ...r, period: p }))
-  ).sort((a, b) => b.period.periodCode.localeCompare(a.period.periodCode));
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [recs, comp] = await Promise.all([
+          payrollService.listRecords({ limit: 24 }),
+          payrollService.getMyCompensation().catch(() => null),
+        ]);
+        setRecords(recs.items);
+        setCompensation(comp);
+      } catch (err) {
+        if (err instanceof ApiError) toast.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  // Stats
-  const latestBase = getBaseSalary(userId);
-  const activeComp = getActiveCompensation(userId);
-  const nextPayDate = getNextPayDate(userId);
-  const user = getUserById(userId);
-  const isProbation = user?.employmentStatus === 'PROBATION';
-
-  // Find next DRAFT/CALCULATING period
-  const nextPeriod = periods.find(p => p.status === 'DRAFT' || p.status === 'CALCULATING');
+  const sorted = [...records].sort((a, b) =>
+    (b.payrollPeriod?.periodCode ?? "").localeCompare(
+      a.payrollPeriod?.periodCode ?? "",
+    ),
+  );
 
   return (
     <div className="space-y-4">
@@ -381,261 +436,527 @@ function EmployeePayslipView({ userId, periods }: { userId: string; periods: Pay
       {/* My salary summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><DollarSign size={12} /> Lương cơ bản</div>
-          <div className="text-[18px] mt-1">{formatVND(latestBase)}</div>
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <DollarSign size={12} /> Lương cơ bản
+          </div>
+          <div className="text-[18px] mt-1">
+            {compensation ? fmtVND(compensation.baseSalary) : "—"}
+          </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><Wallet size={12} /> Phụ cấp</div>
-          <div className="text-[18px] mt-1">{formatVND(getAllowancesTotal(userId))}</div>
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Clock size={12} /> Ngày nhận lương
+          </div>
+          <div className="text-[18px] mt-1">
+            {compensation?.payDayOfMonth
+              ? `Ngày ${compensation.payDayOfMonth}`
+              : "Theo lịch"}
+          </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><Clock size={12} /> Ngày nhận lương</div>
-          <div className="text-[18px] mt-1">{nextPayDate ? new Date(nextPayDate).toLocaleDateString('vi-VN') : 'Theo lịch công ty'}</div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">{activeComp ? getPayDayLabel(activeComp) : ''}</div>
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Shield size={12} /> Loại lương
+          </div>
+          <div className="text-[18px] mt-1">
+            {compensation?.salaryType === "MONTHLY"
+              ? "Tháng"
+              : (compensation?.salaryType ?? "—")}
+          </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground"><Receipt size={12} /> Kỳ lương tiếp theo</div>
-          {nextPeriod ? (
-            <>
-              <div className="text-[18px] mt-1">T{nextPeriod.month}/{nextPeriod.year}</div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${periodStatusColors[nextPeriod.status]}`}>{periodStatusLabels[nextPeriod.status]}</span>
-            </>
-          ) : (
-            <div className="text-[14px] mt-1 text-muted-foreground">Chưa mở kỳ</div>
-          )}
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Receipt size={12} /> Tổng phiếu
+          </div>
+          <div className="text-[18px] mt-1">{records.length}</div>
         </div>
       </div>
 
-      {/* Current salary info section */}
-      {activeComp && (
+      {/* Compensation info */}
+      {compensation && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[12px] text-muted-foreground mb-2">Thông tin lương hiện tại</div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px]">
-            <span>Lương CB: <strong>{formatFullVND(activeComp.baseSalary)}</strong></span>
-            <span>Chu kỳ: <strong>{payFrequencyLabels[activeComp.payFrequency]}</strong> • Ngày {activeComp.payDayOfMonth || '—'}</span>
-            <span>Hiệu lực từ: <strong>{new Date(activeComp.effectiveDate).toLocaleDateString('vi-VN')}</strong></span>
+          <div className="text-[12px] text-muted-foreground mb-2">
+            Cấu hình lương hiện tại
           </div>
-          {activeComp.changeReason && (
-            <div className="text-[12px] text-muted-foreground mt-1">Lý do: {activeComp.changeReason}</div>
-          )}
-          {isProbation && activeComp.probationSalary && (
-            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border text-[12px]">
-              <Clock size={14} className="text-yellow-500" />
-              <span className="text-yellow-700 dark:text-yellow-400">
-                Thử việc đến {activeComp.probationEndDate ? new Date(activeComp.probationEndDate).toLocaleDateString('vi-VN') : '—'} • Lương thử việc: {formatFullVND(activeComp.probationSalary)}
-              </span>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px]">
+            <span>
+              Lương CB: <strong>{fmtVND(compensation.baseSalary)}</strong>
+            </span>
+            <span>
+              Hiệu lực: <strong>{fmtDate(compensation.effectiveFrom)}</strong>
+            </span>
+            <span>
+              Hệ số OT thường:{" "}
+              <strong>×{compensation.overtimeRateWeekday}</strong>
+            </span>
+            <span>
+              Cuối tuần: <strong>×{compensation.overtimeRateWeekend}</strong>
+            </span>
+            <span>
+              Ngày lễ: <strong>×{compensation.overtimeRateHoliday}</strong>
+            </span>
+          </div>
+          {compensation.changeReason && (
+            <div className="text-[12px] text-muted-foreground mt-1">
+              Lý do: {compensation.changeReason}
             </div>
           )}
         </div>
       )}
 
-      {myRecords.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+          <Loader2 size={20} className="animate-spin" />{" "}
+          <span className="text-[13px]">Đang tải...</span>
+        </div>
+      ) : sorted.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground">
           <Receipt size={40} className="mx-auto mb-2 opacity-30" />
           <div className="text-[14px]">Chưa có phiếu lương</div>
         </div>
       ) : (
         <div className="space-y-3">
-          {myRecords.map(r => (
-            <div key={r.id} className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedPayslip(r)}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[15px]">Kỳ lương T{r.period.month}/{r.period.year}</div>
-                  <div className="text-[12px] text-muted-foreground">{r.workingDays} ngày công</div>
+          {sorted.map((r) => {
+            const p = r.payrollPeriod;
+            return (
+              <div
+                key={r.id}
+                className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedRecord(r)}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[15px]">
+                      Kỳ lương T{p?.month}/{p?.year}
+                    </div>
+                    <div className="text-[12px] text-muted-foreground">
+                      {r.workingDays ?? "—"} ngày công
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[18px] text-green-600">
+                      {fmtVND(r.netSalary)}
+                    </div>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full ${r.status === "PAID" ? periodStatusColors["PAID"] : r.status === "APPROVED" ? periodStatusColors["APPROVED"] : periodStatusColors["DRAFT"]}`}
+                    >
+                      {r.status === "PAID"
+                        ? "Đã chi trả"
+                        : r.status === "APPROVED"
+                          ? "Đã duyệt"
+                          : "Bản nháp"}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[18px] text-green-600">{formatFullVND(r.netSalary)}</div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${periodStatusColors[r.period.status]}`}>{periodStatusLabels[r.period.status]}</span>
+                <div className="mt-2 grid grid-cols-5 gap-2 text-[11px] text-muted-foreground">
+                  <div>CB: {fmtVNDShort(r.baseSalary)}</div>
+                  <div>PC: {fmtVNDShort(r.totalAllowances)}</div>
+                  <div>
+                    OT:{" "}
+                    {r.totalOvertimePay > 0
+                      ? fmtVNDShort(r.totalOvertimePay)
+                      : "—"}
+                  </div>
+                  <div>
+                    Thưởng: {r.totalBonus > 0 ? fmtVNDShort(r.totalBonus) : "—"}
+                  </div>
+                  <div className="text-red-500">
+                    -{fmtVNDShort(r.totalDeductions)}
+                  </div>
                 </div>
               </div>
-              {/* Quick breakdown */}
-              <div className="mt-2 grid grid-cols-5 gap-2 text-[11px] text-muted-foreground">
-                <div>CB: {formatVND(r.baseSalary)}</div>
-                <div>PC: {formatVND(r.totalAllowances)}</div>
-                <div>OT: {r.totalOvertimePay > 0 ? formatVND(r.totalOvertimePay) : '—'}</div>
-                <div>Thưởng: {r.totalBonus > 0 ? formatVND(r.totalBonus) : '—'}</div>
-                <div className="text-red-500">-{formatVND(r.totalDeductions)}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {selectedPayslip && <PayslipDialog record={selectedPayslip} onClose={() => setSelectedPayslip(null)} />}
+      {selectedRecord && (
+        <PayslipDialog
+          record={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      )}
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Period Detail Modal
-// ═══════════════════════════════════════════════════════════════
-function PeriodDetailModal({ period, onClose, onCalculate, onApprove, onPay, onViewPayslip }: {
-  period: PayrollPeriod;
+// ═══════════════════════════════════════════════════════════════════
+// Period Detail Modal — loads records on open
+// ═══════════════════════════════════════════════════════════════════
+function PeriodDetailModal({
+  period,
+  onClose,
+  onCalculate,
+  onApprove,
+  onMarkPaid,
+  onCancel,
+}: {
+  period: ApiPayrollPeriod;
   onClose: () => void;
   onCalculate: (id: string) => void;
   onApprove: (id: string) => void;
-  onPay: (id: string) => void;
-  onViewPayslip: (r: PayrollRecord) => void;
+  onMarkPaid: (id: string) => void;
+  onCancel: (id: string) => void;
 }) {
-  const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState<'name' | 'net' | 'gross'>('name');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const { can } = useAuth();
+  const isAdmin = can("ADMIN");
 
-  const totalGross = period.records.reduce((s, r) => s + r.grossSalary, 0);
-  const totalNet = period.records.reduce((s, r) => s + r.netSalary, 0);
-  const totalDeductions = period.records.reduce((s, r) => s + r.totalDeductions, 0);
-  const totalOT = period.records.reduce((s, r) => s + r.totalOvertimePay, 0);
-  const totalBonus = period.records.reduce((s, r) => s + r.totalBonus, 0);
+  const [records, setRecords] = useState<ApiPayrollRecord[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<"name" | "net" | "gross">("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [selectedRecord, setSelectedRecord] = useState<ApiPayrollRecord | null>(
+    null,
+  );
+  const [calculating, setCalculating] = useState(false);
+
+  useEffect(() => {
+    const fetchRecords = async () => {
+      if (period.recordCount === 0) return;
+      setLoading(true);
+      try {
+        const res = await payrollService.listRecords({
+          payrollPeriodId: period.id,
+          limit: 100,
+        });
+        setRecords(res.items);
+      } catch (err) {
+        if (err instanceof ApiError) toast.error(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecords();
+  }, [period.id, period.recordCount]);
 
   const filtered = useMemo(() => {
-    let list = period.records;
+    let list = records;
     if (search) {
       const s = search.toLowerCase();
-      list = list.filter(r => getUserById(r.userId)?.fullName.toLowerCase().includes(s));
+      list = list.filter((r) => r.user?.fullName.toLowerCase().includes(s));
     }
-    list = [...list].sort((a, b) => {
-      const ua = getUserById(a.userId), ub = getUserById(b.userId);
-      if (sortKey === 'name') return sortDir === 'asc' ? (ua?.fullName || '').localeCompare(ub?.fullName || '') : (ub?.fullName || '').localeCompare(ua?.fullName || '');
-      if (sortKey === 'net') return sortDir === 'asc' ? a.netSalary - b.netSalary : b.netSalary - a.netSalary;
-      return sortDir === 'asc' ? a.grossSalary - b.grossSalary : b.grossSalary - a.grossSalary;
+    return [...list].sort((a, b) => {
+      if (sortKey === "name") {
+        const cmp = (a.user?.fullName ?? "").localeCompare(
+          b.user?.fullName ?? "",
+        );
+        return sortDir === "asc" ? cmp : -cmp;
+      }
+      if (sortKey === "net")
+        return sortDir === "asc"
+          ? a.netSalary - b.netSalary
+          : b.netSalary - a.netSalary;
+      return sortDir === "asc"
+        ? a.grossSalary - b.grossSalary
+        : b.grossSalary - a.grossSalary;
     });
-    return list;
-  }, [period.records, search, sortKey, sortDir]);
+  }, [records, search, sortKey, sortDir]);
 
-  // Pie chart for cost distribution
+  const totals = useMemo(
+    () => ({
+      gross: records.reduce((s, r) => s + r.grossSalary, 0),
+      net: records.reduce((s, r) => s + r.netSalary, 0),
+      deductions: records.reduce((s, r) => s + r.totalDeductions, 0),
+      ot: records.reduce((s, r) => s + r.totalOvertimePay, 0),
+      bonus: records.reduce((s, r) => s + r.totalBonus, 0),
+      base: records.reduce((s, r) => s + r.baseSalary, 0),
+      allowances: records.reduce((s, r) => s + r.totalAllowances, 0),
+    }),
+    [records],
+  );
+
   const pieData = [
-    { name: 'Lương CB', value: period.records.reduce((s, r) => s + r.baseSalary, 0) },
-    { name: 'Phụ cấp', value: period.records.reduce((s, r) => s + r.totalAllowances, 0) },
-    { name: 'OT', value: totalOT },
-    { name: 'Thưởng', value: totalBonus },
-  ].filter(d => d.value > 0);
+    { name: "Lương CB", value: totals.base },
+    { name: "Phụ cấp", value: totals.allowances },
+    { name: "OT", value: totals.ot },
+    { name: "Thưởng", value: totals.bonus },
+  ].filter((d) => d.value > 0);
 
   const toggleSort = (key: typeof sortKey) => {
-    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortKey(key); setSortDir('asc'); }
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
   };
+  const SortIcon = ({ k }: { k: typeof sortKey }) =>
+    sortKey === k ? (
+      sortDir === "asc" ? (
+        <ChevronUp size={10} />
+      ) : (
+        <ChevronDown size={10} />
+      )
+    ) : null;
 
-  const SortIcon = ({ k }: { k: typeof sortKey }) => sortKey === k ? (sortDir === 'asc' ? <ChevronUp size={10} /> : <ChevronDown size={10} />) : null;
+  const handleCalculateClick = async () => {
+    setCalculating(true);
+    await onCalculate(period.id);
+    setCalculating(false);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-5xl max-h-[92vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
           <div>
-            <h2 className="text-[18px]">Kỳ lương T{period.month}/{period.year}</h2>
+            <h2 className="text-[18px]">
+              Kỳ lương T{period.month}/{period.year}
+            </h2>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className={`text-[11px] px-2 py-0.5 rounded-full ${periodStatusColors[period.status]}`}>
-                {period.status === 'CALCULATING' && <Loader2 size={10} className="inline mr-1 animate-spin" />}
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full ${periodStatusColors[period.status]}`}
+              >
                 {periodStatusLabels[period.status]}
               </span>
-              <span className="text-[11px] text-muted-foreground">{period.workingDaysInPeriod} ngày công chuẩn • {period.records.length} nhân viên</span>
+              <span className="text-[11px] text-muted-foreground">
+                {period.workingDaysInPeriod ?? "—"} ngày • {period.recordCount}{" "}
+                nhân viên • {period.periodCode}
+              </span>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={18} /></button>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
         </div>
 
         {/* Summary + Pie */}
-        <div className="p-4 grid md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { label: 'Tổng Gross', value: formatVND(totalGross), color: 'text-foreground' },
-              { label: 'Tổng NET', value: formatVND(totalNet), color: 'text-green-600' },
-              { label: 'Tổng khấu trừ', value: formatVND(totalDeductions), color: 'text-red-500' },
-              { label: 'Tổng OT', value: formatVND(totalOT), color: 'text-blue-600' },
-              { label: 'Tổng thưởng', value: formatVND(totalBonus), color: 'text-amber-600' },
-              { label: 'TB NET/NV', value: period.records.length > 0 ? formatVND(totalNet / period.records.length) : '—', color: 'text-green-600' },
-            ].map(s => (
-              <div key={s.label} className="bg-muted/30 rounded-lg p-2.5 text-center">
-                <div className="text-[10px] text-muted-foreground">{s.label}</div>
-                <div className={`text-[15px] ${s.color}`}>{s.value}</div>
-              </div>
-            ))}
-          </div>
-          {pieData.length > 0 && (
-            <div>
+        {records.length > 0 && (
+          <div className="p-4 grid md:grid-cols-3 gap-4">
+            <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                {
+                  label: "Tổng Gross",
+                  value: fmtVND(totals.gross),
+                  color: "text-foreground",
+                },
+                {
+                  label: "Tổng NET",
+                  value: fmtVND(totals.net),
+                  color: "text-green-600",
+                },
+                {
+                  label: "Tổng khấu trừ",
+                  value: fmtVND(totals.deductions),
+                  color: "text-red-500",
+                },
+                {
+                  label: "Tổng OT",
+                  value: fmtVND(totals.ot),
+                  color: "text-blue-600",
+                },
+                {
+                  label: "Tổng thưởng",
+                  value: fmtVND(totals.bonus),
+                  color: "text-amber-600",
+                },
+                {
+                  label: "TB NET/NV",
+                  value:
+                    records.length > 0
+                      ? fmtVND(Math.round(totals.net / records.length))
+                      : "—",
+                  color: "text-green-600",
+                },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  className="bg-muted/30 rounded-lg p-2.5 text-center"
+                >
+                  <div className="text-[10px] text-muted-foreground">
+                    {s.label}
+                  </div>
+                  <div className={`text-[14px] ${s.color}`}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+            {pieData.length > 0 && (
               <ResponsiveContainer width="100%" height={160}>
                 <PieChart>
-                  <Pie key="pie" data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={30} fontSize={10} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {pieData.map((entry, i) => <Cell key={`pie-cell-${entry.name}`} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={60}
+                    innerRadius={30}
+                    fontSize={10}
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(0)}%`
+                    }
+                  >
+                    {pieData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
                   </Pie>
-                  <Tooltip key="pie-tooltip" formatter={(value: number) => formatFullVND(value)} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                  <Tooltip
+                    formatter={(v: number) => fmtVND(v)}
+                    contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Search */}
-        {period.records.length > 0 && (
+        {records.length > 0 && (
           <div className="px-4 pb-2">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input type="text" placeholder="Tìm nhân viên..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                type="text"
+                placeholder="Tìm nhân viên..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
             </div>
           </div>
         )}
 
         {/* Table */}
-        {period.records.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+            <Loader2 size={18} className="animate-spin" />{" "}
+            <span className="text-[13px]">Đang tải phiếu lương...</span>
+          </div>
+        ) : records.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left px-4 py-2 text-[11px] text-muted-foreground cursor-pointer" onClick={() => toggleSort('name')}>Nhân viên <SortIcon k="name" /></th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">Ngày</th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">Lương CB</th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">Phụ cấp</th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden lg:table-cell">OT</th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden lg:table-cell">Thưởng</th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground cursor-pointer" onClick={() => toggleSort('gross')}>Gross <SortIcon k="gross" /></th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">Khấu trừ</th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground cursor-pointer" onClick={() => toggleSort('net')}>NET <SortIcon k="net" /></th>
-                  <th className="text-center px-2 py-2 text-[11px] text-muted-foreground w-10"></th>
+                  <th
+                    className="text-left px-4 py-2 text-[11px] text-muted-foreground cursor-pointer"
+                    onClick={() => toggleSort("name")}
+                  >
+                    Nhân viên <SortIcon k="name" />
+                  </th>
+                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                    Ngày
+                  </th>
+                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                    Lương CB
+                  </th>
+                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
+                    Phụ cấp
+                  </th>
+                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden lg:table-cell">
+                    OT
+                  </th>
+                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden lg:table-cell">
+                    Thưởng
+                  </th>
+                  <th
+                    className="text-right px-3 py-2 text-[11px] text-muted-foreground cursor-pointer"
+                    onClick={() => toggleSort("gross")}
+                  >
+                    Gross <SortIcon k="gross" />
+                  </th>
+                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
+                    Khấu trừ
+                  </th>
+                  <th
+                    className="text-right px-3 py-2 text-[11px] text-muted-foreground cursor-pointer"
+                    onClick={() => toggleSort("net")}
+                  >
+                    NET <SortIcon k="net" />
+                  </th>
+                  <th className="px-2 py-2 w-10" />
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(r => {
-                  const u = getUserById(r.userId);
-                  const dept = u ? getDepartmentById(u.departmentId) : null;
-                  return (
-                    <tr key={r.id} className="border-b border-border last:border-0 hover:bg-accent/30">
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">{u?.fullName.split(' ').slice(-1)[0][0]}</div>
-                          <div>
-                            <div className="text-[12px]">{u?.fullName}</div>
-                            <div className="text-[9px] text-muted-foreground">{dept?.name}</div>
+                {filtered.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="border-b border-border last:border-0 hover:bg-accent/30"
+                  >
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                          {r.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
+                        </div>
+                        <div>
+                          <div className="text-[12px]">{r.user?.fullName}</div>
+                          <div className="text-[9px] text-muted-foreground">
+                            {(
+                              r.user as { department?: { name: string } } | null
+                            )?.department?.name ?? "—"}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-3 py-2 text-[12px] text-right">{r.workingDays}</td>
-                      <td className="px-3 py-2 text-[12px] text-right">{formatVND(r.baseSalary)}</td>
-                      <td className="px-3 py-2 text-[12px] text-right hidden md:table-cell">{formatVND(r.totalAllowances)}</td>
-                      <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">{r.totalOvertimePay > 0 ? formatVND(r.totalOvertimePay) : '—'}</td>
-                      <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">{r.totalBonus > 0 ? formatVND(r.totalBonus) : '—'}</td>
-                      <td className="px-3 py-2 text-[12px] text-right">{formatVND(r.grossSalary)}</td>
-                      <td className="px-3 py-2 text-[12px] text-right text-red-500 hidden md:table-cell">-{formatVND(r.totalDeductions)}</td>
-                      <td className="px-3 py-2 text-[13px] text-right text-green-600">{formatVND(r.netSalary)}</td>
-                      <td className="px-2 py-2 text-center">
-                        <button onClick={() => onViewPayslip(r)} className="p-1 rounded hover:bg-accent" title="Xem phiếu lương"><Eye size={14} className="text-muted-foreground" /></button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-right">
+                      {r.workingDays ?? "—"}
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-right">
+                      {fmtVND(r.baseSalary)}
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-right hidden md:table-cell">
+                      {fmtVND(r.totalAllowances)}
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                      {r.totalOvertimePay > 0
+                        ? fmtVND(r.totalOvertimePay)
+                        : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                      {r.totalBonus > 0 ? fmtVND(r.totalBonus) : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-right">
+                      {fmtVND(r.grossSalary)}
+                    </td>
+                    <td className="px-3 py-2 text-[12px] text-right text-red-500 hidden md:table-cell">
+                      -{fmtVND(r.totalDeductions)}
+                    </td>
+                    <td className="px-3 py-2 text-[13px] text-right text-green-600">
+                      {fmtVND(r.netSalary)}
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <button
+                        onClick={() => setSelectedRecord(r)}
+                        className="p-1 rounded hover:bg-accent"
+                      >
+                        <Eye size={14} className="text-muted-foreground" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-border bg-muted/30">
-                  <td className="px-4 py-2 text-[12px]">Tổng cộng</td>
+                  <td className="px-4 py-2 text-[12px] font-medium">
+                    Tổng cộng
+                  </td>
                   <td className="px-3 py-2 text-[12px] text-right">—</td>
-                  <td className="px-3 py-2 text-[12px] text-right">{formatVND(period.records.reduce((s, r) => s + r.baseSalary, 0))}</td>
-                  <td className="px-3 py-2 text-[12px] text-right hidden md:table-cell">{formatVND(period.records.reduce((s, r) => s + r.totalAllowances, 0))}</td>
-                  <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">{formatVND(totalOT)}</td>
-                  <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">{formatVND(totalBonus)}</td>
-                  <td className="px-3 py-2 text-[12px] text-right">{formatVND(totalGross)}</td>
-                  <td className="px-3 py-2 text-[12px] text-right text-red-500 hidden md:table-cell">-{formatVND(totalDeductions)}</td>
-                  <td className="px-3 py-2 text-[13px] text-right text-green-600">{formatVND(totalNet)}</td>
-                  <td></td>
+                  <td className="px-3 py-2 text-[12px] text-right">
+                    {fmtVND(totals.base)}
+                  </td>
+                  <td className="px-3 py-2 text-[12px] text-right hidden md:table-cell">
+                    {fmtVND(totals.allowances)}
+                  </td>
+                  <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                    {fmtVND(totals.ot)}
+                  </td>
+                  <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                    {fmtVND(totals.bonus)}
+                  </td>
+                  <td className="px-3 py-2 text-[12px] text-right font-medium">
+                    {fmtVND(totals.gross)}
+                  </td>
+                  <td className="px-3 py-2 text-[12px] text-right text-red-500 hidden md:table-cell">
+                    -{fmtVND(totals.deductions)}
+                  </td>
+                  <td className="px-3 py-2 text-[13px] text-right text-green-600 font-medium">
+                    {fmtVND(totals.net)}
+                  </td>
+                  <td />
                 </tr>
               </tfoot>
             </table>
@@ -643,50 +964,94 @@ function PeriodDetailModal({ period, onClose, onCalculate, onApprove, onPay, onV
         ) : (
           <div className="p-8 text-center text-muted-foreground text-[13px]">
             <Calculator size={40} className="mx-auto mb-2 opacity-30" />
-            <div>Chưa có dữ liệu — nhấn "Tính lương" để bắt đầu</div>
+            <div>
+              Chưa có dữ liệu — nhấn "Tính lương" để bắt đầu tính cho kỳ này
+            </div>
           </div>
         )}
 
         {/* Actions */}
         <div className="p-4 border-t border-border flex flex-wrap justify-between items-center gap-2 sticky bottom-0 bg-card">
           <div className="text-[11px] text-muted-foreground">
-            Quy trình: <span className="text-foreground">Bản nháp</span> → <span className="text-blue-600">Đang tính</span> → <span className="text-green-600">Đã duyệt</span> → <span className="text-emerald-600">Đã chi trả</span>
+            {period.paidAt && <span>Đã chi trả: {fmtDate(period.paidAt)}</span>}
+            {period.approvedBy && (
+              <span className="ml-2">
+                Người duyệt: {period.approvedBy.fullName}
+              </span>
+            )}
           </div>
           <div className="flex gap-2">
-            {period.status === 'DRAFT' && (
-              <button onClick={() => onCalculate(period.id)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700">
-                <Calculator size={14} /> Tính lương
+            {isAdmin &&
+              ["DRAFT", "CALCULATING", "APPROVED"].includes(period.status) && (
+                <button
+                  onClick={() => onCancel(period.id)}
+                  className="px-3 py-2 border border-red-300 text-red-600 rounded-lg text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
+                >
+                  <Ban size={14} /> Huỷ kỳ
+                </button>
+              )}
+            {period.status === "DRAFT" && (
+              <button
+                onClick={handleCalculateClick}
+                disabled={calculating}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700 disabled:opacity-50"
+              >
+                {calculating ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Calculator size={14} />
+                )}{" "}
+                Tính lương
               </button>
             )}
-            {period.status === 'CALCULATING' && (
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 opacity-50" disabled>
-                <Loader2 size={14} className="animate-spin" /> Đang tính...
+            {period.status === "CALCULATING" && (
+              <button
+                onClick={() => onApprove(period.id)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-green-700"
+              >
+                <Check size={14} /> Duyệt kỳ lương
               </button>
             )}
-            {period.status === 'APPROVED' && (
-              <button onClick={() => onPay(period.id)} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-emerald-700">
+            {period.status === "APPROVED" && (
+              <button
+                onClick={() => onMarkPaid(period.id)}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-emerald-700"
+              >
                 <Wallet size={14} /> Đánh dấu đã chi trả
               </button>
             )}
           </div>
         </div>
       </div>
+
+      {selectedRecord && (
+        <PayslipDialog
+          record={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      )}
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Payslip Dialog (detail breakdown)
-// ═══════════════════════════════════════════════════════════════
-function PayslipDialog({ record, onClose }: { record: PayrollRecord; onClose: () => void }) {
-  const u = getUserById(record.userId);
-  const dept = u ? getDepartmentById(u.departmentId) : null;
-  const earnings = record.items.filter(i => i.itemType === 'EARNING');
-  const deductions = record.items.filter(i => i.itemType === 'DEDUCTION');
-  const insTotal = record.socialInsuranceEmployee + record.healthInsuranceEmployee + record.unemploymentInsuranceEmployee;
-
-  // Earnings pie
-  const earningsPie = earnings.map(e => ({ name: e.itemName, value: e.amount }));
+// ═══════════════════════════════════════════════════════════════════
+// Payslip Dialog — full breakdown
+// ═══════════════════════════════════════════════════════════════════
+function PayslipDialog({
+  record,
+  onClose,
+}: {
+  record: ApiPayrollRecord;
+  onClose: () => void;
+}) {
+  const u = record.user;
+  const p = record.payrollPeriod;
+  const earnings = record.items.filter((i) => i.itemType === "EARNING");
+  const deductions = record.items.filter((i) => i.itemType === "DEDUCTION");
+  const insTotal =
+    record.socialInsuranceEmployee +
+    record.healthInsuranceEmployee +
+    record.unemploymentInsuranceEmployee;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -696,91 +1061,131 @@ function PayslipDialog({ record, onClose }: { record: PayrollRecord; onClose: ()
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="text-[11px] text-muted-foreground tracking-wider">TECHVN — PHIẾU LƯƠNG</div>
-              <div className="text-[16px] mt-1">{u?.fullName}</div>
-              <div className="text-[12px] text-muted-foreground">{u?.userCode} • {dept?.name}</div>
+              <div className="text-[11px] text-muted-foreground tracking-wider uppercase">
+                Phiếu lương
+              </div>
+              <div className="text-[18px] mt-0.5">
+                T{p?.month}/{p?.year} — {p?.periodCode}
+              </div>
             </div>
-            <div className="text-right">
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[11px]">{record.status}</span>
-              <button onClick={onClose} className="ml-2 p-1 rounded hover:bg-accent"><X size={16} /></button>
-            </div>
+            <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+              <X size={18} />
+            </button>
           </div>
 
-          {/* Info bar */}
-          <div className="grid grid-cols-3 gap-2 mb-4 text-[12px]">
-            <div className="bg-muted/30 rounded-lg p-2 text-center"><div className="text-[10px] text-muted-foreground">Ngày công</div><div>{record.workingDays}</div></div>
-            <div className="bg-muted/30 rounded-lg p-2 text-center"><div className="text-[10px] text-muted-foreground">Lương CB</div><div>{formatVND(record.baseSalary)}</div></div>
-            <div className="bg-muted/30 rounded-lg p-2 text-center"><div className="text-[10px] text-muted-foreground">Phụ cấp</div><div>{formatVND(record.totalAllowances)}</div></div>
+          {/* Employee info */}
+          <div className="flex items-center gap-3 mb-4 p-3 bg-muted/30 rounded-xl">
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-[14px]">
+              {u?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
+            </div>
+            <div>
+              <div className="text-[14px]">{u?.fullName}</div>
+              <div className="text-[12px] text-muted-foreground">
+                {u?.userCode} •{" "}
+                {(u as { department?: { name: string } } | null)?.department
+                  ?.name ?? "—"}
+              </div>
+            </div>
+            <span
+              className={`ml-auto text-[11px] px-2 py-0.5 rounded-full ${record.status === "PAID" ? periodStatusColors["PAID"] : record.status === "APPROVED" ? periodStatusColors["APPROVED"] : periodStatusColors["DRAFT"]}`}
+            >
+              {record.status === "PAID"
+                ? "Đã chi trả"
+                : record.status === "APPROVED"
+                  ? "Đã duyệt"
+                  : "Bản nháp"}
+            </span>
           </div>
 
           {/* Earnings */}
-          <div className="mb-4">
-            <div className="text-[13px] text-green-600 mb-2 flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-green-500" /> THU NHẬP
+          <div className="space-y-1 mb-3">
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2">
+              Thu nhập
             </div>
-            <div className="space-y-1.5">
-              {earnings.map((item, i) => (
-                <div key={i} className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground flex items-center gap-1.5">
-                    {item.sourceType === 'BASE' && <DollarSign size={12} />}
-                    {item.sourceType === 'ALLOWANCE' && <Wallet size={12} />}
-                    {item.sourceType === 'OVERTIME' && <Clock size={12} />}
-                    {item.sourceType === 'BONUS' && <TrendingUp size={12} />}
-                    {item.itemName}
-                  </span>
-                  <span className="text-green-600">+{formatFullVND(item.amount)}</span>
-                </div>
-              ))}
-              <div className="flex justify-between text-[14px] pt-2 border-t border-border">
-                <span>Tổng thu nhập (Gross)</span>
-                <span className="text-green-600">{formatFullVND(record.grossSalary)}</span>
+            {earnings.map((item, i) => (
+              <div key={i} className="flex justify-between text-[13px]">
+                <span>{item.itemName}</span>
+                <span className="text-green-600">{fmtVND(item.amount)}</span>
               </div>
+            ))}
+            <div className="flex justify-between text-[13px] pt-1 border-t border-border font-medium">
+              <span>Tổng thu nhập (Gross)</span>
+              <span>{fmtVND(record.grossSalary)}</span>
             </div>
           </div>
 
           {/* Deductions */}
-          <div className="mb-4">
-            <div className="text-[13px] text-red-500 mb-2 flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-red-500" /> KHẤU TRỪ
+          <div className="space-y-1 mb-3">
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2">
+              Khấu trừ
             </div>
-            <div className="space-y-1.5">
-              {deductions.map((item, i) => (
+            <div className="flex justify-between text-[13px]">
+              <span>BHXH (8%)</span>
+              <span className="text-red-500">
+                -{fmtVND(record.socialInsuranceEmployee)}
+              </span>
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span>BHYT (1.5%)</span>
+              <span className="text-red-500">
+                -{fmtVND(record.healthInsuranceEmployee)}
+              </span>
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span>BHTN (1%)</span>
+              <span className="text-red-500">
+                -{fmtVND(record.unemploymentInsuranceEmployee)}
+              </span>
+            </div>
+            {record.personalIncomeTax > 0 && (
+              <div className="flex justify-between text-[13px]">
+                <span>Thuế TNCN</span>
+                <span className="text-red-500">
+                  -{fmtVND(record.personalIncomeTax)}
+                </span>
+              </div>
+            )}
+            {deductions
+              .filter((d) => d.sourceType === "ADJUSTMENT")
+              .map((item, i) => (
                 <div key={i} className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground flex items-center gap-1.5">
-                    {item.sourceType === 'INSURANCE' && <Shield size={12} />}
-                    {item.sourceType === 'TAX' && <Receipt size={12} />}
-                    {item.sourceType === 'ADJUSTMENT' && <Edit3 size={12} />}
-                    {item.itemName}
-                  </span>
-                  <span className="text-red-500">-{formatFullVND(item.amount)}</span>
+                  <span>{item.itemName}</span>
+                  <span className="text-red-500">-{fmtVND(item.amount)}</span>
                 </div>
               ))}
-              <div className="flex justify-between text-[14px] pt-2 border-t border-border">
-                <span>Tổng khấu trừ</span>
-                <span className="text-red-500">-{formatFullVND(record.totalDeductions)}</span>
-              </div>
+            <div className="flex justify-between text-[13px] pt-1 border-t border-border font-medium text-red-500">
+              <span>Tổng khấu trừ</span>
+              <span>-{fmtVND(record.totalDeductions)}</span>
             </div>
           </div>
 
-          {/* Insurance breakdown */}
-          <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-3 mb-4 text-[11px]">
-            <div className="text-blue-700 dark:text-blue-400 mb-1 flex items-center gap-1"><Shield size={12} /> Chi tiết bảo hiểm</div>
-            <div className="grid grid-cols-3 gap-2">
-              <div>BHXH (8%): {formatFullVND(record.socialInsuranceEmployee)}</div>
-              <div>BHYT (1.5%): {formatFullVND(record.healthInsuranceEmployee)}</div>
-              <div>BHTN (1%): {formatFullVND(record.unemploymentInsuranceEmployee)}</div>
+          {/* Net */}
+          <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
+            <span className="text-[14px] font-medium">Thực nhận (NET)</span>
+            <span className="text-[20px] text-green-600 font-semibold">
+              {fmtVND(record.netSalary)}
+            </span>
+          </div>
+
+          {/* Tax info */}
+          {record.taxableIncome > 0 && (
+            <div className="mt-3 text-[11px] text-muted-foreground grid grid-cols-2 gap-1">
+              <span>Thu nhập tính thuế:</span>
+              <span>{fmtVND(record.taxableIncome)}</span>
+              <span>Ngày công:</span>
+              <span>{record.workingDays ?? "—"}</span>
+              {record.paidAt && (
+                <>
+                  <span>Ngày chi trả:</span>
+                  <span>{fmtDate(record.paidAt)}</span>
+                </>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* NET */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 text-center">
-            <div className="text-[13px] text-muted-foreground">THỰC NHẬN (NET)</div>
-            <div className="text-[28px] text-green-600 mt-1">{formatFullVND(record.netSalary)}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">= Gross ({formatVND(record.grossSalary)}) − Khấu trừ ({formatVND(record.totalDeductions)})</div>
-          </div>
-
-          <button className="w-full mt-4 py-2 border border-border rounded-lg text-[13px] text-muted-foreground hover:bg-accent flex items-center justify-center gap-1">
-            <Download size={14} /> Tải phiếu lương PDF
+          {/* Download placeholder */}
+          <button className="mt-4 w-full py-2 border border-border rounded-lg text-[13px] hover:bg-accent flex items-center justify-center gap-2">
+            <Download size={14} /> Tải phiếu lương (PDF)
           </button>
         </div>
       </div>
@@ -788,14 +1193,48 @@ function PayslipDialog({ record, onClose }: { record: PayrollRecord; onClose: ()
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 // Create Period Dialog
-// ═══════════════════════════════════════════════════════════════
-function CreatePeriodDialog({ onClose, onCreate }: { onClose: () => void; onCreate: (month: number, year: number, days: number) => void }) {
+// ═══════════════════════════════════════════════════════════════════
+function CreatePeriodDialog({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (payload: {
+    month: number;
+    year: number;
+    startDate: string;
+    endDate: string;
+    workingDaysInPeriod: number;
+  }) => void;
+}) {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
-  const [days, setDays] = useState(22);
+  const [workingDays, setWorkingDays] = useState(22);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Auto-calculate start/end dates
+  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
+
+  const handleSubmit = async () => {
+    if (month < 1 || month > 12 || workingDays < 1 || workingDays > 31) {
+      toast.error("Thông tin không hợp lệ");
+      return;
+    }
+    setSubmitting(true);
+    await onCreate({
+      month,
+      year,
+      startDate,
+      endDate,
+      workingDaysInPeriod: workingDays,
+    });
+    setSubmitting(false);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -803,272 +1242,485 @@ function CreatePeriodDialog({ onClose, onCreate }: { onClose: () => void; onCrea
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-[16px]">Tạo kỳ lương mới</h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={18} /></button>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
         </div>
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">Tháng</label>
-              <select value={month} onChange={e => setMonth(Number(e.target.value))} className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
-                {Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>)}
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Tháng *
+              </label>
+              <select
+                value={month}
+                onChange={(e) => setMonth(+e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    Tháng {i + 1}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">Năm</label>
-              <select value={year} onChange={e => setYear(Number(e.target.value))} className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
-                {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Năm *
+              </label>
+              <input
+                type="number"
+                value={year}
+                onChange={(e) => setYear(+e.target.value)}
+                min={2020}
+                max={2030}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">Số ngày công chuẩn</label>
-            <input type="number" value={days} onChange={e => setDays(Number(e.target.value))} className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" min={15} max={31} />
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Ngày công chuẩn *
+            </label>
+            <input
+              type="number"
+              value={workingDays}
+              onChange={(e) => setWorkingDays(+e.target.value)}
+              min={1}
+              max={31}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            />
+          </div>
+          <div className="bg-muted/30 rounded-lg p-3 text-[12px]">
+            <div className="text-muted-foreground mb-1">Kỳ tính</div>
+            <div>
+              {startDate} → {endDate}
+            </div>
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-[13px]">Huỷ</button>
-          <button onClick={() => onCreate(month, year, days)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700">Tạo kỳ lương</button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Plus size={14} />
+            )}{" "}
+            Tạo kỳ lương
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 2. PayrollAdjustmentsPage
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 2. PayrollAdjustmentsPage — Điều chỉnh lương
+// ═══════════════════════════════════════════════════════════════════
 export function PayrollAdjustmentsPage() {
-  const { currentUser, can } = useAuth();
-  const [adjustments, setAdjustments] = useState<PayrollAdjustment[]>(initialAdjustments);
-  const [showCreate, setShowCreate] = useState(false);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const { can } = useAuth();
+  const isAdminHR = can("ADMIN", "HR");
 
-  const isAdminHR = can('ADMIN', 'HR');
+  const [adjustments, setAdjustments] = useState<ApiAdjustment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const fetchAdjustments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await payrollService.listAdjustments({
+        limit: 100,
+        sortOrder: "desc",
+      });
+      setAdjustments(res.items);
+    } catch (err) {
+      if (err instanceof ApiError) toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAdjustments();
+  }, [fetchAdjustments]);
+
+  const handleCreate = async (payload: {
+    userId: string;
+    adjustmentType: AdjustmentType;
+    amount: number;
+    reason: string;
+  }) => {
+    try {
+      await payrollService.createAdjustment(payload);
+      toast.success("Đã tạo điều chỉnh lương");
+      setShowCreate(false);
+      fetchAdjustments();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Không thể tạo");
+    }
+  };
+
+  const handleApprove = async (id: string) => {
+    try {
+      await payrollService.approveAdjustment(id);
+      toast.success("Đã duyệt điều chỉnh");
+      fetchAdjustments();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Không thể duyệt");
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (!rejectReason.trim()) {
+      toast.error("Vui lòng nhập lý do");
+      return;
+    }
+    try {
+      await payrollService.rejectAdjustment(id, rejectReason);
+      toast.success("Đã từ chối điều chỉnh");
+      setRejectingId(null);
+      setRejectReason("");
+      fetchAdjustments();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Không thể từ chối");
+    }
+  };
 
   const filtered = useMemo(() => {
     let list = adjustments;
     if (search) {
       const s = search.toLowerCase();
-      list = list.filter(a => getUserById(a.userId)?.fullName.toLowerCase().includes(s) || a.reason.toLowerCase().includes(s));
+      list = list.filter(
+        (a) =>
+          a.user?.fullName.toLowerCase().includes(s) ||
+          a.reason?.toLowerCase().includes(s),
+      );
     }
-    if (typeFilter) list = list.filter(a => a.type === typeFilter);
-    if (statusFilter) list = list.filter(a => a.status === statusFilter);
+    if (typeFilter) list = list.filter((a) => a.adjustmentType === typeFilter);
+    if (statusFilter) list = list.filter((a) => a.status === statusFilter);
     return list;
   }, [adjustments, search, typeFilter, statusFilter]);
 
-  // Stats
-  const stats = useMemo(() => ({
-    pending: adjustments.filter(a => a.status === 'PENDING').length,
-    totalBonus: adjustments.filter(a => a.type === 'BONUS' && (a.status === 'APPROVED' || a.status === 'APPLIED')).reduce((s, a) => s + a.amount, 0),
-    totalDeduct: adjustments.filter(a => a.type === 'DEDUCTION' && (a.status === 'APPROVED' || a.status === 'APPLIED')).reduce((s, a) => s + a.amount, 0),
-    totalAdvance: adjustments.filter(a => a.type === 'ADVANCE' && (a.status === 'APPROVED' || a.status === 'APPLIED')).reduce((s, a) => s + a.amount, 0),
-  }), [adjustments]);
-
-  const handleApprove = (id: string) => {
-    setAdjustments(prev => prev.map(a => a.id === id ? { ...a, status: 'APPROVED' as const, approvedByUserId: currentUser?.id, approvedAt: new Date().toISOString().slice(0, 10) } : a));
-    toast.success('Đã duyệt điều chỉnh');
-  };
-  const handleReject = (id: string) => {
-    setAdjustments(prev => prev.map(a => a.id === id ? { ...a, status: 'REJECTED' as const, approvedByUserId: currentUser?.id, approvedAt: new Date().toISOString().slice(0, 10) } : a));
-    toast.success('Đã từ chối điều chỉnh');
-  };
-
-  const handleCreate = (data: { userId: string; type: PayrollAdjustmentType; amount: number; reason: string }) => {
-    const newAdj: PayrollAdjustment = {
-      id: `pa-new-${Date.now()}`,
-      userId: data.userId,
-      type: data.type,
-      amount: data.amount,
-      reason: data.reason,
-      status: 'PENDING',
-      createdByUserId: currentUser!.id,
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    setAdjustments(prev => [newAdj, ...prev]);
-    setShowCreate(false);
-    toast.success('Đã tạo điều chỉnh mới');
-  };
+  const stats = useMemo(
+    () => ({
+      pending: adjustments.filter((a) => a.status === "PENDING").length,
+      totalBonus: adjustments
+        .filter((a) => a.adjustmentType === "BONUS" && a.status === "APPROVED")
+        .reduce((s, a) => s + a.amount, 0),
+      totalDeduction: adjustments
+        .filter(
+          (a) => a.adjustmentType === "DEDUCTION" && a.status === "APPROVED",
+        )
+        .reduce((s, a) => s + a.amount, 0),
+      totalAdvance: adjustments
+        .filter(
+          (a) => a.adjustmentType === "ADVANCE" && a.status === "APPROVED",
+        )
+        .reduce((s, a) => s + a.amount, 0),
+    }),
+    [adjustments],
+  );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-[20px]">Điều chỉnh lương</h1>
+      <div className="flex items-center justify-between">
+        <h2 className="text-[18px]">Điều chỉnh lương</h2>
         {isAdminHR && (
-          <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700">
-            <Plus size={16} /> Tạo điều chỉnh
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+          >
+            <Plus size={14} /> Tạo điều chỉnh
           </button>
         )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-yellow-50 dark:bg-yellow-900/10 rounded-xl p-3 text-center">
-          <div className="text-[20px] text-yellow-600">{stats.pending}</div>
-          <div className="text-[10px] text-muted-foreground">Chờ duyệt</div>
-        </div>
-        <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-3 text-center">
-          <div className="text-[16px] text-green-600">{formatVND(stats.totalBonus)}</div>
-          <div className="text-[10px] text-muted-foreground">Tổng thưởng</div>
-        </div>
-        <div className="bg-red-50 dark:bg-red-900/10 rounded-xl p-3 text-center">
-          <div className="text-[16px] text-red-500">{formatVND(stats.totalDeduct)}</div>
-          <div className="text-[10px] text-muted-foreground">Tổng khấu trừ</div>
-        </div>
-        <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-3 text-center">
-          <div className="text-[16px] text-blue-600">{formatVND(stats.totalAdvance)}</div>
-          <div className="text-[10px] text-muted-foreground">Tổng tạm ứng</div>
-        </div>
+        {[
+          {
+            label: "Chờ duyệt",
+            value: stats.pending,
+            color: "text-yellow-600",
+            bg: "bg-yellow-50 dark:bg-yellow-900/10",
+          },
+          {
+            label: "Tổng thưởng",
+            value: fmtVND(stats.totalBonus),
+            color: "text-green-600",
+            bg: "bg-green-50 dark:bg-green-900/10",
+          },
+          {
+            label: "Tổng khấu trừ",
+            value: fmtVND(stats.totalDeduction),
+            color: "text-red-500",
+            bg: "bg-red-50 dark:bg-red-900/10",
+          },
+          {
+            label: "Tổng tạm ứng",
+            value: fmtVND(stats.totalAdvance),
+            color: "text-blue-600",
+            bg: "bg-blue-50 dark:bg-blue-900/10",
+          },
+        ].map((s) => (
+          <div key={s.label} className={`${s.bg} rounded-xl p-3 text-center`}>
+            <div className={`text-[16px] ${s.color}`}>{s.value}</div>
+            <div className="text-[10px] text-muted-foreground">{s.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Tìm nhân viên, lý do..." value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="text"
+            placeholder="Tìm nhân viên, lý do..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          />
         </div>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+        >
           <option value="">Tất cả loại</option>
-          <option value="BONUS">Thưởng</option>
-          <option value="DEDUCTION">Khấu trừ</option>
-          <option value="ADVANCE">Tạm ứng</option>
+          {Object.entries(adjustTypeLabels).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
         </select>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+        >
           <option value="">Tất cả trạng thái</option>
-          {Object.entries(adjustStatusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          {Object.entries(adjustStatusLabels).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
         </select>
       </div>
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead><tr className="border-b border-border bg-muted/50">
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">Nhân viên</th>
-              <th className="text-left px-3 py-3 text-[11px] text-muted-foreground">Loại</th>
-              <th className="text-right px-3 py-3 text-[11px] text-muted-foreground">Số tiền</th>
-              <th className="text-left px-3 py-3 text-[11px] text-muted-foreground hidden md:table-cell">Lý do</th>
-              <th className="text-left px-3 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">Ngày tạo</th>
-              <th className="text-left px-3 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">Người tạo</th>
-              <th className="text-left px-3 py-3 text-[11px] text-muted-foreground">Trạng thái</th>
-              {isAdminHR && <th className="text-right px-3 py-3 text-[11px] text-muted-foreground">Hành động</th>}
-            </tr></thead>
-            <tbody>
-              {filtered.map(a => {
-                const u = getUserById(a.userId);
-                const creator = getUserById(a.createdByUserId);
-                return (
-                  <tr key={a.id} className="border-b border-border last:border-0 hover:bg-accent/30">
-                    <td className="px-4 py-3 text-[12px]">{u?.fullName}</td>
-                    <td className="px-3 py-3"><span className={`text-[10px] px-1.5 py-0.5 rounded ${adjustTypeColors[a.type]}`}>{adjustTypeLabels[a.type]}</span></td>
-                    <td className={`px-3 py-3 text-[13px] text-right ${a.type === 'BONUS' ? 'text-green-600' : a.type === 'DEDUCTION' ? 'text-red-500' : 'text-blue-600'}`}>
-                      {a.type === 'BONUS' ? '+' : a.type === 'DEDUCTION' ? '-' : ''}{formatFullVND(a.amount)}
+      {loading ? (
+        <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+          <Loader2 size={18} className="animate-spin" />{" "}
+          <span className="text-[13px]">Đang tải...</span>
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                    Nhân viên
+                  </th>
+                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                    Loại
+                  </th>
+                  <th className="text-right px-4 py-3 text-[12px] text-muted-foreground">
+                    Số tiền
+                  </th>
+                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                    Lý do
+                  </th>
+                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                    Trạng thái
+                  </th>
+                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                    Ngày tạo
+                  </th>
+                  {isAdminHR && <th className="px-4 py-3 w-32" />}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((a) => (
+                  <tr
+                    key={a.id}
+                    className="border-b border-border last:border-0 hover:bg-accent/30"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                          {a.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
+                        </div>
+                        <div>
+                          <div className="text-[13px]">{a.user?.fullName}</div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {a.user?.userCode}
+                          </div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-3 py-3 text-[12px] text-muted-foreground hidden md:table-cell max-w-[200px] truncate">{a.reason}</td>
-                    <td className="px-3 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">{a.createdAt}</td>
-                    <td className="px-3 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">{creator?.fullName}</td>
-                    <td className="px-3 py-3">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${adjustStatusColors[a.status]}`}>{adjustStatusLabels[a.status]}</span>
-                      {a.note && <div className="text-[9px] text-muted-foreground mt-0.5 truncate max-w-[100px]">{a.note}</div>}
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-[11px] px-2 py-0.5 rounded-full ${adjustTypeColors[a.adjustmentType]}`}
+                      >
+                        {adjustTypeLabels[a.adjustmentType]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-right">
+                      <span
+                        className={
+                          a.adjustmentType === "DEDUCTION"
+                            ? "text-red-500"
+                            : "text-green-600"
+                        }
+                      >
+                        {a.adjustmentType === "DEDUCTION" ? "-" : "+"}
+                        {fmtVND(a.amount)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
+                      {a.reason ?? "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-[11px] px-2 py-0.5 rounded-full ${adjustStatusColors[a.status]}`}
+                      >
+                        {adjustStatusLabels[a.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                      {fmtDate(a.createdAt)}
                     </td>
                     {isAdminHR && (
-                      <td className="px-3 py-3 text-right">
-                        {a.status === 'PENDING' && (
-                          <div className="flex justify-end gap-1">
-                            <button onClick={() => handleApprove(a.id)} className="p-1.5 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/30" title="Duyệt"><Check size={14} /></button>
-                            <button onClick={() => handleReject(a.id)} className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30" title="Từ chối"><X size={14} /></button>
-                          </div>
-                        )}
+                      <td className="px-4 py-3">
+                        {a.status === "PENDING" &&
+                          (rejectingId === a.id ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="text"
+                                placeholder="Lý do *"
+                                value={rejectReason}
+                                onChange={(e) =>
+                                  setRejectReason(e.target.value)
+                                }
+                                autoFocus
+                                className="w-28 px-2 py-1 rounded border border-red-300 text-[11px] bg-input-background"
+                              />
+                              <button
+                                onClick={() => handleReject(a.id)}
+                                className="px-2 py-1 bg-red-600 text-white rounded text-[11px]"
+                              >
+                                <Check size={10} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setRejectingId(null);
+                                  setRejectReason("");
+                                }}
+                                className="px-2 py-1 border border-border rounded text-[11px]"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleApprove(a.id)}
+                                className="px-3 py-1 bg-green-100 text-green-700 rounded text-[11px] hover:bg-green-200"
+                              >
+                                Duyệt
+                              </button>
+                              <button
+                                onClick={() => setRejectingId(a.id)}
+                                className="px-3 py-1 bg-red-100 text-red-600 rounded text-[11px] hover:bg-red-200"
+                              >
+                                Từ chối
+                              </button>
+                            </div>
+                          ))}
                       </td>
                     )}
                   </tr>
-                );
-              })}
-              {filtered.length === 0 && <tr><td colSpan={8} className="text-center py-8 text-muted-foreground text-[13px]">Không có điều chỉnh nào</td></tr>}
-            </tbody>
-          </table>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="text-center py-8 text-muted-foreground text-[13px]"
+                    >
+                      Không có dữ liệu
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border">
+            {filtered.length} / {adjustments.length} điều chỉnh
+          </div>
         </div>
-        <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border">{filtered.length} điều chỉnh</div>
-      </div>
+      )}
 
-      {/* Create Dialog */}
       {showCreate && (
-        <CreateAdjustmentDialog onClose={() => setShowCreate(false)} onCreate={handleCreate} />
+        <CreateAdjustmentDialog
+          onClose={() => setShowCreate(false)}
+          onCreate={handleCreate}
+        />
       )}
     </div>
   );
 }
 
-function CreateAdjustmentDialog({ onClose, onCreate }: {
-  onClose: () => void;
-  onCreate: (data: { userId: string; type: PayrollAdjustmentType; amount: number; reason: string }) => void;
-}) {
-  const [userId, setUserId] = useState('');
-  const [type, setType] = useState<PayrollAdjustmentType>('BONUS');
-  const [amount, setAmount] = useState('');
-  const [reason, setReason] = useState('');
-
-  const activeUsers = users.filter(u => u.employmentStatus === 'ACTIVE');
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Tạo điều chỉnh lương</h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={18} /></button>
-        </div>
-        <div className="p-4 space-y-3">
-          <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">Nhân viên *</label>
-            <select value={userId} onChange={e => setUserId(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]">
-              <option value="">Chọn nhân viên</option>
-              {activeUsers.map(u => <option key={u.id} value={u.id}>{u.fullName} ({u.userCode})</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">Loại điều chỉnh *</label>
-            <div className="flex gap-2">
-              {(['BONUS', 'DEDUCTION', 'ADVANCE'] as const).map(t => (
-                <button key={t} onClick={() => setType(t)} className={`flex-1 py-2 rounded-lg text-[12px] border ${type === t ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600' : 'border-border text-muted-foreground'}`}>
-                  {adjustTypeLabels[t]}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">Số tiền (₫) *</label>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
-            {amount && <div className="text-[11px] text-muted-foreground mt-0.5">{formatFullVND(Number(amount))}</div>}
-          </div>
-          <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">Lý do *</label>
-            <textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Nhập lý do điều chỉnh..." className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] h-20 resize-none" />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 p-4 border-t border-border">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-[13px]">Huỷ</button>
-          <button onClick={() => {
-            if (!userId || !amount || !reason.trim()) { toast.error('Vui lòng điền đầy đủ'); return; }
-            onCreate({ userId, type, amount: Number(amount), reason });
-          }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700">Tạo</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// 3. PayrollConfigPage
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 3. PayrollConfigPage — Thành phần lương + Tính thuế TNCN
+// (Insurance/Tax policy → dùng SystemConfig ở backend, trang này
+//  hiển thị salary components và công cụ tính thuế local)
+// ═══════════════════════════════════════════════════════════════════
 export function PayrollConfigPage() {
   const { can } = useAuth();
-  const [insurance, setInsurance] = useState<InsurancePolicy[]>(initialInsurance);
-  const [taxPolicies, setTaxPolicies] = useState<TaxPolicy[]>(initialTax);
-  const [activeSection, setActiveSection] = useState<'insurance' | 'tax'>('insurance');
+  const isAdminHR = can("ADMIN", "HR");
 
-  const isAdminHR = can('ADMIN', 'HR');
+  const [components, setComponents] = useState<
+    payrollService.ApiSalaryComponent[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState<
+    "components" | "insurance" | "tax"
+  >("components");
+  const [showCreate, setShowCreate] = useState(false);
+
+  useEffect(() => {
+    const fetchComponents = async () => {
+      setLoading(true);
+      try {
+        const res = await payrollService.listSalaryComponents({ limit: 50 });
+        setComponents(res.items);
+      } catch (err) {
+        if (err instanceof ApiError) toast.error((err as ApiError).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (isAdminHR) fetchComponents();
+  }, [isAdminHR]);
 
   if (!isAdminHR) {
     return (
@@ -1079,166 +1731,394 @@ export function PayrollConfigPage() {
     );
   }
 
-  const activeTax = taxPolicies.find(t => t.isActive);
+  const handleCreateComponent = async (payload: {
+    code: string;
+    name: string;
+    componentType: payrollService.ComponentType;
+    calculationType: payrollService.CalculationType;
+    isTaxable: boolean;
+    isInsurable: boolean;
+    description: string | null;
+  }) => {
+    try {
+      const created = await payrollService.createSalaryComponent(payload);
+      setComponents((prev) => [...prev, created]);
+      toast.success("Đã tạo thành phần lương");
+      setShowCreate(false);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? (err as ApiError).message : "Không thể tạo",
+      );
+    }
+  };
+
+  const earningComponents = components.filter(
+    (c) => c.componentType === "EARNING",
+  );
+  const deductionComponents = components.filter(
+    (c) => c.componentType === "DEDUCTION",
+  );
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[20px]">Cấu hình bảng lương</h1>
-
-      {/* Section tabs */}
-      <div className="flex gap-2 border-b border-border">
-        <button onClick={() => setActiveSection('insurance')} className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 ${activeSection === 'insurance' ? 'border-blue-500 text-blue-600' : 'border-transparent text-muted-foreground'}`}>
-          <Shield size={14} /> Chính sách bảo hiểm
-        </button>
-        <button onClick={() => setActiveSection('tax')} className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 ${activeSection === 'tax' ? 'border-blue-500 text-blue-600' : 'border-transparent text-muted-foreground'}`}>
-          <Receipt size={14} /> Thuế TNCN
-        </button>
+      <div className="flex items-center justify-between">
+        <h1 className="text-[20px]">Cấu hình bảng lương</h1>
+        {activeSection === "components" && (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+          >
+            <Plus size={14} /> Thêm thành phần
+          </button>
+        )}
       </div>
 
-      {/* Insurance Section */}
-      {activeSection === 'insurance' && (
+      {/* Section tabs */}
+      <div className="flex gap-1 border-b border-border overflow-x-auto">
+        {(
+          [
+            {
+              key: "components",
+              label: "Thành phần lương",
+              icon: <DollarSign size={14} />,
+            },
+            {
+              key: "insurance",
+              label: "Bảo hiểm XH",
+              icon: <Shield size={14} />,
+            },
+            { key: "tax", label: "Thuế TNCN", icon: <Receipt size={14} /> },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveSection(t.key)}
+            className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors
+              ${activeSection === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Salary Components ── */}
+      {activeSection === "components" && (
+        <div className="space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-[12px] text-blue-700 dark:text-blue-400">
+            <Info size={14} className="shrink-0 mt-0.5" />
+            <span>
+              Thành phần lương được gán cho từng nhân viên riêng lẻ. Loại{" "}
+              <strong>EARNING</strong> cộng vào Gross, loại{" "}
+              <strong>DEDUCTION</strong> trừ vào lương.
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+              <Loader2 size={18} className="animate-spin" />{" "}
+              <span className="text-[13px]">Đang tải...</span>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Earnings */}
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border bg-green-50 dark:bg-green-900/10 flex items-center gap-2">
+                  <TrendingUp size={14} className="text-green-600" />
+                  <span className="text-[13px] text-green-700 dark:text-green-400">
+                    Thu nhập ({earningComponents.length})
+                  </span>
+                </div>
+                <div className="divide-y divide-border">
+                  {earningComponents.map((c) => (
+                    <div
+                      key={c.id}
+                      className="px-4 py-3 flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px]">{c.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded font-mono">
+                            {c.code}
+                          </span>
+                          {!c.isActive && (
+                            <span className="text-[10px] text-muted-foreground">
+                              (ẩn)
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2 mt-0.5">
+                          {c.isTaxable && (
+                            <span className="text-[10px] text-orange-600">
+                              Chịu thuế
+                            </span>
+                          )}
+                          {c.isInsurable && (
+                            <span className="text-[10px] text-blue-600">
+                              Tính BH
+                            </span>
+                          )}
+                          <span className="text-[10px] text-muted-foreground">
+                            {c.calculationType}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`w-2 h-2 rounded-full ${c.isActive ? "bg-green-500" : "bg-gray-300"}`}
+                      />
+                    </div>
+                  ))}
+                  {earningComponents.length === 0 && (
+                    <div className="px-4 py-6 text-center text-muted-foreground text-[13px]">
+                      Chưa có thành phần thu nhập
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Deductions */}
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border bg-red-50 dark:bg-red-900/10 flex items-center gap-2">
+                  <Ban size={14} className="text-red-500" />
+                  <span className="text-[13px] text-red-600 dark:text-red-400">
+                    Khấu trừ ({deductionComponents.length})
+                  </span>
+                </div>
+                <div className="divide-y divide-border">
+                  {deductionComponents.map((c) => (
+                    <div
+                      key={c.id}
+                      className="px-4 py-3 flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px]">{c.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded font-mono">
+                            {c.code}
+                          </span>
+                          {!c.isActive && (
+                            <span className="text-[10px] text-muted-foreground">
+                              (ẩn)
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2 mt-0.5">
+                          {c.isTaxable && (
+                            <span className="text-[10px] text-orange-600">
+                              Chịu thuế
+                            </span>
+                          )}
+                          <span className="text-[10px] text-muted-foreground">
+                            {c.calculationType}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`w-2 h-2 rounded-full ${c.isActive ? "bg-green-500" : "bg-gray-300"}`}
+                      />
+                    </div>
+                  ))}
+                  {deductionComponents.length === 0 && (
+                    <div className="px-4 py-6 text-center text-muted-foreground text-[13px]">
+                      Chưa có thành phần khấu trừ
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Insurance Section (static reference rates) ── */}
+      {activeSection === "insurance" && (
         <div className="space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-[12px] text-blue-700 dark:text-blue-400 flex items-start gap-2">
             <Info size={14} className="shrink-0 mt-0.5" />
-            <div>Tỷ lệ đóng bảo hiểm áp dụng cho tất cả nhân viên. Mức trần lương đóng bảo hiểm: <span className="font-medium">{formatFullVND(insurance[0]?.salaryCap || 36000000)}</span></div>
+            <div>
+              Tỷ lệ BHXH/BHYT/BHTN theo quy định hiện hành. Mức trần lương đóng
+              BHXH: <strong>36.000.000đ/tháng</strong>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            {insurance.map(ins => {
-              const totalRate = ins.employeeRate + ins.employerRate;
+            {[
+              {
+                name: "BHXH — Bảo hiểm xã hội",
+                code: "BHXH",
+                employeeRate: 0.08,
+                employerRate: 0.175,
+                cap: 36000000,
+                color: "blue",
+              },
+              {
+                name: "BHYT — Bảo hiểm y tế",
+                code: "BHYT",
+                employeeRate: 0.015,
+                employerRate: 0.03,
+                cap: 36000000,
+                color: "green",
+              },
+              {
+                name: "BHTN — Bảo hiểm thất nghiệp",
+                code: "BHTN",
+                employeeRate: 0.01,
+                employerRate: 0.01,
+                cap: 93600000,
+                color: "purple",
+              },
+            ].map((ins) => {
+              const total = ins.employeeRate + ins.employerRate;
               return (
-                <div key={ins.id} className="bg-card border border-border rounded-xl p-4">
+                <div
+                  key={ins.code}
+                  className="bg-card border border-border rounded-xl p-4"
+                >
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-[14px]">{ins.name}</div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${ins.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500'}`}>
-                      {ins.isActive ? 'Đang áp dụng' : 'Không hoạt động'}
+                    <div className="text-[13px]">{ins.name}</div>
+                    <span className="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full">
+                      Đang áp dụng
                     </span>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[12px]">
-                      <span className="text-muted-foreground">Mã:</span>
-                      <span className="px-1.5 py-0.5 bg-muted rounded text-[11px]">{ins.code}</span>
-                    </div>
-                    <div className="flex justify-between text-[12px]">
+                  <div className="space-y-2 text-[12px]">
+                    <div className="flex justify-between">
                       <span className="text-muted-foreground">NV đóng:</span>
-                      <span className="text-red-500">{(ins.employeeRate * 100).toFixed(1)}%</span>
+                      <span className="text-red-500">
+                        {(ins.employeeRate * 100).toFixed(1)}%
+                      </span>
                     </div>
-                    <div className="flex justify-between text-[12px]">
+                    <div className="flex justify-between">
                       <span className="text-muted-foreground">DN đóng:</span>
-                      <span className="text-blue-600">{(ins.employerRate * 100).toFixed(1)}%</span>
+                      <span className="text-blue-600">
+                        {(ins.employerRate * 100).toFixed(1)}%
+                      </span>
                     </div>
-                    <div className="flex justify-between text-[12px] pt-1 border-t border-border">
+                    <div className="flex justify-between pt-1 border-t border-border">
                       <span className="text-muted-foreground">Tổng:</span>
-                      <span>{(totalRate * 100).toFixed(1)}%</span>
+                      <span>{(total * 100).toFixed(1)}%</span>
                     </div>
-                    <div className="flex justify-between text-[12px]">
+                    <div className="flex justify-between">
                       <span className="text-muted-foreground">Trần lương:</span>
-                      <span>{formatFullVND(ins.salaryCap)}</span>
+                      <span>{fmtVND(ins.cap)}</span>
                     </div>
-                    <div className="flex justify-between text-[12px]">
-                      <span className="text-muted-foreground">Hiệu lực:</span>
-                      <span>{new Date(ins.effectiveDate).toLocaleDateString('vi-VN')}</span>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        NV max/tháng:
+                      </span>
+                      <span className="text-red-500">
+                        {fmtVND(ins.cap * ins.employeeRate)}
+                      </span>
                     </div>
                   </div>
-
-                  {ins.note && <div className="mt-2 text-[10px] text-muted-foreground">{ins.note}</div>}
-
-                  {/* Visual bar */}
-                  <div className="mt-3">
-                    <div className="flex h-2 rounded overflow-hidden">
-                      <div className="bg-red-400" style={{ width: `${(ins.employeeRate / totalRate) * 100}%` }} title="NV đóng" />
-                      <div className="bg-blue-400" style={{ width: `${(ins.employerRate / totalRate) * 100}%` }} title="DN đóng" />
-                    </div>
-                    <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5">
-                      <span className="text-red-500">NV {(ins.employeeRate * 100).toFixed(1)}%</span>
-                      <span className="text-blue-600">DN {(ins.employerRate * 100).toFixed(1)}%</span>
-                    </div>
+                  <div className="mt-3 h-2 rounded overflow-hidden flex">
+                    <div
+                      className="bg-red-400"
+                      style={{ width: `${(ins.employeeRate / total) * 100}%` }}
+                    />
+                    <div
+                      className="bg-blue-400"
+                      style={{ width: `${(ins.employerRate / total) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5">
+                    <span className="text-red-500">
+                      NV {(ins.employeeRate * 100).toFixed(1)}%
+                    </span>
+                    <span className="text-blue-600">
+                      DN {(ins.employerRate * 100).toFixed(1)}%
+                    </span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Summary card */}
+          {/* Summary */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <div className="text-[13px] mb-3">Tổng hợp tỷ lệ đóng bảo hiểm</div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px]">
-              <div className="text-center">
+            <div className="text-[13px] mb-3">
+              Tổng hợp — Nhân viên đóng hàng tháng (tính trên mức trần BHXH)
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px] text-center">
+              <div>
                 <div className="text-muted-foreground">NV đóng tổng</div>
-                <div className="text-[16px] text-red-500">{(insurance.reduce((s, i) => s + i.employeeRate, 0) * 100).toFixed(1)}%</div>
+                <div className="text-[16px] text-red-500">10.5%</div>
               </div>
-              <div className="text-center">
+              <div>
                 <div className="text-muted-foreground">DN đóng tổng</div>
-                <div className="text-[16px] text-blue-600">{(insurance.reduce((s, i) => s + i.employerRate, 0) * 100).toFixed(1)}%</div>
+                <div className="text-[16px] text-blue-600">22.5%</div>
               </div>
-              <div className="text-center">
+              <div>
                 <div className="text-muted-foreground">NV max/tháng</div>
-                <div className="text-[16px]">{formatVND(insurance.reduce((s, i) => s + i.salaryCap * i.employeeRate, 0))}</div>
+                <div className="text-[16px]">{fmtVND(36000000 * 0.105)}</div>
               </div>
-              <div className="text-center">
+              <div>
                 <div className="text-muted-foreground">DN max/tháng</div>
-                <div className="text-[16px]">{formatVND(insurance.reduce((s, i) => s + i.salaryCap * i.employerRate, 0))}</div>
+                <div className="text-[16px]">{fmtVND(36000000 * 0.225)}</div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Tax Section */}
-      {activeSection === 'tax' && activeTax && (
+      {/* ── Tax Calculator ── */}
+      {activeSection === "tax" && (
         <div className="space-y-4">
-          {/* Tax policy info */}
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <div className="text-[14px]">{activeTax.name}</div>
-                <div className="text-[11px] text-muted-foreground">Hiệu lực: {new Date(activeTax.effectiveDate).toLocaleDateString('vi-VN')}</div>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Đang áp dụng</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-3">
-                <div className="text-[11px] text-muted-foreground">Giảm trừ bản thân</div>
-                <div className="text-[18px] text-blue-600">{formatFullVND(activeTax.personalDeduction)}</div>
-                <div className="text-[10px] text-muted-foreground">/tháng</div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/10 rounded-xl p-3">
-                <div className="text-[11px] text-muted-foreground">Giảm trừ người phụ thuộc</div>
-                <div className="text-[18px] text-purple-600">{formatFullVND(activeTax.dependentDeduction)}</div>
-                <div className="text-[10px] text-muted-foreground">/người/tháng</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tax brackets table */}
+          {/* Biểu thuế */}
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="p-4 border-b border-border">
-              <div className="text-[14px]">Biểu thuế lũy tiến từng phần</div>
-              <div className="text-[11px] text-muted-foreground">Công thức: Thuế = Thu nhập chịu thuế × Thuế suất − Số tiền giảm trừ nhanh</div>
+              <div className="text-[14px]">
+                Biểu thuế TNCN lũy tiến từng phần (2024)
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                Giảm trừ bản thân: 11.000.000đ/tháng | Người phụ thuộc:
+                4.400.000đ/người/tháng
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead><tr className="border-b border-border bg-muted/50">
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground w-16">Bậc</th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">Thu nhập chịu thuế từ</th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">Đến</th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">Thuế suất</th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">Giảm trừ nhanh</th>
-                </tr></thead>
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="text-center px-4 py-3 text-[11px] text-muted-foreground w-12">
+                      Bậc
+                    </th>
+                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                      Thu nhập chịu thuế từ
+                    </th>
+                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                      Đến
+                    </th>
+                    <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                      Thuế suất
+                    </th>
+                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                      Giảm trừ nhanh
+                    </th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {activeTax.brackets.map(b => (
-                    <tr key={b.level} className="border-b border-border last:border-0 hover:bg-accent/30">
-                      <td className="px-4 py-3 text-[13px] text-center">{b.level}</td>
-                      <td className="px-4 py-3 text-[12px] text-right">{formatFullVND(b.fromAmount)}</td>
-                      <td className="px-4 py-3 text-[12px] text-right">{b.toAmount ? formatFullVND(b.toAmount) : '∞'}</td>
+                  {TAX_BRACKETS.map((b) => (
+                    <tr
+                      key={b.level}
+                      className="border-b border-border last:border-0 hover:bg-accent/30"
+                    >
+                      <td className="px-4 py-3 text-[13px] text-center">
+                        {b.level}
+                      </td>
+                      <td className="px-4 py-3 text-[12px] text-right">
+                        {fmtVND(b.from)}
+                      </td>
+                      <td className="px-4 py-3 text-[12px] text-right">
+                        {b.to ? fmtVND(b.to) : "∞"}
+                      </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-[12px] px-2 py-0.5 rounded ${b.rate <= 0.1 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : b.rate <= 0.2 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : b.rate <= 0.3 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                        <span
+                          className={`text-[12px] px-2 py-0.5 rounded ${b.rate <= 0.1 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : b.rate <= 0.2 ? "bg-yellow-100 text-yellow-700" : b.rate <= 0.3 ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"}`}
+                        >
                           {(b.rate * 100).toFixed(0)}%
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-right">{formatFullVND(b.quickDeduction)}</td>
+                      <td className="px-4 py-3 text-[12px] text-right">
+                        {fmtVND(b.quickDeduction)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1247,81 +2127,505 @@ export function PayrollConfigPage() {
           </div>
 
           {/* Tax calculator */}
-          <TaxCalculator brackets={activeTax.brackets} personalDeduction={activeTax.personalDeduction} />
+          <TaxCalculator />
+        </div>
+      )}
+
+      {/* Create component dialog */}
+      {showCreate && (
+        <CreateSalaryComponentDialog
+          onClose={() => setShowCreate(false)}
+          onCreate={handleCreateComponent}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Tax brackets (Vietnam 2024) ──────────────────────────────────
+const TAX_BRACKETS = [
+  { level: 1, from: 0, to: 5_000_000, rate: 0.05, quickDeduction: 0 },
+  {
+    level: 2,
+    from: 5_000_000,
+    to: 10_000_000,
+    rate: 0.1,
+    quickDeduction: 250_000,
+  },
+  {
+    level: 3,
+    from: 10_000_000,
+    to: 18_000_000,
+    rate: 0.15,
+    quickDeduction: 750_000,
+  },
+  {
+    level: 4,
+    from: 18_000_000,
+    to: 32_000_000,
+    rate: 0.2,
+    quickDeduction: 1_650_000,
+  },
+  {
+    level: 5,
+    from: 32_000_000,
+    to: 52_000_000,
+    rate: 0.25,
+    quickDeduction: 3_250_000,
+  },
+  {
+    level: 6,
+    from: 52_000_000,
+    to: 80_000_000,
+    rate: 0.3,
+    quickDeduction: 5_850_000,
+  },
+  {
+    level: 7,
+    from: 80_000_000,
+    to: null,
+    rate: 0.35,
+    quickDeduction: 9_850_000,
+  },
+];
+
+// ─── Tax Calculator widget ────────────────────────────────────────
+function TaxCalculator() {
+  const [grossInput, setGrossInput] = useState("");
+  const [dependents, setDependents] = useState(0);
+
+  const PERSONAL_DEDUCTION = 11_000_000;
+  const DEPENDENT_DEDUCTION = 4_400_000;
+
+  const result = useMemo(() => {
+    const gross = Number(grossInput);
+    if (!gross || gross <= 0) return null;
+
+    const insBase = Math.min(gross, 36_000_000);
+    const bhxh = insBase * 0.08;
+    const bhyt = insBase * 0.015;
+    const bhtn = insBase * 0.01;
+    const totalIns = bhxh + bhyt + bhtn;
+
+    const taxableIncome = Math.max(
+      0,
+      gross - totalIns - PERSONAL_DEDUCTION - dependents * DEPENDENT_DEDUCTION,
+    );
+    let tax = 0;
+    let appliedLevel = 0;
+    for (const b of TAX_BRACKETS) {
+      if (taxableIncome > b.from) {
+        if (b.to === null || taxableIncome <= b.to) {
+          tax = taxableIncome * b.rate - b.quickDeduction;
+          appliedLevel = b.level;
+          break;
+        }
+      }
+    }
+    if (tax < 0) tax = 0;
+    const net = gross - totalIns - Math.max(0, tax);
+    return {
+      gross,
+      bhxh,
+      bhyt,
+      bhtn,
+      totalIns,
+      taxableIncome,
+      tax: Math.max(0, tax),
+      net,
+      appliedLevel,
+    };
+  }, [grossInput, dependents]);
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="text-[14px] mb-3 flex items-center gap-1">
+        <Calculator size={16} /> Tính thử thuế TNCN
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label className="block text-[12px] text-muted-foreground mb-1">
+            Thu nhập Gross (₫)
+          </label>
+          <input
+            type="number"
+            value={grossInput}
+            onChange={(e) => setGrossInput(e.target.value)}
+            placeholder="VD: 30000000"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          />
+        </div>
+        <div>
+          <label className="block text-[12px] text-muted-foreground mb-1">
+            Số người phụ thuộc
+          </label>
+          <input
+            type="number"
+            value={dependents}
+            onChange={(e) => setDependents(Number(e.target.value))}
+            min={0}
+            max={10}
+            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          />
+        </div>
+      </div>
+
+      {result && (
+        <div className="space-y-1.5 text-[12px] bg-muted/20 rounded-xl p-4">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Thu nhập Gross:</span>
+            <span>{fmtVND(result.gross)}</span>
+          </div>
+          <div className="flex justify-between text-red-500">
+            <span>— BHXH (8%):</span>
+            <span>-{fmtVND(result.bhxh)}</span>
+          </div>
+          <div className="flex justify-between text-red-500">
+            <span>— BHYT (1.5%):</span>
+            <span>-{fmtVND(result.bhyt)}</span>
+          </div>
+          <div className="flex justify-between text-red-500">
+            <span>— BHTN (1%):</span>
+            <span>-{fmtVND(result.bhtn)}</span>
+          </div>
+          <div className="flex justify-between text-blue-600">
+            <span>— Giảm trừ bản thân:</span>
+            <span>-{fmtVND(PERSONAL_DEDUCTION)}</span>
+          </div>
+          {dependents > 0 && (
+            <div className="flex justify-between text-purple-600">
+              <span>— Giảm trừ phụ thuộc ({dependents} người):</span>
+              <span>-{fmtVND(dependents * DEPENDENT_DEDUCTION)}</span>
+            </div>
+          )}
+          <div className="flex justify-between pt-1 border-t border-border">
+            <span className="text-muted-foreground">Thu nhập chịu thuế:</span>
+            <span>{fmtVND(result.taxableIncome)}</span>
+          </div>
+          {result.appliedLevel > 0 && (
+            <div className="text-[10px] text-muted-foreground">
+              Áp dụng bậc {result.appliedLevel} (
+              {(TAX_BRACKETS[result.appliedLevel - 1].rate * 100).toFixed(0)}%)
+            </div>
+          )}
+          <div className="flex justify-between text-red-500">
+            <span>Thuế TNCN:</span>
+            <span>-{fmtVND(result.tax)}</span>
+          </div>
+          <div className="flex justify-between text-[14px] font-medium pt-1.5 border-t-2 border-border">
+            <span>THỰC NHẬN (NET):</span>
+            <span className="text-green-600">{fmtVND(result.net)}</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground">
+            Thuế / Gross: {((result.tax / result.gross) * 100).toFixed(2)}% |
+            Tổng khấu trừ:{" "}
+            {(((result.totalIns + result.tax) / result.gross) * 100).toFixed(2)}
+            %
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// ─── Tax Calculator ─────────────
-function TaxCalculator({ brackets, personalDeduction }: { brackets: TaxBracket[]; personalDeduction: number }) {
-  const [grossInput, setGrossInput] = useState('');
-  const [dependents, setDependents] = useState(0);
+// ─── Create Salary Component Dialog ──────────────────────────────
+function CreateSalaryComponentDialog({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (p: {
+    code: string;
+    name: string;
+    componentType: payrollService.ComponentType;
+    calculationType: payrollService.CalculationType;
+    isTaxable: boolean;
+    isInsurable: boolean;
+    description: string | null;
+  }) => void;
+}) {
+  const [form, setForm] = useState({
+    code: "",
+    name: "",
+    componentType: "EARNING" as payrollService.ComponentType,
+    calculationType: "FIXED" as payrollService.CalculationType,
+    isTaxable: false,
+    isInsurable: false,
+    description: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-  const result = useMemo(() => {
-    const gross = Number(grossInput);
-    if (!gross || gross <= 0) return null;
-
-    // Assume insurance on capped base
-    const insBase = Math.min(gross, 36000000);
-    const bhxh = insBase * 0.08;
-    const bhyt = insBase * 0.015;
-    const bhtn = insBase * 0.01;
-    const totalIns = bhxh + bhyt + bhtn;
-
-    const taxableIncome = gross - totalIns - personalDeduction - (dependents * 4400000);
-    let tax = 0;
-    let appliedBracket = 0;
-    if (taxableIncome > 0) {
-      for (const b of brackets) {
-        if (b.toAmount === null || taxableIncome <= b.toAmount) {
-          tax = taxableIncome * b.rate - b.quickDeduction;
-          appliedBracket = b.level;
-          break;
-        }
-      }
+  const handleSubmit = async () => {
+    if (!form.code.trim() || !form.name.trim()) {
+      toast.error("Nhập mã và tên thành phần");
+      return;
     }
-    if (tax < 0) tax = 0;
-    const net = gross - totalIns - tax;
-
-    return { gross, totalIns, bhxh, bhyt, bhtn, personalDeduction, dependentDeduction: dependents * 4400000, taxableIncome: Math.max(0, taxableIncome), tax, net, appliedBracket };
-  }, [grossInput, dependents, brackets, personalDeduction]);
+    setSubmitting(true);
+    await onCreate({ ...form, description: form.description || null });
+    setSubmitting(false);
+  };
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="text-[14px] mb-3 flex items-center gap-1"><Calculator size={16} /> Tính thử thuế TNCN</div>
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div>
-          <label className="block text-[12px] text-muted-foreground mb-1">Thu nhập Gross (₫)</label>
-          <input type="number" value={grossInput} onChange={e => setGrossInput(e.target.value)} placeholder="VD: 30000000" className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-[16px]">Thêm thành phần lương</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
         </div>
-        <div>
-          <label className="block text-[12px] text-muted-foreground mb-1">Số người phụ thuộc</label>
-          <input type="number" value={dependents} onChange={e => setDependents(Number(e.target.value))} min={0} max={10} className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+        <div className="p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Mã * (tự động UPPERCASE)
+              </label>
+              <input
+                value={form.code}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))
+                }
+                placeholder="VD: PHU_CAP_XANG"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Loại *
+              </label>
+              <select
+                value={form.componentType}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    componentType: e.target
+                      .value as payrollService.ComponentType,
+                  }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              >
+                <option value="EARNING">Thu nhập</option>
+                <option value="DEDUCTION">Khấu trừ</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Tên thành phần *
+            </label>
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="VD: Phụ cấp xăng xe"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Cách tính
+            </label>
+            <select
+              value={form.calculationType}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  calculationType: e.target
+                    .value as payrollService.CalculationType,
+                }))
+              }
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            >
+              <option value="FIXED">Cố định (FIXED)</option>
+              <option value="FORMULA">Công thức (FORMULA)</option>
+              <option value="MANUAL">Nhập tay (MANUAL)</option>
+            </select>
+          </div>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isTaxable}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, isTaxable: e.target.checked }))
+                }
+              />
+              Chịu thuế TNCN
+            </label>
+            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isInsurable}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, isInsurable: e.target.checked }))
+                }
+              />
+              Tính bảo hiểm
+            </label>
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Mô tả
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
+              rows={2}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Plus size={14} />
+            )}{" "}
+            Tạo
+          </button>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {result && (
-        <div className="space-y-2 text-[12px]">
-          <div className="flex justify-between"><span className="text-muted-foreground">Thu nhập Gross:</span><span>{formatFullVND(result.gross)}</span></div>
-          <div className="flex justify-between text-red-500"><span>— BHXH (8%):</span><span>-{formatFullVND(result.bhxh)}</span></div>
-          <div className="flex justify-between text-red-500"><span>— BHYT (1.5%):</span><span>-{formatFullVND(result.bhyt)}</span></div>
-          <div className="flex justify-between text-red-500"><span>— BHTN (1%):</span><span>-{formatFullVND(result.bhtn)}</span></div>
-          <div className="flex justify-between text-blue-600"><span>— Giảm trừ bản thân:</span><span>-{formatFullVND(result.personalDeduction)}</span></div>
-          {result.dependentDeduction > 0 && (
-            <div className="flex justify-between text-purple-600"><span>— Giảm trừ phụ thuộc ({dependents} người):</span><span>-{formatFullVND(result.dependentDeduction)}</span></div>
-          )}
-          <div className="flex justify-between border-t border-border pt-1"><span className="text-muted-foreground">Thu nhập chịu thuế:</span><span>{formatFullVND(result.taxableIncome)}</span></div>
-          {result.appliedBracket > 0 && <div className="text-[10px] text-muted-foreground">Áp dụng bậc {result.appliedBracket} ({(brackets[result.appliedBracket - 1].rate * 100).toFixed(0)}%)</div>}
-          <div className="flex justify-between text-red-500"><span>Thuế TNCN:</span><span>-{formatFullVND(result.tax)}</span></div>
-          <div className="flex justify-between text-[14px] border-t-2 border-border pt-2">
-            <span>THỰC NHẬN (NET):</span>
-            <span className="text-green-600">{formatFullVND(result.net)}</span>
-          </div>
-          <div className="text-[10px] text-muted-foreground">Tỷ lệ thuế thực tế: {result.gross > 0 ? ((result.tax / result.gross) * 100).toFixed(2) : 0}% | Tỷ lệ khấu trừ tổng: {result.gross > 0 ? (((result.totalIns + result.tax) / result.gross) * 100).toFixed(2) : 0}%</div>
+// ─── Create Adjustment Dialog ──────────────────────────────────────
+function CreateAdjustmentDialog({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (p: {
+    userId: string;
+    adjustmentType: AdjustmentType;
+    amount: number;
+    reason: string;
+  }) => void;
+}) {
+  const [userId, setUserId] = useState("");
+  const [type, setType] = useState<AdjustmentType>("BONUS");
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!userId.trim()) {
+      toast.error("Nhập User ID của nhân viên");
+      return;
+    }
+    const amt = parseFloat(amount);
+    if (!amt || amt <= 0) {
+      toast.error("Số tiền không hợp lệ");
+      return;
+    }
+    setSubmitting(true);
+    await onCreate({
+      userId: userId.trim(),
+      adjustmentType: type,
+      amount: amt,
+      reason,
+    });
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-[16px]">Tạo điều chỉnh lương</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
         </div>
-      )}
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              User ID nhân viên *
+            </label>
+            <input
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="ID nhân viên..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Loại điều chỉnh *
+            </label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as AdjustmentType)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            >
+              {Object.entries(adjustTypeLabels).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Số tiền (VND) *
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+              min={1}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Lý do
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              placeholder="Nhập lý do điều chỉnh..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Plus size={14} />
+            )}{" "}
+            Tạo điều chỉnh
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

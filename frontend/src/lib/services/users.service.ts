@@ -77,25 +77,48 @@ export interface TerminateUserPayload {
   reason?: string;
 }
 
+/** Khớp 1:1 với toProfileDto trong users.mapper.js */
 export interface UserProfile {
+  id?: string;
   userId: string;
-  dateOfBirth?: string;
-  gender?: string;
-  nationalIdNumber?: string;
-  taxCode?: string;
-  socialInsuranceNumber?: string;
-  healthInsuranceNumber?: string;
-  bankName?: string;
-  bankAccountNumber?: string;
-  bankAccountHolder?: string;
-  permanentAddress?: string;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  emergencyContactRel?: string;
-  dependantCount?: number;
-  educationLevel?: string;
-  educationMajor?: string;
-  university?: string;
+  // Thông tin cá nhân
+  dateOfBirth?: string | null;
+  gender?: "MALE" | "FEMALE" | "OTHER" | "UNDISCLOSED" | null;
+  placeOfBirth?: string | null;
+  nationality?: string | null;
+  ethnicity?: string | null;
+  permanentAddress?: string | null;
+  currentAddress?: string | null;
+  city?: string | null;
+  province?: string | null;
+  // CMND / Hộ chiếu
+  nationalIdNumber?: string | null;
+  nationalIdIssueDate?: string | null;
+  nationalIdIssuePlace?: string | null;
+  passportNumber?: string | null;
+  passportExpiry?: string | null;
+  // Thuế & Bảo hiểm
+  taxCode?: string | null;
+  socialInsuranceNumber?: string | null;
+  healthInsuranceNumber?: string | null;
+  healthInsuranceExpiry?: string | null;
+  // Ngân hàng
+  bankName?: string | null;
+  bankBranch?: string | null;
+  bankAccountNumber?: string | null;
+  bankAccountHolder?: string | null;
+  // Liên hệ khẩn cấp
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  emergencyContactRel?: string | null;
+  // Khác
+  dependantCount?: number | null;
+  educationLevel?: string | null;
+  educationMajor?: string | null;
+  university?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // FIX: Map đúng theo những gì backend getUserStats thực sự trả về
