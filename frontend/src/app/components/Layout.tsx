@@ -149,7 +149,8 @@ export function Layout() {
         children: [
           { label: "Kỳ lương", path: "/payroll" },
           { label: "Điều chỉnh lương", path: "/payroll/adjustments" },
-          { label: "Cấu hình lương", path: "/payroll/config" },
+          { label: "Cấu hình lương NV", path: "/payroll/salary-config" },
+          { label: "Cấu hình bảng lương", path: "/payroll/config" },
         ],
       });
     } else if (can("MANAGER")) {

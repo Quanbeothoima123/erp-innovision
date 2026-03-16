@@ -7,6 +7,8 @@ import { useParams, Link, useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../../lib/apiClient';
 import * as usersService from '../../lib/services/users.service';
+import * as payrollService from '../../lib/services/payroll.service';
+import type { ApiUserSalaryComponent, ApiSalaryComponent } from '../../lib/services/payroll.service';
 import * as departmentsService from '../../lib/services/departments.service';
 import * as jobTitlesService from '../../lib/services/jobTitles.service';
 import type { ApiUser } from '../../lib/services/auth.service';
@@ -22,7 +24,7 @@ import {
   ChevronLeft, Edit2, Lock, Unlock, UserX, KeyRound, DollarSign,
   Wallet, AlertTriangle, Check, X, Plus, Ban, ScrollText, Clock,
   User as UserIcon, Shield, Building2, Phone, Mail, Calendar,
-  Loader2, RefreshCw,
+  Loader2, RefreshCw,Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -268,6 +270,7 @@ export function EmployeeDetailPage() {
     { key: 'info', label: 'Thông tin', icon: <UserIcon size={14} /> },
     ...(isAdminHR || user.id === currentUser?.id ? [{ key: 'profile', label: 'Hồ sơ', icon: <Shield size={14} /> }] : []),
     ...(isAdminHR ? [
+      { key: 'components', label: 'Phụ cấp', icon: <Wallet size={14} /> },
       { key: 'actions', label: 'Hành động', icon: <Lock size={14} /> },
     ] : []),
   ];
@@ -412,6 +415,11 @@ export function EmployeeDetailPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Tab: SALARY COMPONENTS */}
+      {activeTab === 'components' && isAdminHR && (
+        <SalaryComponentsTab userId={user.id} canManage={isAdminHR} />
       )}
 
       {/* Tab: ACTIONS */}
@@ -693,7 +701,7 @@ function EditProfileForm({ profile, onSave, saving, onCancel }: {
       </div>
       <DlgFooter
         onCancel={onCancel}
-        onConfirm={() => onSave({ ...f, dependantCount: parseInt(f.dependantCount) || 0, gender: f.gender || undefined })}
+        onConfirm={() => onSave({ ...f, dependantCount: parseInt(f.dependantCount) || 0,gender: (f.gender as "MALE" | "FEMALE" | "OTHER" | "UNDISCLOSED" | undefined) || undefined })}
         label="Lưu hồ sơ"
         loading={saving}
       />
@@ -729,5 +737,324 @@ function TerminateForm({ userName, onSave, saving, onCancel }: { userName: strin
         variant="danger"
       />
     </>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SalaryComponentsTab — Tab Phụ cấp trong EmployeeDetailPage
+// ═══════════════════════════════════════════════════════════════
+function SalaryComponentsTab({ userId, canManage }: { userId: string; canManage: boolean }) {
+  const [components, setComponents] = useState<ApiUserSalaryComponent[]>([]);
+  const [options, setOptions] = useState<ApiSalaryComponent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+
+  const fmtVND = (n: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+  const fmtDate = (d?: string | null) => d ? new Date(d).toLocaleDateString('vi-VN') : '—';
+
+  const fetchComponents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [comps, opts] = await Promise.all([
+        payrollService.getUserSalaryComponents(userId),
+        payrollService.getSalaryComponentOptions(),
+      ]);
+      setComponents(comps);
+      setOptions(opts);
+    } catch (err) {
+      if (err instanceof ApiError) toast.error(err.message);
+    } finally { setLoading(false); }
+  }, [userId]);
+
+  useEffect(() => { fetchComponents(); }, [fetchComponents]);
+
+  const handleRemove = async (id: string, name: string) => {
+    try {
+      await payrollService.removeUserSalaryComponent(id);
+      toast.success(`Đã gỡ phụ cấp ${name}`);
+      fetchComponents();
+    } catch (err) {
+      if (err instanceof ApiError) toast.error(err.message);
+    }
+  };
+
+  const handleAssign = async (payload: Parameters<typeof payrollService.assignSalaryComponent>[0]) => {
+    try {
+      await payrollService.assignSalaryComponent(payload);
+      toast.success('Đã gán phụ cấp');
+      setShowAdd(false);
+      fetchComponents();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Không thể gán phụ cấp');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+        <Loader2 size={18} className="animate-spin" /> <span className="text-[13px]">Đang tải...</span>
+      </div>
+    );
+  }
+
+  const activeComponents = components.filter(c => c.isActive);
+  const totalActive = activeComponents.reduce((s, c) => s + c.amount, 0);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[14px] flex items-center gap-2">
+          <Wallet size={16} /> Phụ cấp đang áp dụng
+        </h3>
+        {canManage && (
+          <button onClick={() => setShowAdd(true)}
+            className="text-[12px] px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 hover:bg-blue-700">
+            <Plus size={13} /> Gán phụ cấp
+          </button>
+        )}
+      </div>
+
+      {components.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground">
+          <Wallet size={32} className="mx-auto mb-2 opacity-20" />
+          <div className="text-[13px]">Nhân viên này chưa có phụ cấp nào</div>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">Tên phụ cấp</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">Mã</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">Loại</th>
+                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">Số tiền</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">Hiệu lực từ</th>
+                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">Kết thúc</th>
+                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">Trạng thái</th>
+                  {canManage && <th className="px-4 py-3 w-10" />}
+                </tr>
+              </thead>
+              <tbody>
+                {components.map(c => (
+                  <tr key={c.id} className="border-t border-border hover:bg-accent/30">
+                    <td className="px-4 py-3 font-medium">{c.salaryComponent?.name ?? '—'}</td>
+                    <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground hidden md:table-cell">
+                      {c.salaryComponent?.code}
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        c.salaryComponent?.componentType === 'EARNING'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
+                        {c.salaryComponent?.componentType === 'EARNING' ? 'Phụ cấp' : 'Khấu trừ'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-green-600">{fmtVND(c.amount)}</td>
+                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">{fmtDate(c.effectiveFrom)}</td>
+                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">{fmtDate(c.effectiveTo)}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                        c.isActive
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-400'
+                      }`}>
+                        {c.isActive ? 'Đang áp dụng' : 'Hết hạn'}
+                      </span>
+                    </td>
+                    {canManage && (
+                      <td className="px-4 py-3 text-center">
+                        {c.isActive && (
+                          <button
+                            onClick={() => handleRemove(c.id, c.salaryComponent?.name ?? '')}
+                            title="Gỡ phụ cấp"
+                            className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/20">
+                            <X size={13} className="text-red-500" />
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center justify-between px-1 text-[12px] text-muted-foreground">
+            <span>{activeComponents.length} phụ cấp đang hoạt động</span>
+            <span>Tổng: <strong className="text-foreground">{fmtVND(totalActive)}</strong></span>
+          </div>
+        </>
+      )}
+
+      {showAdd && (
+        <AssignComponentDialog
+          options={options}
+          existingIds={components.filter(c => c.isActive).map(c => c.salaryComponent?.id ?? '')}
+          userId={userId}
+          onClose={() => setShowAdd(false)}
+          onSave={handleAssign}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── AssignComponentDialog ─────────────────────────────────────
+// Gán thành phần lương cho nhân viên — dùng real API components
+function AssignComponentDialog({ options, existingIds, userId, onClose, onSave }: {
+  options: ApiSalaryComponent[];
+  existingIds: string[];
+  userId: string;
+  onClose: () => void;
+  onSave: (p: Parameters<typeof payrollService.assignSalaryComponent>[0]) => void;
+}) {
+  const [compSearch, setCompSearch] = useState('');
+  const [compDropdownOpen, setCompDropdownOpen] = useState(false);
+  const [selectedComp, setSelectedComp] = useState<ApiSalaryComponent | null>(null);
+  const [amount, setAmount] = useState('');
+  const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().split('T')[0]);
+  const [effectiveTo, setEffectiveTo] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const fmtVND = (n: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(n);
+
+  // Filter available options (exclude already assigned active ones)
+  const available = options.filter(o => o.isActive && !existingIds.includes(o.id));
+  const filtered = available.filter(o => {
+    if (!compSearch) return true;
+    const s = compSearch.toLowerCase();
+    return o.name.toLowerCase().includes(s) || o.code.toLowerCase().includes(s);
+  });
+
+  const handleSave = () => {
+    const amt = parseFloat(amount);
+    if (!selectedComp) { toast.error('Chọn thành phần lương'); return; }
+    if (!amt || amt <= 0) { toast.error('Nhập số tiền hợp lệ'); return; }
+    if (!effectiveFrom) { toast.error('Chọn ngày hiệu lực'); return; }
+    onSave({
+      userId,
+      salaryComponentId: selectedComp.id,
+      amount: amt,
+      effectiveFrom,
+      effectiveTo: effectiveTo || null,
+      notes: notes || null,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-[440px]">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-[16px]">Gán thành phần lương</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent"><X size={18} /></button>
+        </div>
+        <div className="p-4 space-y-3">
+          {/* Searchable component dropdown */}
+          <div className="relative">
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Thành phần lương * {selectedComp && <span className="text-green-600">✓</span>}
+            </label>
+            {selectedComp ? (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-500 bg-input-background">
+                <span className="text-[13px] flex-1">{selectedComp.name}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">{selectedComp.code}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                  selectedComp.componentType === 'EARNING'
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                }`}>
+                  {selectedComp.componentType === 'EARNING' ? 'Phụ cấp' : 'Khấu trừ'}
+                </span>
+                <button onClick={() => { setSelectedComp(null); setCompDropdownOpen(true); }}
+                  className="text-[11px] text-blue-600 hover:underline ml-1">Đổi</button>
+              </div>
+            ) : (
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input type="text" placeholder="Tìm tên hoặc mã phụ cấp..."
+                  value={compSearch}
+                  onChange={e => { setCompSearch(e.target.value); setCompDropdownOpen(true); }}
+                  onFocus={() => setCompDropdownOpen(true)}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+                {compDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setCompDropdownOpen(false)} />
+                    <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-40 overflow-y-auto">
+                      {filtered.map(o => (
+                        <button key={o.id}
+                          onClick={() => { setSelectedComp(o); setCompDropdownOpen(false); setCompSearch(''); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent text-[12px]">
+                          <span className="flex-1 truncate">{o.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">{o.code}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                            o.componentType === 'EARNING'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          }`}>
+                            {o.componentType === 'EARNING' ? 'Phụ cấp' : 'Khấu trừ'}
+                          </span>
+                        </button>
+                      ))}
+                      {filtered.length === 0 && (
+                        <div className="px-3 py-2 text-[12px] text-muted-foreground">
+                          {available.length === 0 ? 'Tất cả phụ cấp đã được gán' : 'Không tìm thấy'}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Amount */}
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">Số tiền (VND) *</label>
+            <input type="number" value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder="VD: 730,000"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+            {amount && <div className="text-[10px] text-muted-foreground mt-0.5">{fmtVND(parseFloat(amount) || 0)}</div>}
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">Ngày hiệu lực *</label>
+              <input type="date" value={effectiveFrom}
+                onChange={e => setEffectiveFrom(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Ngày kết thúc <span className="text-[10px]">— để trống = không giới hạn</span>
+              </label>
+              <input type="date" value={effectiveTo}
+                onChange={e => setEffectiveTo(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]" />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">Ghi chú <span className="text-[10px]">— tuỳ chọn</span></label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)}
+              rows={2} placeholder="Nhập ghi chú..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent">Huỷ</button>
+          <button onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700">
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

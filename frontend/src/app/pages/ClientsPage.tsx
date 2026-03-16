@@ -903,7 +903,9 @@ function AddContactDialog({
                 {f.label}
               </label>
               <input
-                value={(form as Record<string, string>)[f.key]}
+                value={
+                  (form as Record<string, string | boolean>)[f.key] as string
+                }
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                 }

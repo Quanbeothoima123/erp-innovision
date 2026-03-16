@@ -2,7 +2,7 @@
 // PAYROLL PAGE — Module 7 (Full API integration)
 // Replaces all mockData with real API via payroll.service
 // ================================================================
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   DollarSign,
@@ -2513,17 +2513,92 @@ function CreateAdjustmentDialog({
     adjustmentType: AdjustmentType;
     amount: number;
     reason: string;
+    payrollPeriodId?: string | null;
   }) => void;
 }) {
-  const [userId, setUserId] = useState("");
   const [type, setType] = useState<AdjustmentType>("BONUS");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [payrollPeriodId, setPayrollPeriodId] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Employee search combobox (real API)
+  const [empSearch, setEmpSearch] = useState("");
+  const [empDropdownOpen, setEmpDropdownOpen] = useState(false);
+  const [empList, setEmpList] = useState<
+    Array<{
+      id: string;
+      fullName: string;
+      userCode: string;
+      departmentName?: string;
+    }>
+  >([]);
+  const [empLoading, setEmpLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{
+    id: string;
+    fullName: string;
+    userCode: string;
+    departmentName?: string;
+  } | null>(null);
+  const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Draft/Calculating periods
+  const [draftPeriods, setDraftPeriods] = useState<
+    Array<{ id: string; month: number; year: number; status: string }>
+  >([]);
+  useEffect(() => {
+    payrollService
+      .listPeriods({ limit: 20 })
+      .then((res) => {
+        setDraftPeriods(
+          res.items.filter(
+            (p) => p.status === "DRAFT" || p.status === "CALCULATING",
+          ),
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleEmpSearch = (val: string) => {
+    setEmpSearch(val);
+    setEmpDropdownOpen(true);
+    if (searchRef.current) clearTimeout(searchRef.current);
+    if (!val.trim() || val.trim().length < 2) {
+      setEmpList([]);
+      return;
+    }
+    searchRef.current = setTimeout(async () => {
+      setEmpLoading(true);
+      try {
+        const { listUsers } = await import("../../lib/services/users.service");
+        const res = await listUsers({ search: val.trim(), limit: 10 });
+        setEmpList(
+          res.items.map(
+            (u: {
+              id: string;
+              fullName: string;
+              userCode: string;
+              department?: { name: string } | null;
+            }) => ({
+              id: u.id,
+              fullName: u.fullName,
+              userCode: u.userCode,
+              departmentName: (u as { department?: { name: string } | null })
+                .department?.name,
+            }),
+          ),
+        );
+      } catch {
+        setEmpList([]);
+      } finally {
+        setEmpLoading(false);
+      }
+    }, 300);
+  };
+
   const handleSubmit = async () => {
-    if (!userId.trim()) {
-      toast.error("Nhập User ID của nhân viên");
+    if (!selectedUser) {
+      toast.error("Chọn nhân viên");
       return;
     }
     const amt = parseFloat(amount);
@@ -2531,20 +2606,30 @@ function CreateAdjustmentDialog({
       toast.error("Số tiền không hợp lệ");
       return;
     }
+    if (!reason.trim()) {
+      toast.error("Nhập lý do điều chỉnh");
+      return;
+    }
     setSubmitting(true);
     await onCreate({
-      userId: userId.trim(),
+      userId: selectedUser.id,
       adjustmentType: type,
       amount: amt,
-      reason,
+      reason: reason.trim(),
+      payrollPeriodId: payrollPeriodId || null,
     });
     setSubmitting(false);
+  };
+
+  const periodStatusLabels_: Record<string, string> = {
+    DRAFT: "Bản nháp",
+    CALCULATING: "Đang tính",
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-[480px]">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-[16px]">Tạo điều chỉnh lương</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
@@ -2552,33 +2637,121 @@ function CreateAdjustmentDialog({
           </button>
         </div>
         <div className="p-4 space-y-3">
-          <div>
+          {/* Searchable employee combobox */}
+          <div className="relative">
             <label className="block text-[12px] text-muted-foreground mb-1">
-              User ID nhân viên *
+              Nhân viên *{" "}
+              {selectedUser && <span className="text-green-600">✓</span>}
             </label>
-            <input
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="ID nhân viên..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-            />
+            {selectedUser ? (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-500 bg-input-background">
+                <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+                  {selectedUser.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] truncate">
+                    {selectedUser.fullName}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {selectedUser.departmentName &&
+                      `${selectedUser.departmentName} • `}
+                    {selectedUser.userCode}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedUser(null);
+                    setEmpDropdownOpen(true);
+                  }}
+                  className="text-[11px] text-blue-600 hover:underline shrink-0"
+                >
+                  Đổi
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                {empLoading && (
+                  <Loader2
+                    size={13}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground"
+                  />
+                )}
+                <input
+                  type="text"
+                  placeholder="Tìm tên hoặc mã nhân viên..."
+                  value={empSearch}
+                  onChange={(e) => handleEmpSearch(e.target.value)}
+                  onFocus={() =>
+                    empSearch.length >= 2 && setEmpDropdownOpen(true)
+                  }
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                />
+                {empDropdownOpen && empList.length > 0 && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setEmpDropdownOpen(false)}
+                    />
+                    <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                      {empList.map((u) => (
+                        <button
+                          key={u.id}
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setEmpDropdownOpen(false);
+                            setEmpSearch("");
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent text-[12px]"
+                        >
+                          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+                            {u.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="truncate">{u.fullName}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {u.departmentName && `${u.departmentName} • `}
+                              {u.userCode}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                      {empList.length === 0 && (
+                        <div className="px-3 py-2 text-[12px] text-muted-foreground">
+                          Không tìm thấy
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Adjustment type */}
           <div>
             <label className="block text-[12px] text-muted-foreground mb-1">
               Loại điều chỉnh *
             </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as AdjustmentType)}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-            >
-              {Object.entries(adjustTypeLabels).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
+            <div className="flex gap-2">
+              {(
+                ["BONUS", "DEDUCTION", "ADVANCE", "REIMBURSEMENT"] as const
+              ).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setType(t)}
+                  className={`flex-1 py-2 rounded-lg text-[11px] border transition-colors ${type === t ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600" : "border-border text-muted-foreground hover:bg-accent"}`}
+                >
+                  {adjustTypeLabels[t]}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
+
+          {/* Amount */}
           <div>
             <label className="block text-[12px] text-muted-foreground mb-1">
               Số tiền (VND) *
@@ -2592,15 +2765,40 @@ function CreateAdjustmentDialog({
               className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
             />
           </div>
+
+          {/* Payroll period selector */}
           <div>
             <label className="block text-[12px] text-muted-foreground mb-1">
-              Lý do
+              Kỳ lương áp dụng{" "}
+              <span className="text-[10px] text-muted-foreground">
+                — tuỳ chọn
+              </span>
+            </label>
+            <select
+              value={payrollPeriodId}
+              onChange={(e) => setPayrollPeriodId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            >
+              <option value="">Áp dụng vào kỳ gần nhất</option>
+              {draftPeriods.map((p) => (
+                <option key={p.id} value={p.id}>
+                  T{p.month}/{p.year} —{" "}
+                  {periodStatusLabels_[p.status] ?? p.status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reason */}
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Lý do *
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
-              placeholder="Nhập lý do điều chỉnh..."
+              placeholder="Nhập lý do điều chỉnh lương..."
               className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
             />
           </div>

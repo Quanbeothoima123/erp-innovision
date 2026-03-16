@@ -22,6 +22,7 @@ import {
   PayrollAdjustmentsPage,
   PayrollConfigPage,
 } from "./pages/PayrollPage";
+import { SalaryConfigPage } from "./pages/SalaryConfigPage";
 import {
   ProjectsPage,
   ProjectExpensesPage,
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
           { path: "payroll", Component: PayrollPage },
           { path: "payroll/adjustments", Component: PayrollAdjustmentsPage },
           { path: "payroll/config", Component: PayrollConfigPage },
+          { path: "payroll/salary-config", Component: SalaryConfigPage },
           { path: "projects", Component: ProjectsPage },
           { path: "projects/expenses", Component: ProjectExpensesPage },
           { path: "projects/health", Component: ProjectHealthPage },

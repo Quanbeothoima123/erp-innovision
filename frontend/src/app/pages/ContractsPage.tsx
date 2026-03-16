@@ -521,15 +521,17 @@ function ContractDetailPanel({
   const [showAddAmendment, setShowAddAmendment] = useState(false);
 
   const nextStatuses: ContractStatus[] =
-    {
-      DRAFT: ["PENDING_SIGN", "ACTIVE"],
-      PENDING_SIGN: ["ACTIVE", "DRAFT"],
-      ACTIVE: ["COMPLETED", "TERMINATED", "SUSPENDED"],
-      SUSPENDED: ["ACTIVE", "TERMINATED"],
-      COMPLETED: [],
-      TERMINATED: [],
-      EXPIRED: [],
-    }[c.status] ?? [];
+    (
+      {
+        DRAFT: ["PENDING_SIGN", "ACTIVE"],
+        PENDING_SIGN: ["ACTIVE", "DRAFT"],
+        ACTIVE: ["COMPLETED", "TERMINATED", "SUSPENDED"],
+        SUSPENDED: ["ACTIVE", "TERMINATED"],
+        COMPLETED: [],
+        TERMINATED: [],
+        EXPIRED: [],
+      } as Record<string, ContractStatus[]>
+    )[c.status] ?? [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
