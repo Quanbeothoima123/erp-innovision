@@ -205,6 +205,7 @@ export function ProjectDetailPage() {
 
   // Dialog states
   const [showHealthEdit, setShowHealthEdit] = useState(false);
+  const [showEditProject, setShowEditProject] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddMilestone, setShowAddMilestone] = useState(false);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -727,10 +728,21 @@ export function ProjectDetailPage() {
           {/* ── TAB: TỔNG QUAN ── */}
           {activeTab === "overview" && (
             <div className="space-y-4">
+              {/* Edit project info button */}
+              {isAdminMgr && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowEditProject(true)}
+                    className="px-3 py-1.5 border border-border rounded-lg text-[12px] hover:bg-accent flex items-center gap-1"
+                  >
+                    <Edit2 size={12} /> Sửa thông tin dự án
+                  </button>
+                </div>
+              )}
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Left: Description + info */}
                 <div className="space-y-4">
-                  {project.description && (
+                  {project.description ? (
                     <div>
                       <div className="text-[12px] text-muted-foreground mb-1">
                         Mô tả dự án
@@ -739,7 +751,14 @@ export function ProjectDetailPage() {
                         {project.description}
                       </div>
                     </div>
-                  )}
+                  ) : isAdminMgr ? (
+                    <button
+                      onClick={() => setShowEditProject(true)}
+                      className="text-[13px] text-muted-foreground italic hover:text-blue-600 text-left"
+                    >
+                      + Thêm mô tả dự án...
+                    </button>
+                  ) : null}
                   <div className="grid grid-cols-2 gap-3 text-[13px]">
                     {[
                       { label: "Bắt đầu", value: fmtDate(project.startDate) },
@@ -757,7 +776,15 @@ export function ProjectDetailPage() {
                         <div className="text-[11px] text-muted-foreground">
                           {f.label}
                         </div>
-                        <div>{f.value}</div>
+                        <div
+                          className={
+                            f.value === "—"
+                              ? "text-muted-foreground text-[12px] italic"
+                              : ""
+                          }
+                        >
+                          {f.value}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1244,6 +1271,24 @@ export function ProjectDetailPage() {
           project={project}
           onClose={() => setShowHealthEdit(false)}
           onSave={handleUpdateHealth}
+        />
+      )}
+      {showEditProject && (
+        <EditProjectDialog
+          project={project}
+          onClose={() => setShowEditProject(false)}
+          onSave={async (payload) => {
+            try {
+              await projectsService.updateProject(project.id, payload);
+              toast.success("Đã cập nhật thông tin dự án");
+              setShowEditProject(false);
+              fetchProject();
+            } catch (err) {
+              toast.error(
+                err instanceof ApiError ? err.message : "Không thể cập nhật",
+              );
+            }
+          }}
         />
       )}
       {showAddMember && (
@@ -2044,6 +2089,282 @@ function AddExpenseDialog({
               <Send size={14} />
             )}{" "}
             Gửi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── EditProjectDialog ─────────────────────────────────────────
+// Cho phép sửa toàn bộ thông tin cơ bản của dự án:
+// projectName, description, status, priority, startDate, endDate,
+// budgetAmount, projectManagerUserId
+function EditProjectDialog({
+  project,
+  onClose,
+  onSave,
+}: {
+  project: ApiProject;
+  onClose: () => void;
+  onSave: (
+    payload: Parameters<typeof projectsService.updateProject>[1],
+  ) => Promise<void>;
+}) {
+  const [form, setForm] = useState({
+    projectName: project.projectName,
+    projectCode: project.projectCode ?? "",
+    description: project.description ?? "",
+    status: project.status as string,
+    priority: (project.priority ?? "MEDIUM") as string,
+    startDate: project.startDate?.split("T")[0] ?? "",
+    endDate: project.endDate?.split("T")[0] ?? "",
+    budgetAmount: project.budgetAmount?.toString() ?? "",
+    contractValue: project.contractValue?.toString() ?? "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!form.projectName.trim()) {
+      toast.error("Tên dự án là bắt buộc");
+      return;
+    }
+    if (form.startDate && form.endDate && form.endDate < form.startDate) {
+      toast.error("Ngày kết thúc phải sau ngày bắt đầu");
+      return;
+    }
+    setSubmitting(true);
+    await onSave({
+      projectName: form.projectName.trim(),
+      projectCode: form.projectCode.trim().toUpperCase() || null,
+      description: form.description.trim() || null,
+      status: form.status as Parameters<
+        typeof projectsService.updateProject
+      >[1]["status"],
+      priority:
+        (form.priority as Parameters<
+          typeof projectsService.updateProject
+        >[1]["priority"]) ?? null,
+      startDate: form.startDate || null,
+      endDate: form.endDate || null,
+      budgetAmount: form.budgetAmount ? parseFloat(form.budgetAmount) : null,
+      contractValue: form.contractValue ? parseFloat(form.contractValue) : null,
+    });
+    setSubmitting(false);
+  };
+
+  const statusOpts = [
+    { value: "PLANNING", label: "Lập kế hoạch" },
+    { value: "ACTIVE", label: "Đang thực hiện" },
+    { value: "ON_HOLD", label: "Tạm dừng" },
+    { value: "COMPLETED", label: "Hoàn thành" },
+    { value: "CANCELLED", label: "Huỷ bỏ" },
+    { value: "ARCHIVED", label: "Lưu trữ" },
+  ];
+  const priorityOpts = [
+    { value: "LOW", label: "Thấp" },
+    { value: "MEDIUM", label: "Trung bình" },
+    { value: "HIGH", label: "Cao" },
+    { value: "URGENT", label: "Khẩn cấp" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
+          <h3 className="text-[16px] flex items-center gap-2">
+            <Edit2 size={15} /> Sửa thông tin dự án
+          </h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Tên + Mã */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Tên dự án *
+              </label>
+              <input
+                value={form.projectName}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, projectName: e.target.value }))
+                }
+                placeholder="Tên dự án..."
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Mã dự án
+              </label>
+              <input
+                value={form.projectCode}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    projectCode: e.target.value.toUpperCase(),
+                  }))
+                }
+                placeholder="DA-001"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] uppercase"
+              />
+            </div>
+          </div>
+
+          {/* Status + Priority */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Trạng thái
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, status: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              >
+                {statusOpts.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Ưu tiên
+              </label>
+              <select
+                value={form.priority}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, priority: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              >
+                {priorityOpts.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Ngày bắt đầu + kết thúc */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Ngày bắt đầu
+                {!form.startDate && (
+                  <span className="ml-1 text-orange-500">— chưa có</span>
+                )}
+              </label>
+              <input
+                type="date"
+                value={form.startDate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, startDate: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Ngày kết thúc dự kiến
+                {!form.endDate && (
+                  <span className="ml-1 text-orange-500">— chưa có</span>
+                )}
+              </label>
+              <input
+                type="date"
+                value={form.endDate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, endDate: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+          </div>
+
+          {/* Date validation hint */}
+          {form.startDate && form.endDate && form.endDate < form.startDate && (
+            <div className="flex items-center gap-2 text-[12px] text-red-600 bg-red-50 dark:bg-red-900/10 rounded-lg p-2">
+              <AlertTriangle size={13} /> Ngày kết thúc phải sau ngày bắt đầu
+            </div>
+          )}
+
+          {/* Budget + Contract value */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Ngân sách (VND)
+              </label>
+              <input
+                type="number"
+                value={form.budgetAmount}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, budgetAmount: e.target.value }))
+                }
+                placeholder="0"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Giá trị hợp đồng (VND)
+              </label>
+              <input
+                type="number"
+                value={form.contractValue}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, contractValue: e.target.value }))
+                }
+                placeholder="0"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Mô tả dự án
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
+              rows={4}
+              placeholder="Mô tả mục tiêu, phạm vi dự án..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 p-4 border-t border-border sticky bottom-0 bg-card">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Edit2 size={14} />
+            )}
+            Lưu thay đổi
           </button>
         </div>
       </div>
