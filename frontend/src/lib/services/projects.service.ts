@@ -137,7 +137,8 @@ export interface ApiExpenseSummary {
   currency: string;
   totalApproved: number;
   totalPending: number;
-  categories: Record<
+  /** Backend trả byCategory, KHÔNG phải categories */
+  byCategory: Record<
     string,
     {
       approved: number;

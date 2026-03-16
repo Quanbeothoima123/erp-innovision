@@ -2,7 +2,7 @@
 // PROJECT DETAIL PAGE — Module 8 (/projects/:id)
 // 4 tabs: Tổng quan | Thành viên | Milestones | Chi phí
 // ================================================================
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -32,6 +32,7 @@ import {
   Gauge,
   TrendingUp,
   BarChart3,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -45,6 +46,8 @@ import {
   Cell,
 } from "recharts";
 import * as projectsService from "../../lib/services/projects.service";
+import * as usersService from "../../lib/services/users.service";
+import type { ApiUser } from "../../lib/services/auth.service";
 import type {
   ApiProject,
   ApiAssignment,
@@ -467,7 +470,7 @@ export function ProjectDetailPage() {
   };
 
   const expensePieData = expSummary
-    ? Object.entries(expSummary.categories)
+    ? Object.entries(expSummary.byCategory ?? {})
         .map(([cat, data]) => ({
           name: expCategoryLabels[cat] ?? cat,
           value: data.approved + data.reimbursed,
@@ -1494,7 +1497,7 @@ function UpdateHealthDialog({
   );
 }
 
-// ─── AddMemberDialog ───────────────────────────────────────────
+// ─── AddMemberDialog (with user search dropdown) ──────────────
 function AddMemberDialog({
   onClose,
   onSave,
@@ -1502,7 +1505,27 @@ function AddMemberDialog({
   onClose: () => void;
   onSave: (p: Parameters<typeof projectsService.assignMember>[1]) => void;
 }) {
-  const [userId, setUserId] = useState("");
+  // ── User search state ────────────────────────────────────────
+  const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    Array<{
+      id: string;
+      fullName: string;
+      userCode: string;
+      department?: { name: string } | null;
+    }>
+  >([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{
+    id: string;
+    fullName: string;
+    userCode: string;
+  } | null>(null);
+  const searchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // ── Other fields ─────────────────────────────────────────────
   const [role, setRole] = useState("");
   const [allocation, setAllocation] = useState("100");
   const [isBillable, setIsBillable] = useState(false);
@@ -1511,14 +1534,62 @@ function AddMemberDialog({
   );
   const [submitting, setSubmitting] = useState(false);
 
+  // Debounced search
+  const handleSearchChange = (val: string) => {
+    setSearchText(val);
+    setSelectedUser(null);
+    setShowDropdown(true);
+    if (searchRef.current) clearTimeout(searchRef.current);
+    if (!val.trim() || val.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    searchRef.current = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const res = await usersService.listUsers({
+          search: val.trim(),
+          limit: 10,
+        });
+        const items = res.items ?? [];
+        setSearchResults(
+          items.map(
+            (u: ApiUser & { department?: { name: string } | null }) => ({
+              id: u.id,
+              fullName: u.fullName,
+              userCode: u.userCode,
+              department:
+                (u as { department?: { name: string } | null }).department ??
+                null,
+            }),
+          ),
+        );
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+  };
+
+  const selectUser = (u: {
+    id: string;
+    fullName: string;
+    userCode: string;
+  }) => {
+    setSelectedUser(u);
+    setSearchText(u.fullName + " (" + u.userCode + ")");
+    setShowDropdown(false);
+  };
+
   const handleSubmit = async () => {
-    if (!userId.trim()) {
-      toast.error("Nhập User ID");
+    if (!selectedUser) {
+      toast.error("Vui lòng chọn nhân viên từ danh sách");
       return;
     }
     setSubmitting(true);
     await onSave({
-      userId: userId.trim(),
+      userId: selectedUser.id,
       roleInProject: role || null,
       allocationPercent: allocation ? +allocation : null,
       joinedAt,
@@ -1538,17 +1609,78 @@ function AddMemberDialog({
           </button>
         </div>
         <div className="p-4 space-y-3">
-          <div>
+          {/* User search */}
+          <div className="relative" ref={dropdownRef}>
             <label className="block text-[12px] text-muted-foreground mb-1">
-              User ID *
+              Nhân viên *{" "}
+              {selectedUser && (
+                <span className="text-green-600">✓ Đã chọn</span>
+              )}
             </label>
-            <input
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="ID nhân viên..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] font-mono"
-            />
+            <div className="relative">
+              <Search
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => searchText.length >= 2 && setShowDropdown(true)}
+                placeholder="Tìm theo tên hoặc mã nhân viên..."
+                className={`w-full pl-9 pr-3 py-2 rounded-lg border bg-input-background text-[13px] ${
+                  selectedUser ? "border-green-500" : "border-border"
+                }`}
+              />
+              {searchLoading && (
+                <Loader2
+                  size={14}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground"
+                />
+              )}
+            </div>
+
+            {/* Dropdown results */}
+            {showDropdown &&
+              (searchResults.length > 0 ||
+                (searchText.length >= 2 && !searchLoading)) && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowDropdown(false)}
+                  />
+                  <div className="absolute top-full mt-1 w-full z-50 bg-card border border-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                    {searchResults.length === 0 ? (
+                      <div className="px-4 py-3 text-[12px] text-muted-foreground">
+                        Không tìm thấy nhân viên
+                      </div>
+                    ) : (
+                      searchResults.map((u) => (
+                        <button
+                          key={u.id}
+                          onClick={() => selectUser(u)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-accent flex items-center gap-3 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px] shrink-0">
+                            {u.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[13px] truncate">
+                              {u.fullName}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {u.userCode}
+                              {u.department ? ` • ${u.department.name}` : ""}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
           </div>
+
           <div>
             <label className="block text-[12px] text-muted-foreground mb-1">
               Vai trò trong dự án
@@ -1610,7 +1742,7 @@ function AddMemberDialog({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !selectedUser}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
