@@ -27,6 +27,7 @@ import {
   ProjectExpensesPage,
   ProjectHealthPage,
 } from "./pages/ProjectsPage";
+import { ProjectDetailPage } from "./pages/ProjectDetailPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { ContractsPage } from "./pages/ContractsPage";
 import { InvoicesPage, PaymentsPage } from "./pages/InvoicesPage";
@@ -81,6 +82,7 @@ export const router = createBrowserRouter([
           { path: "projects", Component: ProjectsPage },
           { path: "projects/expenses", Component: ProjectExpensesPage },
           { path: "projects/health", Component: ProjectHealthPage },
+          { path: "projects/:id", Component: ProjectDetailPage },
           { path: "clients", Component: ClientsPage },
           { path: "contracts", Component: ContractsPage },
           { path: "invoices", Component: InvoicesPage },
