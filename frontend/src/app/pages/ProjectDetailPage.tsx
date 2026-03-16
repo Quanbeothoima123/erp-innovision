@@ -152,7 +152,7 @@ const expCategoryLabels: Record<string, string> = {
   HARDWARE: "Phần cứng",
   TRAVEL: "Công tác",
   TRAINING: "Đào tạo",
-  OUTSOURCE: "Thuê ngoài",
+  SUBCONTRACT: "Thuê ngoài",
   OTHER: "Khác",
 };
 const CHART_COLORS = [
@@ -528,7 +528,8 @@ export function ProjectDetailPage() {
               )}
               {project.client && (
                 <span className="flex items-center gap-1">
-                  <Users size={11} /> {project.client.clientName}
+                  <Users size={11} />{" "}
+                  {project.client.shortName ?? project.client.companyName}
                 </span>
               )}
               {(project.startDate || project.endDate) && (
@@ -764,7 +765,8 @@ export function ProjectDetailPage() {
                       </div>
                       <div>
                         {project.contract.contractCode} —{" "}
-                        {fmtVND(project.contract.contractValue)}
+                        {project.contract.title} (
+                        {fmtVND(project.contract.totalValue)})
                       </div>
                     </div>
                   )}

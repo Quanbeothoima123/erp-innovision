@@ -23,7 +23,7 @@ export type ExpenseCategory =
   | "HARDWARE"
   | "TRAVEL"
   | "TRAINING"
-  | "OUTSOURCE"
+  | "SUBCONTRACT"
   | "OTHER";
 export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "REIMBURSED";
 export type AssignmentStatus = "ACTIVE" | "ENDED";
@@ -54,7 +54,7 @@ export interface ApiProject {
     fullName: string;
     avatarUrl?: string | null;
   } | null;
-  client: { id: string; clientName: string } | null;
+  client: { id: string; companyName: string; shortName?: string | null } | null;
   activeMemberCount: number;
   milestoneCount: number;
   approvedExpenseCount: number;
@@ -63,7 +63,12 @@ export interface ApiProject {
   createdAt: string;
   updatedAt: string;
   // Only in detail endpoint
-  contract?: { id: string; contractCode: string; contractValue: number } | null;
+  contract?: {
+    id: string;
+    contractCode: string;
+    title: string;
+    totalValue: number;
+  } | null;
   assignments?: ApiAssignment[];
   milestones?: ApiMilestone[];
 }

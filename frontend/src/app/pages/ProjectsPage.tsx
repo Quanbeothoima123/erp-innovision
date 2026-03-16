@@ -143,7 +143,7 @@ const expCategoryLabels: Record<string, string> = {
   HARDWARE: "Phần cứng",
   TRAVEL: "Công tác phí",
   TRAINING: "Đào tạo",
-  OUTSOURCE: "Thuê ngoài",
+  SUBCONTRACT: "Thuê ngoài",
   OTHER: "Khác",
 };
 const CHART_COLORS = [
@@ -504,7 +504,7 @@ function ProjectCard({
             {p.projectCode && (
               <span className="font-mono">{p.projectCode} • </span>
             )}
-            {p.client?.clientName ?? "Nội bộ"}
+            {p.client?.shortName ?? p.client?.companyName ?? "Nội bộ"}
           </div>
         </div>
         {p.priority && (
