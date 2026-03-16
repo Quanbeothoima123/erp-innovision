@@ -1,27 +1,12 @@
-import { useState, useMemo } from "react";
+// ================================================================
+// PROJECT DETAIL PAGE — Module 8 (/projects/:id)
+// 4 tabs: Tổng quan | Thành viên | Milestones | Chi phí
+// ================================================================
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import {
-  projects as initialProjects,
-  getUserById,
-  getClientById,
-  getContractById,
-  formatVND,
-  formatFullVND,
-  users,
-  projectExpenses as initialExpenses,
-  departments,
-} from "../data/mockData";
-import type {
-  Project,
-  ProjectMilestone,
-  ProjectAssignment,
-  ProjectExpense,
-  ProjectExpenseCategory,
-  ProjectExpenseStatus,
-  MilestoneStatus,
-} from "../data/mockData";
-import {
+  ArrowLeft,
   ChevronRight,
   Users,
   Target,
@@ -32,17 +17,21 @@ import {
   AlertTriangle,
   Plus,
   Edit2,
-  ThumbsUp,
-  ThumbsDown,
   X,
-  Briefcase,
-  FileText,
+  Loader2,
   FolderKanban,
   Activity,
-  ArrowLeft,
+  Briefcase,
+  FileText,
   MoreHorizontal,
   UserPlus,
   Send,
+  ThumbsUp,
+  ThumbsDown,
+  RefreshCw,
+  Gauge,
+  TrendingUp,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -55,8 +44,32 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import * as projectsService from "../../lib/services/projects.service";
+import type {
+  ApiProject,
+  ApiAssignment,
+  ApiMilestone,
+  ApiExpense,
+  ApiExpenseSummary,
+  ProjectStatus,
+  ProjectHealthStatus,
+  MilestoneStatus,
+  ExpenseCategory,
+  ExpenseStatus,
+} from "../../lib/services/projects.service";
+import { ApiError } from "../../lib/apiClient";
 
-// ─── Constants ──────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────
+const fmtVND = (n: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(n);
+const fmtDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString("vi-VN") : "—";
+
+// ─── Constants ────────────────────────────────────────────────
 const healthColors: Record<string, string> = {
   ON_TRACK:
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
@@ -74,6 +87,7 @@ const healthEmoji: Record<string, string> = {
   AT_RISK: "🟡",
   DELAYED: "🔴",
 };
+
 const statusColors: Record<string, string> = {
   PLANNING: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
   ACTIVE:
@@ -82,7 +96,7 @@ const statusColors: Record<string, string> = {
     "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   COMPLETED: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   CANCELLED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  ARCHIVED: "bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-500",
+  ARCHIVED: "bg-gray-100 text-gray-500",
 };
 const statusLabels: Record<string, string> = {
   PLANNING: "Lập kế hoạch",
@@ -93,16 +107,16 @@ const statusLabels: Record<string, string> = {
   ARCHIVED: "Lưu trữ",
 };
 const priorityColors: Record<string, string> = {
-  LOW: "bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400",
-  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  URGENT: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  LOW: "bg-gray-100 text-gray-600",
+  MEDIUM: "bg-blue-100 text-blue-700",
+  HIGH: "bg-orange-100 text-orange-700",
+  URGENT: "bg-red-100 text-red-700",
 };
 const priorityLabels: Record<string, string> = {
   LOW: "Thấp",
-  MEDIUM: "Trung bình",
+  MEDIUM: "TB",
   HIGH: "Cao",
-  URGENT: "Khẩn cấp",
+  URGENT: "Khẩn",
 };
 const msStatusColors: Record<string, string> = {
   PENDING: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
@@ -123,17 +137,20 @@ const expStatusColors: Record<string, string> = {
   APPROVED:
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   REJECTED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  REIMBURSED:
+    "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
 };
 const expStatusLabels: Record<string, string> = {
   PENDING: "Đang chờ",
   APPROVED: "Đã duyệt",
-  REJECTED: "Bị từ chối",
+  REJECTED: "Từ chối",
+  REIMBURSED: "Hoàn tiền",
 };
 const expCategoryLabels: Record<string, string> = {
   LABOR: "Nhân công",
   SOFTWARE: "Phần mềm",
   HARDWARE: "Phần cứng",
-  TRAVEL: "Công tác phí",
+  TRAVEL: "Công tác",
   TRAINING: "Đào tạo",
   OUTSOURCE: "Thuê ngoài",
   OTHER: "Khác",
@@ -147,287 +164,340 @@ const CHART_COLORS = [
   "#06b6d4",
   "#f97316",
 ];
+const PROJECT_ROLES = [
+  "Project Manager",
+  "Tech Lead",
+  "Senior Dev",
+  "Backend Dev",
+  "Frontend Dev",
+  "Full-Stack Dev",
+  "BA",
+  "QA Engineer",
+  "DevOps",
+  "Designer",
+  "Support Eng",
+  "Junior Dev",
+];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-popover border border-border rounded-lg p-2.5 shadow-lg text-[12px]">
-      <div className="text-muted-foreground mb-1">{label}</div>
-      {payload.map((p: any, i: number) => (
-        <div key={i} className="flex items-center gap-2">
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: p.color }}
-          />
-          <span className="text-muted-foreground">{p.name}:</span>
-          <span>
-            {typeof p.value === "number" && p.value > 10000
-              ? formatFullVND(p.value)
-              : p.value}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
+type TabKey = "overview" | "members" | "milestones" | "expenses";
 
 // ═══════════════════════════════════════════════════════════════
-// MAIN: ProjectDetailPage
+// ProjectDetailPage
 // ═══════════════════════════════════════════════════════════════
 export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentUser, can } = useAuth();
-  const isAdminMgr = can("ADMIN", "MANAGER");
+  const { can } = useAuth();
+  const isAdminMgr = can("ADMIN", "MANAGER", "HR");
 
-  const [project, setProject] = useState<Project | null>(
-    () => initialProjects.find((p) => p.id === id) || null,
-  );
-  const [expenses, setExpenses] = useState<ProjectExpense[]>(initialExpenses);
-  const [tab, setTab] = useState("overview");
-  const [msFilter, setMsFilter] = useState("");
-  const [expCatFilter, setExpCatFilter] = useState("");
-  const [expStatusFilter, setExpStatusFilter] = useState("");
-  const [showProgressDialog, setShowProgressDialog] = useState(false);
-  const [showMsDialog, setShowMsDialog] = useState(false);
-  const [showExpenseDialog, setShowExpenseDialog] = useState(false);
-  const [showMemberDialog, setShowMemberDialog] = useState(false);
+  // ─── State ──────────────────────────────────────────────────
+  const [project, setProject] = useState<ApiProject | null>(null);
+  const [members, setMembers] = useState<ApiAssignment[]>([]);
+  const [milestones, setMilestones] = useState<ApiMilestone[]>([]);
+  const [expenses, setExpenses] = useState<ApiExpense[]>([]);
+  const [expSummary, setExpSummary] = useState<ApiExpenseSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
+  // Dialog states
+  const [showHealthEdit, setShowHealthEdit] = useState(false);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [showAddMilestone, setShowAddMilestone] = useState(false);
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [editMilestone, setEditMilestone] = useState<ApiMilestone | null>(null);
+  const [msStatusFilter, setMsStatusFilter] = useState("");
+  const [expStatusFilter, setExpStatusFilter] = useState("");
+
+  // ─── Fetch ──────────────────────────────────────────────────
+  const fetchProject = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const [proj, mbrs, mstones, exps, summary] = await Promise.all([
+        projectsService.getProjectById(id),
+        projectsService.getProjectMembers(id, { includeEnded: true }),
+        projectsService.getMilestones(id),
+        projectsService.getProjectExpenses(id, { limit: 50 }),
+        projectsService.getExpenseSummary(id).catch(() => null),
+      ]);
+      setProject(proj);
+      setMembers(mbrs);
+      setMilestones(mstones);
+      setExpenses(exps.items);
+      if (summary) setExpSummary(summary);
+    } catch (err) {
+      if (err instanceof ApiError) toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchProject();
+  }, [fetchProject]);
+
+  // ─── Handlers ───────────────────────────────────────────────
+  const handleUpdateHealth = async (payload: {
+    healthStatus?: ProjectHealthStatus;
+    progressPercent?: number;
+    notes?: string | null;
+  }) => {
+    if (!id) return;
+    try {
+      await projectsService.updateHealth(id, payload);
+      toast.success("Đã cập nhật tiến độ");
+      setShowHealthEdit(false);
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleCloseProject = async (
+    status: "COMPLETED" | "CANCELLED" | "ARCHIVED",
+  ) => {
+    if (!id) return;
+    try {
+      await projectsService.closeProject(id, { status });
+      toast.success(
+        `Đã ${status === "COMPLETED" ? "hoàn thành" : status === "CANCELLED" ? "huỷ" : "lưu trữ"} dự án`,
+      );
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleReopenProject = async () => {
+    if (!id) return;
+    try {
+      await projectsService.reopenProject(id);
+      toast.success("Đã mở lại dự án");
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleAssignMember = async (
+    payload: Parameters<typeof projectsService.assignMember>[1],
+  ) => {
+    if (!id) return;
+    try {
+      await projectsService.assignMember(id, payload);
+      toast.success("Đã thêm thành viên");
+      setShowAddMember(false);
+      fetchProject();
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Không thể thêm thành viên",
+      );
+    }
+  };
+
+  const handleEndAssignment = async (assignmentId: string) => {
+    if (!id) return;
+    try {
+      await projectsService.endAssignment(id, assignmentId, {
+        leftAt: new Date().toISOString(),
+      });
+      toast.success("Đã kết thúc assignment");
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleCreateMilestone = async (
+    payload: Parameters<typeof projectsService.createMilestone>[1],
+  ) => {
+    if (!id) return;
+    try {
+      await projectsService.createMilestone(id, payload);
+      toast.success("Đã tạo milestone");
+      setShowAddMilestone(false);
+      fetchProject();
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Không thể tạo milestone",
+      );
+    }
+  };
+
+  const handleUpdateMilestone = async (
+    msId: string,
+    payload: Parameters<typeof projectsService.updateMilestone>[2],
+  ) => {
+    if (!id) return;
+    try {
+      await projectsService.updateMilestone(id, msId, payload);
+      toast.success("Đã cập nhật milestone");
+      setEditMilestone(null);
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleMarkDone = async (msId: string) => {
+    if (!id) return;
+    try {
+      await projectsService.updateMilestone(id, msId, { status: "DONE" });
+      toast.success("Milestone đã hoàn thành!");
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleDeleteMilestone = async (msId: string) => {
+    if (!id) return;
+    try {
+      await projectsService.deleteMilestone(id, msId);
+      toast.success("Đã xoá milestone");
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleCreateExpense = async (
+    payload: Parameters<typeof projectsService.createExpense>[1],
+  ) => {
+    if (!id) return;
+    try {
+      await projectsService.createExpense(id, payload);
+      toast.success("Đã gửi chi phí — chờ duyệt");
+      setShowAddExpense(false);
+      fetchProject();
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Không thể gửi chi phí",
+      );
+    }
+  };
+
+  const handleApproveExpense = async (expenseId: string) => {
+    if (!id) return;
+    try {
+      await projectsService.approveExpense(id, expenseId);
+      toast.success("Đã duyệt chi phí");
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleRejectExpense = async (expenseId: string, reason: string) => {
+    if (!id) return;
+    try {
+      await projectsService.rejectExpense(id, expenseId, reason);
+      toast.success("Đã từ chối chi phí");
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  const handleReimburseExpense = async (expenseId: string) => {
+    if (!id) return;
+    try {
+      await projectsService.reimburseExpense(id, expenseId);
+      toast.success("Đã đánh dấu hoàn tiền");
+      fetchProject();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi");
+    }
+  };
+
+  // ─── Loading ─────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
+        <Loader2 size={20} className="animate-spin" />
+        <span className="text-[13px]">Đang tải dự án...</span>
+      </div>
+    );
+  }
   if (!project) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <FolderKanban size={48} className="text-muted-foreground mb-4" />
-        <h2 className="text-[16px] mb-2">Không tìm thấy dự án</h2>
+      <div className="text-center py-20">
+        <FolderKanban
+          size={40}
+          className="mx-auto mb-2 opacity-30 text-muted-foreground"
+        />
+        <div className="text-[14px] text-muted-foreground">
+          Không tìm thấy dự án
+        </div>
         <button
           onClick={() => navigate("/projects")}
-          className="text-blue-600 text-[13px] hover:underline"
+          className="mt-4 px-4 py-2 border border-border rounded-lg text-[13px] hover:bg-accent flex items-center gap-1 mx-auto"
         >
-          ← Quay lại danh sách dự án
+          <ArrowLeft size={14} /> Quay lại
         </button>
       </div>
     );
   }
 
-  const pm = getUserById(project.projectManagerUserId);
-  const client = getClientById(project.clientId);
-  const contract = project.contractId
-    ? getContractById(project.contractId)
+  const budgetPct = project.budgetUsedPercent ?? 0;
+  const remaining = project.budgetAmount
+    ? project.budgetAmount - project.spentAmount
     : null;
-  const budgetUsedPct =
-    project.budgetAmount > 0
-      ? Math.round((project.spentAmount / project.budgetAmount) * 100)
-      : 0;
-  const budgetRemaining = project.budgetAmount - project.spentAmount;
-  const projectExpensesList = expenses.filter(
-    (e) => e.projectId === project.id,
-  );
-  const daysRemaining = Math.max(
-    0,
-    Math.ceil(
-      (new Date(project.endDate).getTime() - new Date("2025-03-12").getTime()) /
-        86400000,
-    ),
-  );
+  const doneMilestones = milestones.filter((m) => m.status === "DONE").length;
+  const overdueMilestones = milestones.filter((m) => m.isOverdue).length;
 
-  // Expense summary by category
-  const expenseByCategory = useMemo(() => {
-    const catMap = new Map<string, number>();
-    projectExpensesList
-      .filter((e) => e.status === "APPROVED")
-      .forEach((e) => {
-        catMap.set(e.category, (catMap.get(e.category) || 0) + e.amount);
-      });
-    return Array.from(catMap.entries())
-      .map(([cat, amount]) => ({
-        name: expCategoryLabels[cat] || cat,
-        value: amount,
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [projectExpensesList]);
+  const filteredMilestones = msStatusFilter
+    ? milestones.filter((m) => m.status === msStatusFilter)
+    : milestones;
+  const filteredExpenses = expStatusFilter
+    ? expenses.filter((e) => e.status === expStatusFilter)
+    : expenses;
 
-  // Handlers
-  const handleUpdateProgress = (
-    healthStatus: string,
-    progressPercent: number,
-  ) => {
-    setProject((prev) =>
-      prev
-        ? { ...prev, healthStatus: healthStatus as any, progressPercent }
-        : null,
-    );
-    setShowProgressDialog(false);
-    toast.success("Đã cập nhật tiến độ");
+  const expenseSummaryTotals = {
+    approved: expenses
+      .filter((e) => ["APPROVED", "REIMBURSED"].includes(e.status))
+      .reduce((s, e) => s + e.amount, 0),
+    pending: expenses
+      .filter((e) => e.status === "PENDING")
+      .reduce((s, e) => s + e.amount, 0),
+    reimbursed: expenses
+      .filter((e) => e.status === "REIMBURSED")
+      .reduce((s, e) => s + e.amount, 0),
   };
 
-  const handleAddMilestone = (
-    name: string,
-    dueDate: string,
-    ownerUserId: string,
-  ) => {
-    const newMs: ProjectMilestone = {
-      id: `ms-${Date.now()}`,
-      projectId: project.id,
-      name,
-      ownerUserId,
-      dueDate,
-      status: "PENDING",
-    };
-    setProject((prev) =>
-      prev ? { ...prev, milestones: [...prev.milestones, newMs] } : null,
-    );
-    setShowMsDialog(false);
-    toast.success("Đã thêm milestone");
-  };
-
-  const handleMarkMsDone = (msId: string) => {
-    setProject((prev) =>
-      prev
-        ? {
-            ...prev,
-            milestones: prev.milestones.map((m) =>
-              m.id === msId
-                ? {
-                    ...m,
-                    status: "DONE" as MilestoneStatus,
-                    completedAt: "2025-03-12",
-                  }
-                : m,
-            ),
-          }
-        : null,
-    );
-    toast.success("Đánh dấu hoàn thành");
-  };
-
-  const handleAddMember = (
-    userId: string,
-    role: string,
-    allocation: number,
-    isBillable: boolean,
-  ) => {
-    const newA: ProjectAssignment = {
-      userId,
-      projectId: project.id,
-      roleInProject: role,
-      allocationPercent: allocation,
-      isBillable,
-    };
-    setProject((prev) =>
-      prev ? { ...prev, assignments: [...prev.assignments, newA] } : null,
-    );
-    setShowMemberDialog(false);
-    toast.success("Đã thêm thành viên");
-  };
-
-  const handleSubmitExpense = (
-    title: string,
-    category: ProjectExpenseCategory,
-    amount: number,
-    date: string,
-  ) => {
-    const newExp: ProjectExpense = {
-      id: `pex-${Date.now()}`,
-      projectId: project.id,
-      description: title,
-      amount,
-      category,
-      submittedByUserId: currentUser?.id || "",
-      submittedDate: date,
-      status: "PENDING",
-    };
-    setExpenses((prev) => [newExp, ...prev]);
-    setShowExpenseDialog(false);
-    toast.success("Đã submit chi phí");
-  };
-
-  const handleApproveExpense = (expId: string) => {
-    setExpenses((prev) =>
-      prev.map((e) =>
-        e.id === expId
-          ? {
-              ...e,
-              status: "APPROVED" as ProjectExpenseStatus,
-              approvedByUserId: currentUser?.id,
-              approvedDate: "2025-03-12",
-            }
-          : e,
-      ),
-    );
-    toast.success("Đã duyệt chi phí");
-  };
-  const handleRejectExpense = (expId: string) => {
-    setExpenses((prev) =>
-      prev.map((e) =>
-        e.id === expId
-          ? {
-              ...e,
-              status: "REJECTED" as ProjectExpenseStatus,
-              approvedByUserId: currentUser?.id,
-              approvedDate: "2025-03-12",
-              rejectReason: "Không đạt yêu cầu",
-            }
-          : e,
-      ),
-    );
-    toast.success("Đã từ chối chi phí");
-  };
-
-  const handleCloseProject = () => {
-    setProject((prev) =>
-      prev
-        ? { ...prev, status: "COMPLETED" as any, progressPercent: 100 }
-        : null,
-    );
-    setShowMoreMenu(false);
-    toast.success("Đã đóng dự án");
-  };
-
-  const tabs = [
-    { key: "overview", label: "Tổng quan" },
-    { key: "members", label: `Thành viên (${project.assignments.length})` },
-    { key: "milestones", label: `Milestones (${project.milestones.length})` },
-    { key: "expenses", label: `Chi phí (${projectExpensesList.length})` },
-  ];
-
-  const filteredMs = project.milestones.filter(
-    (m) => !msFilter || m.status === msFilter,
-  );
-  const filteredExp = projectExpensesList.filter((e) => {
-    if (expCatFilter && e.category !== expCatFilter) return false;
-    if (expStatusFilter && e.status !== expStatusFilter) return false;
-    return true;
-  });
-  const approvedExpTotal = projectExpensesList
-    .filter((e) => e.status === "APPROVED")
-    .reduce((s, e) => s + e.amount, 0);
-  const pendingExpTotal = projectExpensesList
-    .filter((e) => e.status === "PENDING")
-    .reduce((s, e) => s + e.amount, 0);
+  const expensePieData = expSummary
+    ? Object.entries(expSummary.categories)
+        .map(([cat, data]) => ({
+          name: expCategoryLabels[cat] ?? cat,
+          value: data.approved + data.reimbursed,
+        }))
+        .filter((d) => d.value > 0)
+    : [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-6xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+      <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
         <button
           onClick={() => navigate("/projects")}
-          className="hover:text-foreground transition-colors flex items-center gap-1"
+          className="hover:text-foreground flex items-center gap-1"
         >
-          <ArrowLeft size={14} /> Dự án
+          <FolderKanban size={12} /> Dự án
         </button>
-        <ChevronRight size={14} />
+        <ChevronRight size={12} />
         <span className="text-foreground">{project.projectName}</span>
       </div>
 
-      {/* Header Card */}
-      <div className="bg-card border border-border rounded-xl p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      {/* ── Project Header Card ── */}
+      <div className="bg-card border border-border rounded-xl p-4 md:p-6">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
+            {/* Title row */}
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h1 className="text-[20px]">{project.projectName}</h1>
               {project.healthStatus && (
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded ${healthColors[project.healthStatus]}`}
+                  className={`text-[11px] px-2 py-0.5 rounded-full ${healthColors[project.healthStatus]}`}
                 >
                   {healthEmoji[project.healthStatus]}{" "}
                   {healthLabels[project.healthStatus]}
@@ -438,84 +508,137 @@ export function ProjectDetailPage() {
               >
                 {statusLabels[project.status]}
               </span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full ${priorityColors[project.priority]}`}
-              >
-                {priorityLabels[project.priority]}
-              </span>
+              {project.priority && (
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded ${priorityColors[project.priority]}`}
+                >
+                  {priorityLabels[project.priority]}
+                </span>
+              )}
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-[12px] text-muted-foreground mt-2">
-              <span>{project.projectCode}</span>
-              <span className="flex items-center gap-1">
-                {pm && (
-                  <>
-                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[8px]">
-                      {pm.fullName.split(" ").slice(-1)[0][0]}
-                    </div>{" "}
-                    PM: {pm.fullName}
-                  </>
-                )}
-              </span>
-              {client && <span>KH: {client.shortName}</span>}
-              <span className="flex items-center gap-1">
-                <Calendar size={12} /> {project.startDate} → {project.endDate}
-              </span>
+            <h1 className="text-[22px] mt-1">{project.projectName}</h1>
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 text-[12px] text-muted-foreground">
+              {project.projectCode && (
+                <span className="font-mono">{project.projectCode}</span>
+              )}
+              {project.projectManager && (
+                <span className="flex items-center gap-1">
+                  <Briefcase size={11} /> PM: {project.projectManager.fullName}
+                </span>
+              )}
+              {project.client && (
+                <span className="flex items-center gap-1">
+                  <Users size={11} /> {project.client.clientName}
+                </span>
+              )}
+              {(project.startDate || project.endDate) && (
+                <span className="flex items-center gap-1">
+                  <Calendar size={11} /> {fmtDate(project.startDate)} →{" "}
+                  {fmtDate(project.endDate)}
+                </span>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-2 relative">
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={fetchProject}
+              className="p-2 rounded-lg border border-border hover:bg-accent"
+            >
+              <RefreshCw size={14} />
+            </button>
             {isAdminMgr && (
-              <button
-                onClick={() => setShowProgressDialog(true)}
-                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] hover:bg-blue-700 transition-colors"
-              >
-                Cập nhật tiến độ
-              </button>
-            )}
-            {isAdminMgr && (
-              <div className="relative">
+              <>
                 <button
-                  onClick={() => setShowMoreMenu(!showMoreMenu)}
-                  className="p-1.5 rounded-lg border border-border hover:bg-accent"
+                  onClick={() => setShowHealthEdit(true)}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[12px] hover:bg-blue-700 flex items-center gap-1"
                 >
-                  <MoreHorizontal size={16} />
+                  <Edit2 size={12} /> Cập nhật tiến độ
                 </button>
-                {showMoreMenu && (
-                  <div className="absolute right-0 top-full mt-1 bg-popover border border-border rounded-lg shadow-lg z-10 min-w-[150px]">
-                    {project.status !== "COMPLETED" ? (
-                      <button
-                        onClick={handleCloseProject}
-                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-accent transition-colors"
-                      >
-                        Đóng dự án
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setProject((prev) =>
-                            prev ? { ...prev, status: "ACTIVE" as any } : null,
-                          );
-                          setShowMoreMenu(false);
-                          toast.success("Đã mở lại dự án");
-                        }}
-                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-accent transition-colors"
-                      >
-                        Mở lại dự án
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowMoreMenu(!showMoreMenu)}
+                    className="p-2 rounded-lg border border-border hover:bg-accent"
+                  >
+                    <MoreHorizontal size={16} />
+                  </button>
+                  {showMoreMenu && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowMoreMenu(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl py-1 w-44">
+                        {["ACTIVE", "PLANNING", "ON_HOLD"].includes(
+                          project.status,
+                        ) && (
+                          <>
+                            <button
+                              onClick={() => {
+                                handleCloseProject("COMPLETED");
+                                setShowMoreMenu(false);
+                              }}
+                              className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent flex items-center gap-2"
+                            >
+                              <CheckCircle2
+                                size={14}
+                                className="text-green-600"
+                              />{" "}
+                              Đánh dấu hoàn thành
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleCloseProject("CANCELLED");
+                                setShowMoreMenu(false);
+                              }}
+                              className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent text-red-600 flex items-center gap-2"
+                            >
+                              <X size={14} /> Huỷ dự án
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleCloseProject("ARCHIVED");
+                                setShowMoreMenu(false);
+                              }}
+                              className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent text-muted-foreground flex items-center gap-2"
+                            >
+                              <FileText size={14} /> Lưu trữ
+                            </button>
+                          </>
+                        )}
+                        {["COMPLETED", "CANCELLED", "ARCHIVED"].includes(
+                          project.status,
+                        ) && (
+                          <button
+                            onClick={() => {
+                              handleReopenProject();
+                              setShowMoreMenu(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent flex items-center gap-2"
+                          >
+                            <Activity size={14} className="text-blue-600" /> Mở
+                            lại dự án
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        {/* Progress */}
+        {/* Progress bar */}
         <div className="mt-4">
-          <div className="flex items-center justify-between text-[12px] mb-1">
-            <span className="text-muted-foreground">Tiến độ</span>
-            <span>{project.progressPercent}% hoàn thành</span>
+          <div className="flex justify-between text-[12px] text-muted-foreground mb-1">
+            <span>Tiến độ hoàn thành</span>
+            <span className="font-medium text-foreground">
+              {project.progressPercent}%
+            </span>
           </div>
-          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-2.5 bg-border rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-500 rounded-full transition-all"
               style={{ width: `${project.progressPercent}%` }}
@@ -523,843 +646,1273 @@ export function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Budget stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          <div className="text-center">
-            <div className="text-[11px] text-muted-foreground">Ngân sách</div>
-            <div className="text-[14px]">{formatVND(project.budgetAmount)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-[11px] text-muted-foreground">Đã chi</div>
-            <div
-              className={`text-[14px] ${budgetUsedPct > 90 ? "text-red-500" : ""}`}
-            >
-              {formatVND(project.spentAmount)}
+        {/* Financial summary */}
+        {project.budgetAmount && (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px]">
+            <div className="bg-muted/30 rounded-lg p-2.5 text-center">
+              <div className="text-[10px] text-muted-foreground">Ngân sách</div>
+              <div className="font-medium">{fmtVND(project.budgetAmount)}</div>
             </div>
-          </div>
-          <div className="text-center">
-            <div className="text-[11px] text-muted-foreground">Còn lại</div>
-            <div className="text-[14px]">{formatVND(budgetRemaining)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-[11px] text-muted-foreground">% ngân sách</div>
-            <div
-              className={`text-[14px] ${budgetUsedPct > 90 ? "text-red-500" : budgetUsedPct > 70 ? "text-yellow-500" : ""}`}
-            >
-              {budgetUsedPct}%
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-border overflow-x-auto">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2.5 text-[13px] whitespace-nowrap border-b-2 transition-colors ${tab === t.key ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab: Overview */}
-      {tab === "overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-            <h3 className="text-[14px]">Thông tin dự án</h3>
-            <p className="text-[13px] text-muted-foreground">
-              {project.description}
-            </p>
-            {contract && (
-              <div className="text-[12px] text-muted-foreground border-t border-border pt-3 mt-3">
-                <span className="flex items-center gap-1">
-                  <FileText size={12} /> Hợp đồng: {contract.contractCode} —{" "}
-                  {contract.title}
-                </span>
-              </div>
-            )}
-            <div className="text-[12px] text-muted-foreground flex items-center gap-1">
-              <Clock size={12} /> Còn {daysRemaining} ngày đến deadline
-            </div>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-            <h3 className="text-[14px]">Health Snapshot</h3>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div>
-                <div className="text-[20px]">
-                  {project.milestones.filter((m) => m.status === "DONE").length}
-                  /{project.milestones.length}
-                </div>
-                <div className="text-[11px] text-muted-foreground">
-                  Milestone Done
-                </div>
-              </div>
-              <div>
-                <div
-                  className={`text-[20px] ${budgetUsedPct > 90 ? "text-red-500" : ""}`}
-                >
-                  {budgetUsedPct}%
-                </div>
-                <div className="text-[11px] text-muted-foreground">
-                  Ngân sách đã dùng
-                </div>
-              </div>
-              <div>
-                <div className="text-[20px]">{daysRemaining}</div>
-                <div className="text-[11px] text-muted-foreground">
-                  Ngày còn lại
-                </div>
-              </div>
-            </div>
-          </div>
-          {expenseByCategory.length > 0 && (
-            <div className="bg-card border border-border rounded-xl overflow-hidden lg:col-span-2">
-              <div className="px-5 py-3.5 border-b border-border">
-                <h3 className="text-[14px]">Chi phí theo danh mục</h3>
-              </div>
-              <div className="p-4">
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart
-                    data={expenseByCategory}
-                    margin={{ left: 0, right: 20 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="var(--border)"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                    />
-                    <YAxis
-                      tickFormatter={(v: number) =>
-                        v >= 1000000
-                          ? `${(v / 1000000).toFixed(0)}M`
-                          : String(v)
-                      }
-                      tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Số tiền" radius={[4, 4, 0, 0]}>
-                      {expenseByCategory.map((e, i) => (
-                        <Cell
-                          key={`ec-${e.name}`}
-                          fill={CHART_COLORS[i % CHART_COLORS.length]}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Tab: Members */}
-      {tab === "members" && (
-        <div className="space-y-3">
-          {isAdminMgr && (
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowMemberDialog(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] hover:bg-blue-700"
+            <div className="bg-muted/30 rounded-lg p-2.5 text-center">
+              <div className="text-[10px] text-muted-foreground">Đã chi</div>
+              <div
+                className={`font-medium ${budgetPct > 90 ? "text-red-500" : ""}`}
               >
-                <UserPlus size={14} /> Thêm thành viên
-              </button>
+                {fmtVND(project.spentAmount)}
+              </div>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-2.5 text-center">
+              <div className="text-[10px] text-muted-foreground">Còn lại</div>
+              <div
+                className={`font-medium ${remaining && remaining < 0 ? "text-red-500" : "text-green-600"}`}
+              >
+                {remaining != null ? fmtVND(remaining) : "—"}
+              </div>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-2.5 text-center">
+              <div className="text-[10px] text-muted-foreground">% đã dùng</div>
+              <div
+                className={`font-medium ${budgetPct > 90 ? "text-red-500" : budgetPct > 70 ? "text-yellow-600" : "text-green-600"}`}
+              >
+                {budgetPct.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Tabs ── */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="flex border-b border-border overflow-x-auto">
+          {(
+            [
+              {
+                key: "overview",
+                label: "Tổng quan",
+                icon: <BarChart3 size={14} />,
+              },
+              {
+                key: "members",
+                label: `Thành viên (${members.filter((m) => m.status === "ACTIVE").length})`,
+                icon: <Users size={14} />,
+              },
+              {
+                key: "milestones",
+                label: `Milestones (${milestones.length})`,
+                icon: <Target size={14} />,
+              },
+              {
+                key: "expenses",
+                label: `Chi phí (${expenses.length})`,
+                icon: <DollarSign size={14} />,
+              },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key as TabKey)}
+              className={`flex items-center gap-1.5 px-4 py-3 text-[13px] border-b-2 whitespace-nowrap transition-colors
+                ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            >
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-4 md:p-6">
+          {/* ── TAB: TỔNG QUAN ── */}
+          {activeTab === "overview" && (
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Left: Description + info */}
+                <div className="space-y-4">
+                  {project.description && (
+                    <div>
+                      <div className="text-[12px] text-muted-foreground mb-1">
+                        Mô tả dự án
+                      </div>
+                      <div className="text-[13px] leading-relaxed">
+                        {project.description}
+                      </div>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-3 text-[13px]">
+                    {[
+                      { label: "Bắt đầu", value: fmtDate(project.startDate) },
+                      { label: "Kết thúc DK", value: fmtDate(project.endDate) },
+                      {
+                        label: "Kết thúc TT",
+                        value: fmtDate(project.actualEndDate),
+                      },
+                      {
+                        label: "Thành viên",
+                        value: `${project.activeMemberCount} người`,
+                      },
+                    ].map((f) => (
+                      <div key={f.label}>
+                        <div className="text-[11px] text-muted-foreground">
+                          {f.label}
+                        </div>
+                        <div>{f.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {project.contract && (
+                    <div className="bg-muted/30 rounded-lg p-3 text-[12px]">
+                      <div className="text-[11px] text-muted-foreground mb-1">
+                        Hợp đồng liên kết
+                      </div>
+                      <div>
+                        {project.contract.contractCode} —{" "}
+                        {fmtVND(project.contract.contractValue)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Health snapshot */}
+                <div className="bg-muted/20 rounded-xl p-4 space-y-3">
+                  <div className="text-[13px] flex items-center gap-1">
+                    <Gauge size={14} /> Health Snapshot
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      {
+                        label: "Milestones hoàn thành",
+                        value: `${doneMilestones}/${milestones.length}`,
+                        pct:
+                          milestones.length > 0
+                            ? Math.round(
+                                (doneMilestones / milestones.length) * 100,
+                              )
+                            : 0,
+                        color: "bg-green-500",
+                      },
+                      {
+                        label: "Ngân sách sử dụng",
+                        value: `${budgetPct.toFixed(0)}%`,
+                        pct: Math.min(100, budgetPct),
+                        color:
+                          budgetPct > 90
+                            ? "bg-red-500"
+                            : budgetPct > 70
+                              ? "bg-yellow-500"
+                              : "bg-green-500",
+                      },
+                      {
+                        label: "Tiến độ tổng thể",
+                        value: `${project.progressPercent}%`,
+                        pct: project.progressPercent,
+                        color: "bg-blue-500",
+                      },
+                    ].map((s) => (
+                      <div key={s.label}>
+                        <div className="flex justify-between text-[12px] mb-1">
+                          <span className="text-muted-foreground">
+                            {s.label}
+                          </span>
+                          <span className="font-medium">{s.value}</span>
+                        </div>
+                        <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${s.color}`}
+                            style={{ width: `${s.pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {overdueMilestones > 0 && (
+                    <div className="flex items-center gap-2 text-[12px] text-red-600 bg-red-50 dark:bg-red-900/10 rounded-lg p-2">
+                      <AlertTriangle size={14} /> {overdueMilestones} milestone
+                      quá hạn
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Expense by category chart */}
+              {expensePieData.length > 0 && (
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <div className="text-[13px] mb-3">
+                    Chi phí theo danh mục (đã duyệt)
+                  </div>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={expensePieData}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--color-border)"
+                      />
+                      <XAxis
+                        dataKey="name"
+                        fontSize={11}
+                        tick={{ fill: "var(--color-muted-foreground)" }}
+                      />
+                      <YAxis
+                        fontSize={11}
+                        tick={{ fill: "var(--color-muted-foreground)" }}
+                        tickFormatter={(v) => `${(v / 1e6).toFixed(0)}tr`}
+                      />
+                      <Tooltip
+                        formatter={(v: number) => [fmtVND(v)]}
+                        contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                      />
+                      <Bar
+                        dataKey="value"
+                        name="Đã duyệt"
+                        radius={[4, 4, 0, 0]}
+                      >
+                        {expensePieData.map((_, i) => (
+                          <Cell
+                            key={i}
+                            fill={CHART_COLORS[i % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
           )}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
-                      Thành viên
-                    </th>
-                    <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
-                      Mã NV
-                    </th>
-                    <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
-                      Vai trò
-                    </th>
-                    <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
-                      Allocation
-                    </th>
-                    <th className="text-center px-4 py-2 text-[12px] text-muted-foreground">
-                      Billable
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {project.assignments.map((a) => {
-                    const user = getUserById(a.userId);
-                    return (
+
+          {/* ── TAB: THÀNH VIÊN ── */}
+          {activeTab === "members" && (
+            <div className="space-y-3">
+              {isAdminMgr && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowAddMember(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+                  >
+                    <UserPlus size={14} /> Thêm thành viên
+                  </button>
+                </div>
+              )}
+              <div className="overflow-x-auto">
+                <table className="w-full text-[13px]">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                        Thành viên
+                      </th>
+                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                        Vai trò
+                      </th>
+                      <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                        Phân bổ
+                      </th>
+                      <th className="text-center px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                        Billable
+                      </th>
+                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                        Ngày vào
+                      </th>
+                      <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                        Trạng thái
+                      </th>
+                      {isAdminMgr && <th className="px-4 py-3 w-20" />}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.map((a) => (
                       <tr
-                        key={a.userId}
-                        className="border-b border-border last:border-0 hover:bg-accent/50"
+                        key={a.id}
+                        className="border-t border-border hover:bg-accent/30"
                       >
-                        <td className="px-4 py-2.5">
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px]">
-                              {user?.fullName.split(" ").slice(-1)[0][0] || "?"}
+                            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                              {a.user?.fullName.split(" ").slice(-1)[0]?.[0] ??
+                                "?"}
                             </div>
-                            <span className="text-[13px]">
-                              {user?.fullName || "Unknown"}
-                            </span>
+                            <div>
+                              <div className="text-[13px]">
+                                {a.user?.fullName ?? "—"}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground">
+                                {a.user?.userCode}
+                              </div>
+                            </div>
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-[12px] text-muted-foreground">
-                          {user?.userCode || "—"}
+                        <td className="px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                          {a.roleInProject ?? "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-[13px]">
-                          {a.roleInProject}
+                        <td className="px-4 py-3 text-[12px] text-right hidden lg:table-cell">
+                          {a.allocationPercent != null
+                            ? `${a.allocationPercent}%`
+                            : "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-[13px] text-right">
-                          {a.allocationPercent}%
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        <td className="px-4 py-3 text-center hidden md:table-cell">
                           {a.isBillable ? (
-                            <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[11px]">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                               Billable
                             </span>
                           ) : (
-                            <span className="text-[11px] text-muted-foreground">
-                              Non-billable
+                            <span className="text-[10px] text-muted-foreground">
+                              —
                             </span>
                           )}
                         </td>
-                      </tr>
-                    );
-                  })}
-                  {project.assignments.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="text-center py-8 text-muted-foreground text-[13px]"
-                      >
-                        Chưa có thành viên nào
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Milestones */}
-      {tab === "milestones" && (
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={msFilter}
-              onChange={(e) => setMsFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[13px]"
-            >
-              <option value="">Tất cả trạng thái</option>
-              {Object.entries(msStatusLabels).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-            {isAdminMgr && (
-              <button
-                onClick={() => setShowMsDialog(true)}
-                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] hover:bg-blue-700"
-              >
-                <Plus size={14} /> Thêm milestone
-              </button>
-            )}
-          </div>
-          <div className="space-y-2">
-            {filteredMs.map((ms, idx) => {
-              const owner = getUserById(ms.ownerUserId);
-              return (
-                <div
-                  key={ms.id}
-                  className={`bg-card border rounded-xl p-4 ${ms.status === "OVERDUE" ? "border-red-300 dark:border-red-700" : "border-border"}`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] ${ms.status === "DONE" ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" : ms.status === "OVERDUE" ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" : ms.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}
-                      >
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <div className="text-[14px]">{ms.name}</div>
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
-                          {owner && <span>Owner: {owner.fullName}</span>}
-                          <span>Due: {ms.dueDate}</span>
-                          {ms.completedAt && (
-                            <span className="text-green-600 dark:text-green-400">
-                              Done: {ms.completedAt}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${msStatusColors[ms.status]}`}
-                      >
-                        {msStatusLabels[ms.status]}
-                      </span>
-                      {ms.status === "IN_PROGRESS" && isAdminMgr && (
-                        <button
-                          onClick={() => handleMarkMsDone(ms.id)}
-                          className="text-[11px] px-2 py-1 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50"
-                        >
-                          <CheckCircle2 size={12} className="inline mr-0.5" />{" "}
-                          Hoàn thành
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {filteredMs.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground text-[13px]">
-                Không có milestone nào
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Tab: Expenses */}
-      {tab === "expenses" && (
-        <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-card border border-border rounded-xl p-3 text-center">
-              <div className="text-[11px] text-muted-foreground">Đã duyệt</div>
-              <div className="text-[16px] text-green-600">
-                {formatVND(approvedExpTotal)}
-              </div>
-            </div>
-            <div className="bg-card border border-border rounded-xl p-3 text-center">
-              <div className="text-[11px] text-muted-foreground">Đang chờ</div>
-              <div className="text-[16px] text-yellow-600">
-                {formatVND(pendingExpTotal)}
-              </div>
-            </div>
-            <div className="bg-card border border-border rounded-xl p-3 text-center">
-              <div className="text-[11px] text-muted-foreground">
-                Tổng khoản
-              </div>
-              <div className="text-[16px]">{projectExpensesList.length}</div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={expCatFilter}
-              onChange={(e) => setExpCatFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[13px]"
-            >
-              <option value="">Tất cả danh mục</option>
-              {Object.entries(expCategoryLabels).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-            <select
-              value={expStatusFilter}
-              onChange={(e) => setExpStatusFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[13px]"
-            >
-              <option value="">Tất cả trạng thái</option>
-              {Object.entries(expStatusLabels).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={() => setShowExpenseDialog(true)}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] hover:bg-blue-700"
-            >
-              <Plus size={14} /> Submit chi phí
-            </button>
-          </div>
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
-                      Tiêu đề
-                    </th>
-                    <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
-                      Danh mục
-                    </th>
-                    <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
-                      Số tiền
-                    </th>
-                    <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
-                      Người submit
-                    </th>
-                    <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
-                      Ngày
-                    </th>
-                    <th className="text-center px-4 py-2 text-[12px] text-muted-foreground">
-                      Trạng thái
-                    </th>
-                    {isAdminMgr && (
-                      <th className="text-center px-4 py-2 text-[12px] text-muted-foreground">
-                        Hành động
-                      </th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredExp.map((e) => {
-                    const submitter = getUserById(e.submittedByUserId);
-                    return (
-                      <tr
-                        key={e.id}
-                        className="border-b border-border last:border-0 hover:bg-accent/50"
-                      >
-                        <td className="px-4 py-2.5 text-[13px] max-w-[200px] truncate">
-                          {e.description}
+                        <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                          {fmtDate(a.joinedAt)}
                         </td>
-                        <td className="px-4 py-2.5 text-[12px] text-muted-foreground">
-                          {expCategoryLabels[e.category]}
-                        </td>
-                        <td className="px-4 py-2.5 text-[13px] text-right">
-                          {formatVND(e.amount)}
-                        </td>
-                        <td className="px-4 py-2.5 text-[12px] text-muted-foreground">
-                          {submitter?.fullName.split(" ").slice(-2).join(" ") ||
-                            "—"}
-                        </td>
-                        <td className="px-4 py-2.5 text-[12px] text-muted-foreground">
-                          {e.submittedDate}
-                        </td>
-                        <td className="px-4 py-2.5 text-center">
+                        <td className="px-4 py-3 text-center">
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
+                            className={`text-[10px] px-2 py-0.5 rounded-full ${a.status === "ACTIVE" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500"}`}
                           >
-                            {expStatusLabels[e.status]}
+                            {a.status === "ACTIVE" ? "Đang tham gia" : "Đã rời"}
                           </span>
                         </td>
                         {isAdminMgr && (
-                          <td className="px-4 py-2.5 text-center">
-                            {e.status === "PENDING" && (
-                              <div className="flex items-center justify-center gap-1">
-                                <button
-                                  onClick={() => handleApproveExpense(e.id)}
-                                  className="p-1 rounded text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30"
-                                >
-                                  <ThumbsUp size={14} />
-                                </button>
-                                <button
-                                  onClick={() => handleRejectExpense(e.id)}
-                                  className="p-1 rounded text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30"
-                                >
-                                  <ThumbsDown size={14} />
-                                </button>
-                              </div>
+                          <td className="px-4 py-3 text-center">
+                            {a.status === "ACTIVE" && (
+                              <button
+                                onClick={() => handleEndAssignment(a.id)}
+                                className="text-[11px] text-red-500 hover:underline"
+                              >
+                                Kết thúc
+                              </button>
                             )}
                           </td>
                         )}
                       </tr>
-                    );
-                  })}
-                  {filteredExp.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={isAdminMgr ? 7 : 6}
-                        className="text-center py-8 text-muted-foreground text-[13px]"
-                      >
-                        Không có chi phí nào
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ))}
+                    {members.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          Chưa có thành viên
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Dialogs */}
-      {showProgressDialog && (
-        <ProgressDialog
+          {/* ── TAB: MILESTONES ── */}
+          {activeTab === "milestones" && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex gap-1">
+                  {(
+                    ["", "PENDING", "IN_PROGRESS", "DONE", "OVERDUE"] as const
+                  ).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setMsStatusFilter(s)}
+                      className={`px-2.5 py-1 rounded-lg text-[12px] transition-colors ${msStatusFilter === s ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
+                    >
+                      {s === "" ? "Tất cả" : msStatusLabels[s]}
+                    </button>
+                  ))}
+                </div>
+                {isAdminMgr && (
+                  <button
+                    onClick={() => setShowAddMilestone(true)}
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-blue-700"
+                  >
+                    <Plus size={13} /> Thêm milestone
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                {filteredMilestones.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`bg-card border rounded-xl p-4 ${m.isOverdue ? "border-red-300 dark:border-red-800" : "border-border"}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[13px] font-medium">
+                            {m.name}
+                          </span>
+                          {m.isOverdue && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-0.5">
+                              <AlertTriangle size={10} /> OVERDUE
+                            </span>
+                          )}
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full ${msStatusColors[m.status]}`}
+                          >
+                            {msStatusLabels[m.status]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                          {m.owner && (
+                            <span className="flex items-center gap-1">
+                              <Users size={10} /> {m.owner.fullName}
+                            </span>
+                          )}
+                          {m.dueDate && (
+                            <span className="flex items-center gap-1">
+                              <Calendar size={10} /> {fmtDate(m.dueDate)}
+                            </span>
+                          )}
+                          {m.completedAt && (
+                            <span className="flex items-center gap-1 text-green-600">
+                              <CheckCircle2 size={10} /> Xong:{" "}
+                              {fmtDate(m.completedAt)}
+                            </span>
+                          )}
+                        </div>
+                        {m.description && (
+                          <div className="text-[12px] text-muted-foreground mt-1.5">
+                            {m.description}
+                          </div>
+                        )}
+                      </div>
+                      {isAdminMgr && (
+                        <div className="flex gap-1 shrink-0">
+                          {m.status !== "DONE" && (
+                            <button
+                              onClick={() => handleMarkDone(m.id)}
+                              className="px-2.5 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg text-[11px] hover:bg-green-200 flex items-center gap-1"
+                            >
+                              <CheckCircle2 size={12} /> Xong
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setEditMilestone(m)}
+                            className="p-1.5 rounded hover:bg-accent"
+                          >
+                            <Edit2
+                              size={13}
+                              className="text-muted-foreground"
+                            />
+                          </button>
+                          {m.status !== "DONE" && (
+                            <button
+                              onClick={() => handleDeleteMilestone(m.id)}
+                              className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/20"
+                            >
+                              <X size={13} className="text-red-500" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {filteredMilestones.length === 0 && (
+                  <div className="text-center py-10 text-muted-foreground">
+                    <Target size={32} className="mx-auto mb-2 opacity-30" />
+                    <div className="text-[13px]">Chưa có milestone nào</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── TAB: CHI PHÍ ── */}
+          {activeTab === "expenses" && (
+            <div className="space-y-3">
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  {
+                    label: "Đã duyệt",
+                    value: expenseSummaryTotals.approved,
+                    color: "text-green-600",
+                  },
+                  {
+                    label: "Đang chờ",
+                    value: expenseSummaryTotals.pending,
+                    color: "text-yellow-600",
+                  },
+                  {
+                    label: "Đã hoàn tiền",
+                    value: expenseSummaryTotals.reimbursed,
+                    color: "text-teal-600",
+                  },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="bg-muted/30 rounded-xl p-3 text-center"
+                  >
+                    <div className="text-[10px] text-muted-foreground">
+                      {s.label}
+                    </div>
+                    <div className={`text-[15px] ${s.color}`}>
+                      {fmtVND(s.value)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex gap-1 flex-wrap">
+                  {(
+                    [
+                      "",
+                      "PENDING",
+                      "APPROVED",
+                      "REJECTED",
+                      "REIMBURSED",
+                    ] as const
+                  ).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setExpStatusFilter(s)}
+                      className={`px-2.5 py-1 rounded-lg text-[12px] transition-colors ${expStatusFilter === s ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
+                    >
+                      {s === "" ? "Tất cả" : expStatusLabels[s]}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowAddExpense(true)}
+                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-blue-700"
+                >
+                  <Send size={13} /> Gửi chi phí
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-[13px]">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                        Tiêu đề
+                      </th>
+                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                        Danh mục
+                      </th>
+                      <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                        Số tiền
+                      </th>
+                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                        Người gửi
+                      </th>
+                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                        Ngày
+                      </th>
+                      <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                        Trạng thái
+                      </th>
+                      {isAdminMgr && (
+                        <th className="px-4 py-3 text-[11px] text-muted-foreground">
+                          Thao tác
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredExpenses.map((e) => (
+                      <ExpenseRow
+                        key={e.id}
+                        expense={e}
+                        isAdminMgr={isAdminMgr}
+                        onApprove={() => handleApproveExpense(e.id)}
+                        onReject={(reason) => handleRejectExpense(e.id, reason)}
+                        onReimburse={() => handleReimburseExpense(e.id)}
+                      />
+                    ))}
+                    {filteredExpenses.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          Chưa có chi phí
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Dialogs ── */}
+      {showHealthEdit && (
+        <UpdateHealthDialog
           project={project}
-          onSave={handleUpdateProgress}
-          onClose={() => setShowProgressDialog(false)}
+          onClose={() => setShowHealthEdit(false)}
+          onSave={handleUpdateHealth}
         />
       )}
-      {showMsDialog && (
-        <MilestoneDialog
-          onSave={handleAddMilestone}
-          onClose={() => setShowMsDialog(false)}
+      {showAddMember && (
+        <AddMemberDialog
+          onClose={() => setShowAddMember(false)}
+          onSave={handleAssignMember}
         />
       )}
-      {showMemberDialog && (
-        <MemberDialog
-          projectAssignments={project.assignments}
-          onSave={handleAddMember}
-          onClose={() => setShowMemberDialog(false)}
+      {showAddMilestone && (
+        <MilestoneFormDialog
+          onClose={() => setShowAddMilestone(false)}
+          onSave={handleCreateMilestone}
+          title="Thêm milestone"
         />
       )}
-      {showExpenseDialog && (
-        <ExpenseDialog
-          onSave={handleSubmitExpense}
-          onClose={() => setShowExpenseDialog(false)}
+      {editMilestone && (
+        <MilestoneFormDialog
+          milestone={editMilestone}
+          onClose={() => setEditMilestone(null)}
+          onSave={(payload) => handleUpdateMilestone(editMilestone.id, payload)}
+          title="Sửa milestone"
+        />
+      )}
+      {showAddExpense && (
+        <AddExpenseDialog
+          onClose={() => setShowAddExpense(false)}
+          onSave={handleCreateExpense}
         />
       )}
     </div>
   );
 }
 
-// ─── Dialogs ────────────────────────────────────────────────
-function DialogWrapper({
-  title,
-  onClose,
-  children,
+// ─── ExpenseRow ────────────────────────────────────────────────
+function ExpenseRow({
+  expense: e,
+  isAdminMgr,
+  onApprove,
+  onReject,
+  onReimburse,
 }: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
+  expense: ApiExpense;
+  isAdminMgr: boolean;
+  onApprove: () => void;
+  onReject: (reason: string) => void;
+  onReimburse: () => void;
 }) {
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-card border border-border rounded-xl shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
-          <h3 className="text-[14px]">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
+    <tr className="border-t border-border hover:bg-accent/30">
+      <td className="px-4 py-3">
+        <div>{e.title}</div>
+        {e.rejectReason && (
+          <div className="text-[11px] text-red-500 mt-0.5">
+            ↳ {e.rejectReason}
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-3 hidden md:table-cell">
+        <span className="text-[11px] px-2 py-0.5 rounded bg-muted">
+          {expCategoryLabels[e.category]}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-right">{fmtVND(e.amount)}</td>
+      <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+        {e.submittedBy?.fullName ?? "—"}
+      </td>
+      <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+        {fmtDate(e.expenseDate)}
+      </td>
+      <td className="px-4 py-3 text-center">
+        <span
+          className={`text-[10px] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
+        >
+          {expStatusLabels[e.status]}
+        </span>
+      </td>
+      {isAdminMgr && (
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-1 flex-wrap">
+            {e.status === "PENDING" &&
+              (rejecting ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={reason}
+                    onChange={(ev) => setReason(ev.target.value)}
+                    placeholder="Lý do *"
+                    autoFocus
+                    className="w-28 px-2 py-1 rounded border border-red-300 text-[11px] bg-input-background"
+                  />
+                  <button
+                    onClick={() => {
+                      onReject(reason);
+                      setRejecting(false);
+                      setReason("");
+                    }}
+                    className="p-1 bg-red-600 text-white rounded text-[10px]"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={() => {
+                      setRejecting(false);
+                      setReason("");
+                    }}
+                    className="p-1 border border-border rounded text-[10px]"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={onApprove}
+                    className="p-1.5 rounded hover:bg-green-100 text-green-600"
+                    title="Duyệt"
+                  >
+                    <ThumbsUp size={13} />
+                  </button>
+                  <button
+                    onClick={() => setRejecting(true)}
+                    className="p-1.5 rounded hover:bg-red-100 text-red-500"
+                    title="Từ chối"
+                  >
+                    <ThumbsDown size={13} />
+                  </button>
+                </>
+              ))}
+            {e.status === "APPROVED" && (
+              <button
+                onClick={onReimburse}
+                className="text-[11px] px-2 py-0.5 rounded bg-teal-100 text-teal-700 hover:bg-teal-200"
+              >
+                Hoàn tiền
+              </button>
+            )}
+          </div>
+        </td>
+      )}
+    </tr>
+  );
+}
+
+// ─── UpdateHealthDialog ────────────────────────────────────────
+function UpdateHealthDialog({
+  project,
+  onClose,
+  onSave,
+}: {
+  project: ApiProject;
+  onClose: () => void;
+  onSave: (p: {
+    healthStatus?: ProjectHealthStatus;
+    progressPercent?: number;
+    notes?: string | null;
+  }) => void;
+}) {
+  const [health, setHealth] = useState<ProjectHealthStatus | "">(
+    project.healthStatus ?? "",
+  );
+  const [progress, setProgress] = useState(project.progressPercent);
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    await onSave({
+      ...(health && { healthStatus: health as ProjectHealthStatus }),
+      progressPercent: progress,
+      notes: notes || null,
+    });
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-[16px]">Cập nhật tiến độ</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Sức khoẻ dự án
+            </label>
+            <select
+              value={health}
+              onChange={(e) => setHealth(e.target.value as ProjectHealthStatus)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            >
+              <option value="">Chưa xác định</option>
+              {Object.entries(healthLabels).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {healthEmoji[k]} {v}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Tiến độ:{" "}
+              <span className="font-medium text-foreground">{progress}%</span>
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={progress}
+              onChange={(e) => setProgress(+e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Ghi chú
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Ghi chú cập nhật..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          >
+            {submitting ? <Loader2 size={14} className="animate-spin" /> : null}{" "}
+            Lưu
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function ProgressDialog({
-  project,
-  onSave,
+// ─── AddMemberDialog ───────────────────────────────────────────
+function AddMemberDialog({
   onClose,
-}: {
-  project: Project;
-  onSave: (h: string, p: number) => void;
-  onClose: () => void;
-}) {
-  const [health, setHealth] = useState(project.healthStatus || "ON_TRACK");
-  const [progress, setProgress] = useState(project.progressPercent);
-  return (
-    <DialogWrapper title="Cập nhật tiến độ" onClose={onClose}>
-      <div className="space-y-4">
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Tình trạng sức khoẻ
-          </label>
-          <select
-            value={health}
-            onChange={(e) => setHealth(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          >
-            <option value="ON_TRACK">🟢 Đúng tiến độ</option>
-            <option value="AT_RISK">🟡 Có rủi ro</option>
-            <option value="DELAYED">🔴 Chậm trễ</option>
-          </select>
-        </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Tiến độ: {progress}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={progress}
-            onChange={(e) => setProgress(parseInt(e.target.value))}
-            className="w-full"
-          />
-        </div>
-        <button
-          onClick={() => onSave(health, progress)}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700"
-        >
-          Lưu
-        </button>
-      </div>
-    </DialogWrapper>
-  );
-}
-
-function MilestoneDialog({
   onSave,
-  onClose,
 }: {
-  onSave: (name: string, dueDate: string, ownerUserId: string) => void;
   onClose: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [ownerId, setOwnerId] = useState("");
-  const activeUsers = users.filter((u) => u.accountStatus === "ACTIVE");
-  return (
-    <DialogWrapper title="Thêm Milestone" onClose={onClose}>
-      <div className="space-y-4">
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Tên milestone *
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          />
-        </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Hạn hoàn thành *
-          </label>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          />
-        </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Owner *
-          </label>
-          <select
-            value={ownerId}
-            onChange={(e) => setOwnerId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          >
-            <option value="">Chọn người phụ trách</option>
-            {activeUsers.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.fullName} ({u.userCode})
-              </option>
-            ))}
-          </select>
-        </div>
-        <button
-          onClick={() => {
-            if (name && dueDate && ownerId) onSave(name, dueDate, ownerId);
-          }}
-          disabled={!name || !dueDate || !ownerId}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Thêm
-        </button>
-      </div>
-    </DialogWrapper>
-  );
-}
-
-function MemberDialog({
-  projectAssignments,
-  onSave,
-  onClose,
-}: {
-  projectAssignments: ProjectAssignment[];
-  onSave: (
-    userId: string,
-    role: string,
-    alloc: number,
-    billable: boolean,
-  ) => void;
-  onClose: () => void;
+  onSave: (p: Parameters<typeof projectsService.assignMember>[1]) => void;
 }) {
   const [userId, setUserId] = useState("");
   const [role, setRole] = useState("");
-  const [alloc, setAlloc] = useState(100);
-  const [billable, setBillable] = useState(true);
-  const existingIds = new Set(projectAssignments.map((a) => a.userId));
-  const availableUsers = users.filter(
-    (u) => u.accountStatus === "ACTIVE" && !existingIds.has(u.id),
+  const [allocation, setAllocation] = useState("100");
+  const [isBillable, setIsBillable] = useState(false);
+  const [joinedAt, setJoinedAt] = useState(
+    new Date().toISOString().split("T")[0],
   );
-  const roles = [
-    "Project Manager",
-    "Tech Lead",
-    "Senior Dev",
-    "Backend Dev",
-    "Frontend Dev",
-    "Full-Stack Dev",
-    "BA",
-    "QA Engineer",
-    "DevOps",
-    "Designer",
-    "Support Eng",
-    "Junior Dev",
-  ];
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!userId.trim()) {
+      toast.error("Nhập User ID");
+      return;
+    }
+    setSubmitting(true);
+    await onSave({
+      userId: userId.trim(),
+      roleInProject: role || null,
+      allocationPercent: allocation ? +allocation : null,
+      joinedAt,
+      isBillable,
+    });
+    setSubmitting(false);
+  };
+
   return (
-    <DialogWrapper title="Thêm thành viên" onClose={onClose}>
-      <div className="space-y-4">
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Nhân viên *
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-[16px]">Thêm thành viên</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              User ID *
+            </label>
+            <input
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="ID nhân viên..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Vai trò trong dự án
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            >
+              <option value="">-- Chọn vai trò --</option>
+              {PROJECT_ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Phân bổ (%)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={allocation}
+                onChange={(e) => setAllocation(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Ngày tham gia *
+              </label>
+              <input
+                type="date"
+                value={joinedAt}
+                onChange={(e) => setJoinedAt(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isBillable}
+              onChange={(e) => setIsBillable(e.target.checked)}
+            />
+            Billable (tính phí khách hàng)
           </label>
-          <select
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
           >
-            <option value="">Chọn nhân viên</option>
-            {availableUsers.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.fullName} ({u.userCode})
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Vai trò *
-          </label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
-            <option value="">Chọn vai trò</option>
-            {roles.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <UserPlus size={14} />
+            )}{" "}
+            Thêm
+          </button>
         </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Allocation %
-          </label>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={alloc}
-            onChange={(e) => setAlloc(parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          />
-        </div>
-        <label className="flex items-center gap-2 text-[13px]">
-          <input
-            type="checkbox"
-            checked={billable}
-            onChange={(e) => setBillable(e.target.checked)}
-            className="rounded"
-          />{" "}
-          Billable
-        </label>
-        <button
-          onClick={() => {
-            if (userId && role) onSave(userId, role, alloc, billable);
-          }}
-          disabled={!userId || !role}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Thêm
-        </button>
       </div>
-    </DialogWrapper>
+    </div>
   );
 }
 
-function ExpenseDialog({
-  onSave,
+// ─── MilestoneFormDialog ───────────────────────────────────────
+function MilestoneFormDialog({
+  milestone,
+  title,
   onClose,
+  onSave,
 }: {
-  onSave: (
-    title: string,
-    cat: ProjectExpenseCategory,
-    amount: number,
-    date: string,
-  ) => void;
+  milestone?: ApiMilestone;
+  title: string;
   onClose: () => void;
+  onSave: (p: {
+    name: string;
+    description?: string | null;
+    dueDate?: string | null;
+    status?: MilestoneStatus;
+  }) => void;
 }) {
-  const [title, setTitle] = useState("");
-  const [cat, setCat] = useState<ProjectExpenseCategory>("SOFTWARE");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState("2025-03-12");
+  const [form, setForm] = useState({
+    name: milestone?.name ?? "",
+    description: milestone?.description ?? "",
+    dueDate: milestone?.dueDate?.split("T")[0] ?? "",
+    status: (milestone?.status ?? "PENDING") as MilestoneStatus,
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!form.name.trim()) {
+      toast.error("Tên milestone là bắt buộc");
+      return;
+    }
+    setSubmitting(true);
+    await onSave({
+      name: form.name.trim(),
+      description: form.description || null,
+      dueDate: form.dueDate || null,
+      status: form.status,
+    });
+    setSubmitting(false);
+  };
+
   return (
-    <DialogWrapper title="Submit chi phí" onClose={onClose}>
-      <div className="space-y-4">
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Tiêu đề *
-          </label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-[16px]">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
         </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Danh mục *
-          </label>
-          <select
-            value={cat}
-            onChange={(e) => setCat(e.target.value as ProjectExpenseCategory)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Tên milestone *
+            </label>
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Tên milestone..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Deadline
+              </label>
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, dueDate: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Trạng thái
+              </label>
+              <select
+                value={form.status}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    status: e.target.value as MilestoneStatus,
+                  }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              >
+                {(["PENDING", "IN_PROGRESS", "DONE"] as const).map((s) => (
+                  <option key={s} value={s}>
+                    {s === "PENDING"
+                      ? "Chờ"
+                      : s === "IN_PROGRESS"
+                        ? "Đang làm"
+                        : "Hoàn thành"}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Mô tả
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
+              rows={2}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
           >
-            {Object.entries(expCategoryLabels).map(([k, v]) => (
-              <option key={k} value={k}>
-                {v}
-              </option>
-            ))}
-          </select>
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Plus size={14} />
+            )}
+            {milestone ? "Cập nhật" : "Tạo"}
+          </button>
         </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Số tiền (VND) *
-          </label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0"
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          />
-        </div>
-        <div>
-          <label className="text-[13px] text-muted-foreground block mb-1">
-            Ngày *
-          </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          />
-        </div>
-        <button
-          onClick={() => {
-            if (title && amount) onSave(title, cat, parseInt(amount), date);
-          }}
-          disabled={!title || !amount}
-          className="w-full py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Submit
-        </button>
       </div>
-    </DialogWrapper>
+    </div>
+  );
+}
+
+// ─── AddExpenseDialog ──────────────────────────────────────────
+function AddExpenseDialog({
+  onClose,
+  onSave,
+}: {
+  onClose: () => void;
+  onSave: (p: Parameters<typeof projectsService.createExpense>[1]) => void;
+}) {
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "OTHER" as ExpenseCategory,
+    amount: "",
+    expenseDate: new Date().toISOString().split("T")[0],
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!form.title.trim()) {
+      toast.error("Nhập tiêu đề");
+      return;
+    }
+    const amt = parseFloat(form.amount);
+    if (!amt || amt <= 0) {
+      toast.error("Số tiền không hợp lệ");
+      return;
+    }
+    setSubmitting(true);
+    await onSave({
+      title: form.title.trim(),
+      description: form.description || null,
+      category: form.category,
+      amount: amt,
+      expenseDate: form.expenseDate,
+    });
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="text-[16px]">Gửi chi phí</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-accent">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Tiêu đề *
+            </label>
+            <input
+              value={form.title}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, title: e.target.value }))
+              }
+              placeholder="Mô tả chi phí..."
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Danh mục *
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    category: e.target.value as ExpenseCategory,
+                  }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              >
+                {Object.entries(expCategoryLabels).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Ngày *
+              </label>
+              <input
+                type="date"
+                value={form.expenseDate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, expenseDate: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Số tiền (VND) *
+            </label>
+            <input
+              type="number"
+              value={form.amount}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, amount: e.target.value }))
+              }
+              placeholder="0"
+              min={1}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            />
+          </div>
+          <div>
+            <label className="block text-[12px] text-muted-foreground mb-1">
+              Ghi chú
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
+              rows={2}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          >
+            {submitting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Send size={14} />
+            )}{" "}
+            Gửi
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
