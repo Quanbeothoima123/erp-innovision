@@ -7,6 +7,8 @@ const {
   toPublicDto,
   toListItemDto,
   toProfileDto,
+  toWorkShiftDto,
+  toAuditLogDto,
   toRoleDto,
 } = require("./users.mapper");
 const {
@@ -315,6 +317,53 @@ async function updateProfile(req, res, next) {
   }
 }
 
+/**
+ * GET /api/users/:id/work-shifts
+ * Lịch sử ca làm việc của nhân viên.
+ * Bản thân + HR/Admin xem được.
+ */
+async function getUserWorkShifts(req, res, next) {
+  try {
+    const shifts = await usersService.getUserWorkShifts(
+      req.params.id,
+      req.user,
+    );
+    return successResponse(
+      res,
+      shifts.map(toWorkShiftDto),
+      "Lấy lịch sử ca làm việc thành công",
+    );
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/users/:id/audit-logs
+ * Nhật ký hoạt động liên quan đến nhân viên.
+ * Chỉ HR/Admin được xem.
+ * Query: page, limit, entityType, actionType, mode (about | by | all)
+ */
+async function getUserAuditLogs(req, res, next) {
+  try {
+    const { logs, total } = await usersService.getUserAuditLogs(
+      req.params.id,
+      req.user,
+      req.query,
+    );
+    const page  = parseInt(req.query.page,  10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    return paginatedResponse(
+      res,
+      logs.map(toAuditLogDto),
+      { page, limit, total },
+      "Lấy nhật ký hoạt động thành công",
+    );
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   listUsers,
   getUserStats,
@@ -332,4 +381,6 @@ module.exports = {
   resendSetupEmail,
   getProfile,
   updateProfile,
+  getUserWorkShifts,
+  getUserAuditLogs,
 };

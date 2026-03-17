@@ -214,6 +214,101 @@ async function getUserStats() {
   return { total, byEmployment, byAccount };
 }
 
+// ── Work Shifts ───────────────────────────────────────────────
+
+/**
+ * Lấy toàn bộ lịch sử ca làm việc của 1 nhân viên,
+ * kèm thông tin shift (tên, giờ, loại...).
+ * Sắp xếp: ca đang active lên đầu, sau đó theo effectiveFrom mới → cũ.
+ */
+async function findWorkShifts(userId) {
+  return prisma.userWorkShift.findMany({
+    where: { userId },
+    include: {
+      shift: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          shiftType: true,
+          startTime: true,
+          endTime: true,
+          breakMinutes: true,
+          workMinutes: true,
+          isNightShift: true,
+          overtimeAfterMinutes: true,
+        },
+      },
+    },
+    orderBy: [
+      { isActive: "desc" },
+      { effectiveFrom: "desc" },
+    ],
+  });
+}
+
+// ── Audit Logs ────────────────────────────────────────────────
+
+/**
+ * Lấy audit logs liên quan đến 1 nhân viên:
+ * - Các log có entityId = userId (hành động trực tiếp lên user)
+ * - Các log có actorUserId = userId (hành động do user đó thực hiện)
+ * Hỗ trợ filter theo entityType, actionType và phân trang.
+ */
+async function findAuditLogs(userId, {
+  entityType,
+  actionType,
+  mode = "about", // "about" | "by" | "all"
+  page = 1,
+  limit = 20,
+} = {}) {
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 20;
+  const skip = (pageNum - 1) * limitNum;
+
+  // Xây dựng điều kiện theo mode
+  let userCondition;
+  if (mode === "by") {
+    userCondition = { actorUserId: userId };
+  } else if (mode === "all") {
+    userCondition = {
+      OR: [{ entityId: userId }, { actorUserId: userId }],
+    };
+  } else {
+    // "about" — mặc định: log về user này (các entityType liên quan đến user)
+    userCondition = {
+      OR: [
+        { entityId: userId, entityType: { in: ["USER", "USER_PROFILE", "USER_COMPENSATION", "USER_SALARY_COMPONENT", "WORK_SHIFT"] } },
+        // Cũng lấy cả log leave/attendance/overtime có entityId là userId
+        { entityId: userId },
+      ],
+    };
+  }
+
+  const where = {
+    ...userCondition,
+    ...(entityType && { entityType }),
+    ...(actionType && { actionType }),
+  };
+
+  const [total, logs] = await prisma.$transaction([
+    prisma.auditLog.count({ where }),
+    prisma.auditLog.findMany({
+      where,
+      include: {
+        actorUser: {
+          select: { id: true, fullName: true, avatarUrl: true, userCode: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limitNum,
+    }),
+  ]);
+
+  return { logs, total };
+}
+
 module.exports = {
   findMany,
   findById,
@@ -231,4 +326,6 @@ module.exports = {
   findAllRoles,
   getLastUserCode,
   getUserStats,
+  findWorkShifts,
+  findAuditLogs,
 };

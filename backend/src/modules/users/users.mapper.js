@@ -139,6 +139,71 @@ function toProfileDto(profile) {
   };
 }
 
+// ── Work Shift DTO ────────────────────────────────────────────
+
+/**
+ * DTO cho 1 bản ghi UserWorkShift, kèm thông tin shift detail.
+ */
+function toWorkShiftDto(uws) {
+  if (!uws) return null;
+  return {
+    id: uws.id,
+    userId: uws.userId,
+    shiftId: uws.shiftId,
+    dayOfWeek: uws.dayOfWeek,       // null = áp dụng tất cả ngày trong tuần
+    effectiveFrom: uws.effectiveFrom,
+    effectiveTo: uws.effectiveTo,
+    isActive: uws.isActive,
+    notes: uws.notes,
+    createdAt: uws.createdAt,
+    updatedAt: uws.updatedAt,
+    shift: uws.shift
+      ? {
+          id: uws.shift.id,
+          code: uws.shift.code,
+          name: uws.shift.name,
+          shiftType: uws.shift.shiftType,
+          startTime: uws.shift.startTime,
+          endTime: uws.shift.endTime,
+          breakMinutes: uws.shift.breakMinutes,
+          workMinutes: uws.shift.workMinutes,
+          isNightShift: uws.shift.isNightShift,
+          overtimeAfterMinutes: uws.shift.overtimeAfterMinutes,
+        }
+      : null,
+  };
+}
+
+// ── Audit Log DTO ─────────────────────────────────────────────
+
+/**
+ * DTO cho 1 bản ghi AuditLog, kèm thông tin actor (người thực hiện).
+ */
+function toAuditLogDto(log) {
+  if (!log) return null;
+  return {
+    id: log.id,
+    entityType: log.entityType,
+    entityId: log.entityId,
+    actionType: log.actionType,
+    actorUserId: log.actorUserId,
+    actorUser: log.actorUser
+      ? {
+          id: log.actorUser.id,
+          fullName: log.actorUser.fullName,
+          avatarUrl: log.actorUser.avatarUrl,
+          userCode: log.actorUser.userCode,
+        }
+      : null,
+    description: log.description,
+    oldValues: log.oldValues,
+    newValues: log.newValues,
+    metadata: log.metadata,
+    ipAddress: log.ipAddress,
+    createdAt: log.createdAt,
+  };
+}
+
 // ── Role DTO ──────────────────────────────────────────────────
 
 function toRoleDto(role) {
@@ -162,5 +227,7 @@ module.exports = {
   toAdminDto,
   toListItemDto,
   toProfileDto,
+  toWorkShiftDto,
+  toAuditLogDto,
   toRoleDto,
 };

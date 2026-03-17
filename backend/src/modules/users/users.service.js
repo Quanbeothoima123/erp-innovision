@@ -254,6 +254,41 @@ async function updateProfile(targetId, dto, requestingUser) {
   return repo.upsertProfile(targetId, dto);
 }
 
+// ── Work Shifts ───────────────────────────────────────────────
+
+/**
+ * Lấy lịch sử ca làm việc của 1 nhân viên.
+ * - HR/Admin: xem của bất kỳ ai
+ * - Bản thân: xem của mình
+ * - Người khác: 403
+ */
+async function getUserWorkShifts(targetId, requestingUser) {
+  _assertCanViewProfile(targetId, requestingUser);
+  await _assertUserExists(targetId);
+  return repo.findWorkShifts(targetId);
+}
+
+// ── Audit Logs ────────────────────────────────────────────────
+
+/**
+ * Lấy audit logs liên quan đến 1 nhân viên.
+ * Chỉ HR/Admin mới được xem — nhân viên không tự xem nhật ký của mình.
+ */
+async function getUserAuditLogs(targetId, requestingUser, filters) {
+  _assertHrOrAdmin(requestingUser);
+  await _assertUserExists(targetId);
+  return repo.findAuditLogs(targetId, filters);
+}
+
+function _assertHrOrAdmin(requestingUser) {
+  const isHrOrAdmin = requestingUser.roles.some((r) =>
+    [ROLES.ADMIN, ROLES.HR].includes(r),
+  );
+  if (!isHrOrAdmin) {
+    throw AppError.forbidden("Chỉ HR/Admin mới có thể xem nhật ký hoạt động.");
+  }
+}
+
 // ── Roles list ────────────────────────────────────────────────
 
 async function listRoles() {
@@ -384,4 +419,6 @@ module.exports = {
   updateProfile,
   listRoles,
   getUserStats,
+  getUserWorkShifts,
+  getUserAuditLogs,
 };

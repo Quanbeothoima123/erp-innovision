@@ -156,6 +156,30 @@ const updateMeSchema = z.object({
   avatarUrl: z.string().url("URL không hợp lệ").max(2048).optional().nullable(),
 });
 
+// ── GET /users/:id/audit-logs ─────────────────────────────────
+const auditLogQuerySchema = paginationSchema.extend({
+  entityType: z
+    .enum([
+      "USER", "USER_PROFILE", "DEPARTMENT", "JOB_TITLE",
+      "LEAVE_TYPE", "LEAVE_REQUEST", "LEAVE_BALANCE",
+      "ATTENDANCE_RECORD", "ATTENDANCE_REQUEST", "WORK_SHIFT", "HOLIDAY",
+      "OVERTIME_REQUEST", "PROJECT", "PROJECT_ASSIGNMENT",
+      "PROJECT_MILESTONE", "PROJECT_EXPENSE", "PAYROLL_PERIOD",
+      "USER_COMPENSATION", "SALARY_COMPONENT", "USER_SALARY_COMPONENT",
+      "CONTRACT", "INVOICE", "CLIENT_PAYMENT",
+    ])
+    .optional(),
+  actionType: z
+    .enum([
+      "CREATE", "UPDATE", "DEACTIVATE", "APPROVE", "REJECT",
+      "ASSIGN", "REMOVE", "STATUS_CHANGE", "SEND", "PAYMENT",
+      "CANCEL", "SIGN", "LOGIN", "LOGOUT", "PASSWORD_SET", "PASSWORD_RESET",
+    ])
+    .optional(),
+  // "about" = log về user này | "by" = log do user thực hiện | "all" = cả hai
+  mode: z.enum(["about", "by", "all"]).default("about"),
+});
+
 // ── GET /users — params ───────────────────────────────────────
 const userIdParamSchema = z.object({
   id: z.string().min(1, "User ID không hợp lệ"),
@@ -171,4 +195,5 @@ module.exports = {
   updateProfileSchema,
   updateMeSchema,
   userIdParamSchema,
+  auditLogQuerySchema,
 };

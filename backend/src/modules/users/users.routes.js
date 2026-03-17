@@ -19,6 +19,7 @@ const {
   updateProfileSchema,
   updateMeSchema,
   userIdParamSchema,
+  auditLogQuerySchema,
 } = require("./users.validation");
 
 const router = Router();
@@ -147,6 +148,26 @@ router.put(
   "/:id/profile",
   validate(updateProfileSchema),
   controller.updateProfile,
+);
+
+/**
+ * GET /api/users/:id/work-shifts
+ * Lịch sử ca làm việc của nhân viên.
+ * Bản thân + HR/Admin xem được — xử lý phân quyền trong service.
+ */
+router.get("/:id/work-shifts", controller.getUserWorkShifts);
+
+/**
+ * GET /api/users/:id/audit-logs
+ * Nhật ký hoạt động liên quan đến nhân viên.
+ * Chỉ HR/Admin được xem.
+ * Query: page, limit, entityType, actionType, mode (about|by|all)
+ */
+router.get(
+  "/:id/audit-logs",
+  authorize(ROLES.ADMIN, ROLES.HR),
+  validate(auditLogQuerySchema, "query"),
+  controller.getUserAuditLogs,
 );
 
 module.exports = router;
