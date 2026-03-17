@@ -231,3 +231,83 @@ export async function updateUserProfile(
 ): Promise<UserProfile> {
   return api.put<UserProfile>(`/users/${id}/profile`, payload);
 }
+
+// ─── Work Shifts ─────────────────────────────────────────────
+
+export interface ApiWorkShiftRecord {
+  id: string;
+  userId: string;
+  shiftId: string;
+  dayOfWeek: number | null;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  isActive: boolean;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  shift: {
+    id: string;
+    code: string;
+    name: string;
+    shiftType: string;
+    startTime: string;
+    endTime: string;
+    breakMinutes: number;
+    workMinutes: number;
+    isNightShift: boolean;
+    overtimeAfterMinutes: number;
+  } | null;
+}
+
+/** GET /api/users/:id/work-shifts — lịch sử ca làm việc */
+export async function getUserWorkShifts(
+  id: string,
+): Promise<ApiWorkShiftRecord[]> {
+  return api.get<ApiWorkShiftRecord[]>(`/users/${id}/work-shifts`);
+}
+
+// ─── Audit Logs ───────────────────────────────────────────────
+
+export interface ApiAuditLogRecord {
+  id: string;
+  entityType: string;
+  entityId: string;
+  actionType: string;
+  actorUserId: string | null;
+  actorUser: {
+    id: string;
+    fullName: string;
+    avatarUrl: string | null;
+    userCode: string;
+  } | null;
+  description: string | null;
+  oldValues: Record<string, unknown> | null;
+  newValues: Record<string, unknown> | null;
+  ipAddress: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogParams {
+  page?: number;
+  limit?: number;
+  entityType?: string;
+  actionType?: string;
+  mode?: "about" | "by" | "all";
+}
+
+export interface PaginatedAuditLogs {
+  items: ApiAuditLogRecord[];
+  logs?: ApiAuditLogRecord[]; // alias từ backend
+  pagination: { total: number; page: number; limit: number };
+  total?: number; // alias từ backend
+}
+
+/** GET /api/users/:id/audit-logs — nhật ký hoạt động (chỉ HR/Admin) */
+export async function getUserAuditLogs(
+  id: string,
+  params?: AuditLogParams,
+): Promise<PaginatedAuditLogs> {
+  return api.get<PaginatedAuditLogs>(`/users/${id}/audit-logs`, {
+    params: params as Record<string, string>,
+  });
+}
