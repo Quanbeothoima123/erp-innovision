@@ -1,49 +1,96 @@
 // ================================================================
-// DEPARTMENTS PAGE + JOB TITLES PAGE — Module 3 (API-integrated)
-// Fixes: replaces all mock state with real API calls
+// DEPARTMENTS PAGE + JOB TITLES PAGE — Module 3
+// Fixed: headUserOptions now loads from API, mockUsers used in mock mode
+// UI: upgraded to match Figma design
 // ================================================================
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
-  Search, Plus, X, Edit2, Trash2, Users, Building,
-  ToggleLeft, ToggleRight, RefreshCw, Loader2, AlertCircle, Briefcase,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { ApiError } from '../../lib/apiClient';
-import * as departmentsService from '../../lib/services/departments.service';
-import type { ApiDepartment } from '../../lib/services/departments.service';
-import * as jobTitlesService from '../../lib/services/jobTitles.service';
-import type { ApiJobTitle } from '../../lib/services/jobTitles.service';
+  Search,
+  Plus,
+  X,
+  Edit2,
+  Trash2,
+  Users,
+  Building,
+  ToggleLeft,
+  ToggleRight,
+  RefreshCw,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { ApiError } from "../../lib/apiClient";
+import * as departmentsService from "../../lib/services/departments.service";
+import type { ApiDepartment } from "../../lib/services/departments.service";
+import * as jobTitlesService from "../../lib/services/jobTitles.service";
+import type { ApiJobTitle } from "../../lib/services/jobTitles.service";
+import * as usersService from "../../lib/services/users.service";
 
 // Mock fallback
-import { departments as mockDepts, jobTitles as mockJobTitles, users } from '../data/mockData';
+import {
+  departments as mockDepts,
+  jobTitles as mockJobTitles,
+  users as mockUsers,
+} from "../data/mockData";
 
 const USE_API = !!import.meta.env.VITE_API_URL;
 
-// ── Helpers ─────────────────────────────────────────────────────
-function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+// ── Shared UI helpers ──────────────────────────────────────────
+function Overlay({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">{children}</div>
+      <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        {children}
+      </div>
     </div>
   );
 }
 function DlgHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between p-4 border-b border-border">
-      <h3 className="text-[15px] font-medium">{title}</h3>
-      <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-accent"><X size={15} /></button>
+      <h3 className="text-[15px] font-semibold">{title}</h3>
+      <button
+        onClick={onClose}
+        className="p-1.5 rounded-lg hover:bg-accent transition"
+      >
+        <X size={15} />
+      </button>
     </div>
   );
 }
-function DlgFooter({ onCancel, onConfirm, label, loading, variant = 'primary' }: {
-  onCancel: () => void; onConfirm: () => void; label: string; loading?: boolean; variant?: 'primary' | 'danger';
+function DlgFooter({
+  onCancel,
+  onConfirm,
+  label,
+  loading,
+  variant = "primary",
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+  label: string;
+  loading?: boolean;
+  variant?: "primary" | "danger";
 }) {
   return (
     <div className="flex justify-end gap-2 p-4 border-t border-border">
-      <button onClick={onCancel} className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition">Huỷ</button>
-      <button onClick={onConfirm} disabled={loading} className={`px-4 py-2 text-white rounded-lg text-[13px] flex items-center gap-1.5 transition disabled:opacity-50 ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+      <button
+        onClick={onCancel}
+        className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+      >
+        Huỷ
+      </button>
+      <button
+        onClick={onConfirm}
+        disabled={loading}
+        className={`px-4 py-2 text-white rounded-lg text-[13px] flex items-center gap-1.5 transition disabled:opacity-50 ${variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
+      >
         {loading && <Loader2 size={13} className="animate-spin" />} {label}
       </button>
     </div>
@@ -55,19 +102,44 @@ function DlgFooter({ onCancel, onConfirm, label, loading, variant = 'primary' }:
 // ================================================================
 export function DepartmentsPage() {
   const { can } = useAuth();
-  const isAdmin = can('ADMIN', 'HR');
+  const isAdmin = can("ADMIN", "HR");
 
   const [depts, setDepts] = useState<ApiDepartment[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editDept, setEditDept] = useState<ApiDepartment | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', headUserId: '', isActive: true });
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    headUserId: "",
+    isActive: true,
+  });
 
-  // For selecting head user
-  const headUserOptions = users.map(u => ({ id: u.id, name: u.fullName }));
+  // ── Head-user options: load from API or fall back to mock ──────
+  const [headUserOptions, setHeadUserOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (USE_API) {
+      // Load danh sách nhân viên để chọn trưởng phòng
+      usersService
+        .listUsers({ limit: 200 })
+        .then((res) =>
+          setHeadUserOptions(
+            res.items.map((u) => ({ id: u.id, name: u.fullName })),
+          ),
+        )
+        .catch(() => {});
+    } else {
+      setHeadUserOptions(
+        mockUsers.map((u) => ({ id: u.id, name: u.fullName })),
+      );
+    }
+  }, []);
 
   const fetchDepts = useCallback(async () => {
     setLoading(true);
@@ -76,104 +148,189 @@ export function DepartmentsPage() {
         const res = await departmentsService.listDepartments({ limit: 200 });
         setDepts(res.items);
       } else {
-        setDepts(mockDepts.map(d => ({
-          id: d.id, name: d.name, description: d.description,
-          headUserId: d.headUserId, isActive: d.isActive,
-          _count: { members: users.filter(u => u.departmentId === d.id).length },
-        })));
+        setDepts(
+          mockDepts.map((d) => ({
+            id: d.id,
+            name: d.name,
+            description: d.description,
+            headUserId: d.headUserId,
+            isActive: d.isActive,
+            _count: {
+              members: mockUsers.filter((u) => u.departmentId === d.id).length,
+            },
+          })),
+        );
       }
-    } catch { toast.error('Không tải được danh sách phòng ban'); }
-    finally { setLoading(false); }
+    } catch {
+      toast.error("Không tải được danh sách phòng ban");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchDepts(); }, [fetchDepts]);
+  useEffect(() => {
+    fetchDepts();
+  }, [fetchDepts]);
 
   const openCreate = () => {
     setEditDept(null);
-    setForm({ name: '', description: '', headUserId: '', isActive: true });
+    setForm({ name: "", description: "", headUserId: "", isActive: true });
     setShowForm(true);
   };
   const openEdit = (d: ApiDepartment) => {
     setEditDept(d);
-    setForm({ name: d.name, description: d.description ?? '', headUserId: d.headUserId ?? '', isActive: d.isActive });
+    setForm({
+      name: d.name,
+      description: d.description ?? "",
+      headUserId: d.headUserId ?? "",
+      isActive: d.isActive,
+    });
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error('Vui lòng nhập tên phòng ban'); return; }
+    if (!form.name.trim()) {
+      toast.error("Vui lòng nhập tên phòng ban");
+      return;
+    }
     setSaving(true);
     try {
-      const payload = { name: form.name.trim(), description: form.description, headUserId: form.headUserId || null, isActive: form.isActive };
+      const payload = {
+        name: form.name.trim(),
+        description: form.description,
+        headUserId: form.headUserId || null,
+        isActive: form.isActive,
+      };
       if (USE_API) {
         if (editDept) {
-          const updated = await departmentsService.updateDepartment(editDept.id, payload);
-          setDepts(prev => prev.map(d => d.id === editDept.id ? updated : d));
+          const updated = await departmentsService.updateDepartment(
+            editDept.id,
+            payload,
+          );
+          setDepts((prev) =>
+            prev.map((d) => (d.id === editDept.id ? updated : d)),
+          );
         } else {
-          const created = await departmentsService.createDepartment({ ...payload, description: payload.description || undefined, headUserId: payload.headUserId ?? undefined });
-          setDepts(prev => [...prev, created]);
+          const created = await departmentsService.createDepartment({
+            ...payload,
+            description: payload.description || undefined,
+            headUserId: payload.headUserId ?? undefined,
+          });
+          setDepts((prev) => [...prev, created]);
         }
       } else {
         if (editDept) {
-          setDepts(prev => prev.map(d => d.id === editDept.id ? { ...d, ...payload } : d));
+          setDepts((prev) =>
+            prev.map((d) => (d.id === editDept.id ? { ...d, ...payload } : d)),
+          );
         } else {
-          const newDept: ApiDepartment = { id: `dept-${Date.now()}`, ...payload, description: payload.description || '', headUserId: payload.headUserId, _count: { members: 0 } };
-          setDepts(prev => [...prev, newDept]);
+          const newDept: ApiDepartment = {
+            id: `dept-${Date.now()}`,
+            ...payload,
+            description: payload.description || "",
+            headUserId: payload.headUserId,
+            _count: { members: 0 },
+          };
+          setDepts((prev) => [...prev, newDept]);
         }
       }
-      toast.success(editDept ? `Đã cập nhật phòng ban ${form.name}` : `Đã tạo phòng ban ${form.name}`);
+      toast.success(
+        editDept
+          ? `Đã cập nhật phòng ban ${form.name}`
+          : `Đã tạo phòng ban ${form.name}`,
+      );
       setShowForm(false);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Thao tác thất bại');
-    } finally { setSaving(false); }
+      toast.error(err instanceof ApiError ? err.message : "Thao tác thất bại");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    const dept = depts.find(d => d.id === id);
+    const dept = depts.find((d) => d.id === id);
     if ((dept?._count?.members ?? 0) > 0) {
-      toast.error(`Không thể xoá phòng ban có ${dept?._count?.members} nhân viên`);
-      setDeleteConfirm(null); return;
+      toast.error(
+        `Không thể xoá phòng ban có ${dept?._count?.members} nhân viên`,
+      );
+      setDeleteConfirm(null);
+      return;
     }
     setSaving(true);
     try {
       if (USE_API) await departmentsService.deleteDepartment(id);
-      setDepts(prev => prev.filter(d => d.id !== id));
-      toast.success('Đã xoá phòng ban');
+      setDepts((prev) => prev.filter((d) => d.id !== id));
+      toast.success("Đã xoá phòng ban");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Xoá thất bại');
-    } finally { setSaving(false); setDeleteConfirm(null); }
+      toast.error(err instanceof ApiError ? err.message : "Xoá thất bại");
+    } finally {
+      setSaving(false);
+      setDeleteConfirm(null);
+    }
   };
 
   const toggleActive = async (d: ApiDepartment) => {
     try {
       if (USE_API) {
-        const updated = await departmentsService.updateDepartment(d.id, { isActive: !d.isActive });
-        setDepts(prev => prev.map(x => x.id === d.id ? updated : x));
+        const updated = await departmentsService.updateDepartment(d.id, {
+          isActive: !d.isActive,
+        });
+        setDepts((prev) => prev.map((x) => (x.id === d.id ? updated : x)));
       } else {
-        setDepts(prev => prev.map(x => x.id === d.id ? { ...x, isActive: !x.isActive } : x));
+        setDepts((prev) =>
+          prev.map((x) =>
+            x.id === d.id ? { ...x, isActive: !x.isActive } : x,
+          ),
+        );
       }
-      toast.success(`Đã ${d.isActive ? 'vô hiệu' : 'kích hoạt'} phòng ban ${d.name}`);
+      toast.success(
+        `Đã ${d.isActive ? "vô hiệu" : "kích hoạt"} phòng ban ${d.name}`,
+      );
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Thao tác thất bại');
+      toast.error(err instanceof ApiError ? err.message : "Thao tác thất bại");
     }
   };
 
+  // Resolve head user display name
+  const getHeadName = (d: ApiDepartment) => {
+    if (d.headUser?.fullName) return d.headUser.fullName;
+    if (!d.headUserId) return null;
+    return headUserOptions.find((u) => u.id === d.headUserId)?.name ?? null;
+  };
+
   const filtered = search
-    ? depts.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || (d.description ?? '').toLowerCase().includes(search.toLowerCase()))
+    ? depts.filter(
+        (d) =>
+          d.name.toLowerCase().includes(search.toLowerCase()) ||
+          (d.description ?? "").toLowerCase().includes(search.toLowerCase()),
+      )
     : depts;
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-[20px] font-semibold">Phòng ban</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">Quản lý các phòng ban trong tổ chức</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            Quản lý các phòng ban trong tổ chức
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={fetchDepts} className="p-2 rounded-lg border border-border hover:bg-accent transition">
-            <RefreshCw size={14} className={`text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
+          <button
+            onClick={fetchDepts}
+            className="p-2 rounded-lg border border-border hover:bg-accent transition"
+          >
+            <RefreshCw
+              size={14}
+              className={`text-muted-foreground ${loading ? "animate-spin" : ""}`}
+            />
           </button>
           {isAdmin && (
-            <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition">
+            <button
+              onClick={openCreate}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+            >
               <Plus size={15} /> Thêm phòng ban
             </button>
           )}
@@ -182,17 +339,24 @@ export function DepartmentsPage() {
 
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input type="text" placeholder="Tìm phòng ban..." value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <Search
+          size={15}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          type="text"
+          placeholder="Tìm phòng ban..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
-      {/* Grid */}
+      {/* Grid / States */}
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
-          <Loader2 size={18} className="animate-spin" /><span className="text-[13px]">Đang tải...</span>
+          <Loader2 size={18} className="animate-spin" />
+          <span className="text-[13px]">Đang tải...</span>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -201,89 +365,197 @@ export function DepartmentsPage() {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map(d => (
-            <div key={d.id} className={`bg-card border border-border rounded-xl p-4 transition-opacity ${!d.isActive ? 'opacity-60' : ''}`}>
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center text-white flex-shrink-0">
-                    <Building size={16} />
-                  </div>
-                  <div>
-                    <div className="text-[14px] font-medium">{d.name}</div>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${d.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
-                      {d.isActive ? 'Hoạt động' : 'Vô hiệu'}
-                    </span>
+          {filtered.map((d) => {
+            const headName = getHeadName(d);
+            return (
+              <div
+                key={d.id}
+                className={`bg-card border border-border rounded-xl p-4 transition-opacity ${!d.isActive ? "opacity-60" : ""}`}
+              >
+                {/* Card header */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center text-white flex-shrink-0">
+                      <Building size={16} />
+                    </div>
+                    <div>
+                      <div className="text-[14px] font-medium leading-tight">
+                        {d.name}
+                      </div>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                          d.isActive
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
+                      >
+                        {d.isActive ? "Hoạt động" : "Vô hiệu"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {d.description && (
-                <p className="text-[12px] text-muted-foreground mb-3 line-clamp-2">{d.description}</p>
-              )}
-
-              <div className="flex items-center justify-between text-[12px] text-muted-foreground">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1"><Users size={11} /> {d._count?.members ?? 0} nhân viên</div>
-                  <div>TP: {d.headUser?.fullName ?? d.headUserId ? headUserOptions.find(u => u.id === d.headUserId)?.name : <span className="italic">Chưa gán</span>}</div>
-                </div>
-                {isAdmin && (
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => toggleActive(d)} className="p-1.5 rounded-lg hover:bg-accent transition" title={d.isActive ? 'Vô hiệu' : 'Kích hoạt'}>
-                      {d.isActive ? <ToggleRight size={16} className="text-emerald-600" /> : <ToggleLeft size={16} className="text-muted-foreground" />}
-                    </button>
-                    <button onClick={() => openEdit(d)} className="p-1.5 rounded-lg hover:bg-accent transition">
-                      <Edit2 size={14} className="text-muted-foreground" />
-                    </button>
-                    <button onClick={() => setDeleteConfirm(d.id)} className="p-1.5 rounded-lg hover:bg-accent transition">
-                      <Trash2 size={14} className="text-red-400" />
-                    </button>
-                  </div>
+                {/* Description */}
+                {d.description && (
+                  <p className="text-[12px] text-muted-foreground mb-3 line-clamp-2">
+                    {d.description}
+                  </p>
                 )}
+
+                {/* Footer: stats + actions */}
+                <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1">
+                      <Users size={11} /> {d._count?.members ?? 0} nhân viên
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span>TP:</span>
+                      {headName ? (
+                        <span className="text-foreground">{headName}</span>
+                      ) : (
+                        <span className="italic">Chưa gán</span>
+                      )}
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        onClick={() => toggleActive(d)}
+                        className="p-1.5 rounded-lg hover:bg-accent transition"
+                        title={d.isActive ? "Vô hiệu hoá" : "Kích hoạt"}
+                      >
+                        {d.isActive ? (
+                          <ToggleRight size={16} className="text-emerald-600" />
+                        ) : (
+                          <ToggleLeft
+                            size={16}
+                            className="text-muted-foreground"
+                          />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => openEdit(d)}
+                        className="p-1.5 rounded-lg hover:bg-accent transition"
+                      >
+                        <Edit2 size={14} className="text-muted-foreground" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(d.id)}
+                        className="p-1.5 rounded-lg hover:bg-accent transition"
+                      >
+                        <Trash2 size={14} className="text-red-400" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Form Dialog */}
       {showForm && (
         <Overlay onClose={() => setShowForm(false)}>
-          <DlgHeader title={editDept ? `Sửa: ${editDept.name}` : 'Thêm phòng ban'} onClose={() => setShowForm(false)} />
+          <DlgHeader
+            title={editDept ? `Sửa: ${editDept.name}` : "Thêm phòng ban"}
+            onClose={() => setShowForm(false)}
+          />
           <div className="p-5 space-y-3">
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">Tên phòng ban *</label>
-              <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="VD: Phòng Kỹ Thuật"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Tên phòng ban *
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, name: e.target.value }))
+                }
+                placeholder="VD: Phòng Kỹ Thuật"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">Mô tả</label>
-              <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Mô tả
+              </label>
+              <textarea
+                value={form.description}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, description: e.target.value }))
+                }
+                rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">Trưởng phòng</label>
-              <select value={form.headUserId} onChange={e => setForm(p => ({ ...p, headUserId: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]">
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Trưởng phòng
+              </label>
+              <select
+                value={form.headUserId}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, headUserId: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+              >
                 <option value="">-- Chưa gán --</option>
-                {headUserOptions.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                {headUserOptions.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <input type="checkbox" id="isActive" checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))} className="accent-blue-600" />
-              <label htmlFor="isActive" className="text-[13px] cursor-pointer">Kích hoạt</label>
+              <input
+                type="checkbox"
+                id="deptIsActive"
+                checked={form.isActive}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, isActive: e.target.checked }))
+                }
+                className="accent-blue-600"
+              />
+              <label
+                htmlFor="deptIsActive"
+                className="text-[13px] cursor-pointer"
+              >
+                Kích hoạt
+              </label>
             </div>
           </div>
-          <DlgFooter onCancel={() => setShowForm(false)} onConfirm={handleSave} label={editDept ? 'Lưu thay đổi' : 'Tạo phòng ban'} loading={saving} />
+          <DlgFooter
+            onCancel={() => setShowForm(false)}
+            onConfirm={handleSave}
+            label={editDept ? "Lưu thay đổi" : "Tạo phòng ban"}
+            loading={saving}
+          />
         </Overlay>
       )}
 
       {/* Delete Confirm */}
       {deleteConfirm && (
         <Overlay onClose={() => setDeleteConfirm(null)}>
-          <DlgHeader title="Xác nhận xoá" onClose={() => setDeleteConfirm(null)} />
+          <DlgHeader
+            title="Xác nhận xoá"
+            onClose={() => setDeleteConfirm(null)}
+          />
           <div className="p-5">
-            <p className="text-[13px] text-muted-foreground">Bạn có chắc muốn xoá phòng ban <strong>{depts.find(d => d.id === deleteConfirm)?.name}</strong>? Hành động này không thể hoàn tác.</p>
+            <p className="text-[13px] text-muted-foreground">
+              Bạn có chắc muốn xoá phòng ban{" "}
+              <strong>{depts.find((d) => d.id === deleteConfirm)?.name}</strong>
+              ? Hành động này không thể hoàn tác.
+            </p>
           </div>
-          <DlgFooter onCancel={() => setDeleteConfirm(null)} onConfirm={() => handleDelete(deleteConfirm)} label="Xoá" loading={saving} variant="danger" />
+          <DlgFooter
+            onCancel={() => setDeleteConfirm(null)}
+            onConfirm={() => handleDelete(deleteConfirm)}
+            label="Xoá"
+            loading={saving}
+            variant="danger"
+          />
         </Overlay>
       )}
     </div>
@@ -295,16 +567,21 @@ export function DepartmentsPage() {
 // ================================================================
 export function JobTitlesPage() {
   const { can } = useAuth();
-  const isAdmin = can('ADMIN', 'HR');
+  const isAdmin = can("ADMIN", "HR");
 
   const [jobs, setJobs] = useState<ApiJobTitle[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editJob, setEditJob] = useState<ApiJobTitle | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [form, setForm] = useState({ code: '', name: '', description: '', isActive: true });
+  const [form, setForm] = useState({
+    code: "",
+    name: "",
+    description: "",
+    isActive: true,
+  });
 
   const fetchJobs = useCallback(async () => {
     setLoading(true);
@@ -315,173 +592,384 @@ export function JobTitlesPage() {
       } else {
         setJobs(mockJobTitles as ApiJobTitle[]);
       }
-    } catch { toast.error('Không tải được danh sách chức danh'); }
-    finally { setLoading(false); }
+    } catch {
+      toast.error("Không tải được danh sách chức danh");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchJobs(); }, [fetchJobs]);
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   const openCreate = () => {
     setEditJob(null);
-    setForm({ code: '', name: '', description: '', isActive: true });
+    setForm({ code: "", name: "", description: "", isActive: true });
     setShowForm(true);
   };
   const openEdit = (j: ApiJobTitle) => {
     setEditJob(j);
-    setForm({ code: j.code, name: j.name, description: j.description ?? '', isActive: j.isActive });
+    setForm({
+      code: j.code,
+      name: j.name,
+      description: j.description ?? "",
+      isActive: j.isActive,
+    });
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    if (!form.code.trim() || !form.name.trim()) { toast.error('Vui lòng nhập mã và tên chức danh'); return; }
+    if (!form.code.trim() || !form.name.trim()) {
+      toast.error("Vui lòng nhập mã và tên chức danh");
+      return;
+    }
     setSaving(true);
     try {
       if (USE_API) {
         if (editJob) {
-          const updated = await jobTitlesService.updateJobTitle(editJob.id, { code: form.code, name: form.name, description: form.description || undefined, isActive: form.isActive });
-          setJobs(prev => prev.map(j => j.id === editJob.id ? updated : j));
+          const updated = await jobTitlesService.updateJobTitle(editJob.id, {
+            code: form.code,
+            name: form.name,
+            description: form.description || undefined,
+            isActive: form.isActive,
+          });
+          setJobs((prev) =>
+            prev.map((j) => (j.id === editJob.id ? updated : j)),
+          );
         } else {
-          const created = await jobTitlesService.createJobTitle({ code: form.code, name: form.name, description: form.description || undefined, isActive: form.isActive });
-          setJobs(prev => [...prev, created]);
+          const created = await jobTitlesService.createJobTitle({
+            code: form.code,
+            name: form.name,
+            description: form.description || undefined,
+            isActive: form.isActive,
+          });
+          setJobs((prev) => [...prev, created]);
         }
       } else {
         if (editJob) {
-          setJobs(prev => prev.map(j => j.id === editJob.id ? { ...j, ...form } : j));
+          setJobs((prev) =>
+            prev.map((j) => (j.id === editJob.id ? { ...j, ...form } : j)),
+          );
         } else {
-          setJobs(prev => [...prev, { id: `jt-${Date.now()}`, ...form, description: form.description } as ApiJobTitle]);
+          setJobs((prev) => [
+            ...prev,
+            {
+              id: `jt-${Date.now()}`,
+              ...form,
+              description: form.description,
+            } as ApiJobTitle,
+          ]);
         }
       }
-      toast.success(editJob ? 'Đã cập nhật chức danh' : `Đã tạo chức danh ${form.name}`);
+      toast.success(
+        editJob ? "Đã cập nhật chức danh" : `Đã tạo chức danh ${form.name}`,
+      );
       setShowForm(false);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Thao tác thất bại');
-    } finally { setSaving(false); }
+      toast.error(err instanceof ApiError ? err.message : "Thao tác thất bại");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    const job = jobs.find(j => j.id === id);
-    if ((job?._count?.users ?? 0) > 0) { toast.error('Không thể xoá chức danh đang có nhân viên'); setDeleteConfirm(null); return; }
+    const job = jobs.find((j) => j.id === id);
+    if ((job?._count?.users ?? 0) > 0) {
+      toast.error("Không thể xoá chức danh đang có nhân viên");
+      setDeleteConfirm(null);
+      return;
+    }
     setSaving(true);
     try {
       if (USE_API) await jobTitlesService.deleteJobTitle(id);
-      setJobs(prev => prev.filter(j => j.id !== id));
-      toast.success('Đã xoá chức danh');
+      setJobs((prev) => prev.filter((j) => j.id !== id));
+      toast.success("Đã xoá chức danh");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Xoá thất bại');
-    } finally { setSaving(false); setDeleteConfirm(null); }
+      toast.error(err instanceof ApiError ? err.message : "Xoá thất bại");
+    } finally {
+      setSaving(false);
+      setDeleteConfirm(null);
+    }
   };
 
   const toggleActive = async (j: ApiJobTitle) => {
     try {
       if (USE_API) {
-        const updated = await jobTitlesService.updateJobTitle(j.id, { isActive: !j.isActive });
-        setJobs(prev => prev.map(x => x.id === j.id ? updated : x));
+        const updated = await jobTitlesService.updateJobTitle(j.id, {
+          isActive: !j.isActive,
+        });
+        setJobs((prev) => prev.map((x) => (x.id === j.id ? updated : x)));
       } else {
-        setJobs(prev => prev.map(x => x.id === j.id ? { ...x, isActive: !x.isActive } : x));
+        setJobs((prev) =>
+          prev.map((x) =>
+            x.id === j.id ? { ...x, isActive: !x.isActive } : x,
+          ),
+        );
       }
-      toast.success(`Đã ${j.isActive ? 'vô hiệu' : 'kích hoạt'} chức danh ${j.name}`);
-    } catch (err) { toast.error(err instanceof ApiError ? err.message : 'Thao tác thất bại'); }
+      toast.success(
+        `Đã ${j.isActive ? "vô hiệu" : "kích hoạt"} chức danh ${j.name}`,
+      );
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Thao tác thất bại");
+    }
   };
 
   const filtered = search
-    ? jobs.filter(j => j.name.toLowerCase().includes(search.toLowerCase()) || (j.code ?? '').toLowerCase().includes(search.toLowerCase()))
+    ? jobs.filter(
+        (j) =>
+          j.name.toLowerCase().includes(search.toLowerCase()) ||
+          (j.code ?? "").toLowerCase().includes(search.toLowerCase()),
+      )
     : jobs;
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-[20px] font-semibold">Chức danh</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">Quản lý danh sách chức danh công việc</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">
+            Quản lý danh sách chức danh công việc
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={fetchJobs} className="p-2 rounded-lg border border-border hover:bg-accent transition">
-            <RefreshCw size={14} className={`text-muted-foreground ${loading ? 'animate-spin' : ''}`} />
+          <button
+            onClick={fetchJobs}
+            className="p-2 rounded-lg border border-border hover:bg-accent transition"
+          >
+            <RefreshCw
+              size={14}
+              className={`text-muted-foreground ${loading ? "animate-spin" : ""}`}
+            />
           </button>
           {isAdmin && (
-            <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition">
+            <button
+              onClick={openCreate}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+            >
               <Plus size={15} /> Thêm chức danh
             </button>
           )}
         </div>
       </div>
 
+      {/* Search */}
       <div className="relative max-w-sm">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input type="text" placeholder="Tìm chức danh..." value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <Search
+          size={15}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          type="text"
+          placeholder="Tìm chức danh..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
+      {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
-          <Loader2 size={18} className="animate-spin" /><span className="text-[13px]">Đang tải...</span>
+          <Loader2 size={18} className="animate-spin" />
+          <span className="text-[13px]">Đang tải...</span>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+          <Users size={32} className="opacity-20 mb-2" />
+          <p className="text-[13px]">Không có chức danh nào</p>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[80px_1fr_2fr_80px_80px_40px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-            <span>Mã</span><span>Tên chức danh</span><span>Mô tả</span><span>Nhân viên</span><span>Trạng thái</span><span />
+          {/* Table header */}
+          <div
+            className="grid gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide"
+            style={{ gridTemplateColumns: "90px 1fr 2fr 80px 100px 120px" }}
+          >
+            <span>Mã</span>
+            <span>Tên chức danh</span>
+            <span>Mô tả</span>
+            <span>Nhân viên</span>
+            <span>Trạng thái</span>
+            <span>Thao tác</span>
           </div>
+
+          {/* Table rows */}
           <div className="divide-y divide-border">
-            {filtered.map(j => (
-              <div key={j.id} className="grid grid-cols-[80px_1fr_2fr_80px_80px_40px] gap-3 px-4 py-3 items-center hover:bg-muted/30 transition">
-                <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-center">{j.code}</span>
-                <span className="text-[13px] font-medium">{j.name}</span>
-                <span className="text-[12px] text-muted-foreground truncate">{j.description || '—'}</span>
-                <span className="text-[12px] text-muted-foreground flex items-center gap-1"><Users size={11} />{j._count?.users ?? 0}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full text-center ${j.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
-                  {j.isActive ? 'Hoạt động' : 'Vô hiệu'}
+            {filtered.map((j) => (
+              <div
+                key={j.id}
+                className="grid gap-3 px-4 py-3 items-center hover:bg-muted/30 transition"
+                style={{ gridTemplateColumns: "90px 1fr 2fr 80px 100px 120px" }}
+              >
+                {/* Mã */}
+                <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-center truncate">
+                  {j.code}
                 </span>
-                {isAdmin && (
+                {/* Tên */}
+                <span className="text-[13px] font-medium">{j.name}</span>
+                {/* Mô tả */}
+                <span className="text-[12px] text-muted-foreground truncate">
+                  {j.description || "—"}
+                </span>
+                {/* Nhân viên */}
+                <span className="text-[12px] text-muted-foreground flex items-center gap-1">
+                  <Users size={11} />
+                  {j._count?.users ?? 0}
+                </span>
+                {/* Trạng thái */}
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded-full text-center font-medium w-fit ${
+                    j.isActive
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                  }`}
+                >
+                  {j.isActive ? "Hoạt động" : "Vô hiệu"}
+                </span>
+                {/* Thao tác */}
+                {isAdmin ? (
                   <div className="flex items-center gap-0.5">
-                    <button onClick={() => toggleActive(j)} className="p-1 rounded hover:bg-accent transition">
-                      {j.isActive ? <ToggleRight size={14} className="text-emerald-600" /> : <ToggleLeft size={14} />}
+                    <button
+                      onClick={() => toggleActive(j)}
+                      className="p-1.5 rounded-lg hover:bg-accent transition"
+                      title={j.isActive ? "Vô hiệu hoá" : "Kích hoạt"}
+                    >
+                      {j.isActive ? (
+                        <ToggleRight size={15} className="text-emerald-600" />
+                      ) : (
+                        <ToggleLeft
+                          size={15}
+                          className="text-muted-foreground"
+                        />
+                      )}
                     </button>
-                    <button onClick={() => openEdit(j)} className="p-1 rounded hover:bg-accent transition"><Edit2 size={13} className="text-muted-foreground" /></button>
-                    <button onClick={() => setDeleteConfirm(j.id)} className="p-1 rounded hover:bg-accent transition"><Trash2 size={13} className="text-red-400" /></button>
+                    <button
+                      onClick={() => openEdit(j)}
+                      className="p-1.5 rounded-lg hover:bg-accent transition"
+                      title="Chỉnh sửa"
+                    >
+                      <Edit2 size={13} className="text-muted-foreground" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(j.id)}
+                      className="p-1.5 rounded-lg hover:bg-accent transition"
+                      title="Xoá"
+                    >
+                      <Trash2 size={13} className="text-red-400" />
+                    </button>
                   </div>
+                ) : (
+                  <span />
                 )}
               </div>
             ))}
           </div>
+
+          {/* Footer count */}
+          <div className="px-4 py-3 border-t border-border text-[12px] text-muted-foreground">
+            {filtered.length} / {jobs.length} chức danh
+          </div>
         </div>
       )}
 
+      {/* Form Dialog */}
       {showForm && (
         <Overlay onClose={() => setShowForm(false)}>
-          <DlgHeader title={editJob ? `Sửa: ${editJob.name}` : 'Thêm chức danh'} onClose={() => setShowForm(false)} />
+          <DlgHeader
+            title={editJob ? `Sửa: ${editJob.name}` : "Thêm chức danh"}
+            onClose={() => setShowForm(false)}
+          />
           <div className="p-5 space-y-3">
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">Mã chức danh *</label>
-              <input type="text" value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value.toUpperCase() }))} placeholder="VD: DEV_SENIOR"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Mã chức danh *
+              </label>
+              <input
+                type="text"
+                value={form.code}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))
+                }
+                placeholder="VD: SR_DEV"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">Tên chức danh *</label>
-              <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="VD: Senior Developer"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Tên chức danh *
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, name: e.target.value }))
+                }
+                placeholder="VD: Senior Developer"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">Mô tả</label>
-              <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Mô tả
+              </label>
+              <textarea
+                value={form.description}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, description: e.target.value }))
+                }
+                rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <div className="flex items-center gap-2">
-              <input type="checkbox" id="jtIsActive" checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))} className="accent-blue-600" />
-              <label htmlFor="jtIsActive" className="text-[13px] cursor-pointer">Kích hoạt</label>
+              <input
+                type="checkbox"
+                id="jtIsActive"
+                checked={form.isActive}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, isActive: e.target.checked }))
+                }
+                className="accent-blue-600"
+              />
+              <label
+                htmlFor="jtIsActive"
+                className="text-[13px] cursor-pointer"
+              >
+                Kích hoạt
+              </label>
             </div>
           </div>
-          <DlgFooter onCancel={() => setShowForm(false)} onConfirm={handleSave} label={editJob ? 'Lưu thay đổi' : 'Tạo chức danh'} loading={saving} />
+          <DlgFooter
+            onCancel={() => setShowForm(false)}
+            onConfirm={handleSave}
+            label={editJob ? "Lưu thay đổi" : "Tạo chức danh"}
+            loading={saving}
+          />
         </Overlay>
       )}
 
+      {/* Delete Confirm */}
       {deleteConfirm && (
         <Overlay onClose={() => setDeleteConfirm(null)}>
-          <DlgHeader title="Xác nhận xoá" onClose={() => setDeleteConfirm(null)} />
+          <DlgHeader
+            title="Xác nhận xoá"
+            onClose={() => setDeleteConfirm(null)}
+          />
           <div className="p-5">
-            <p className="text-[13px] text-muted-foreground">Bạn có chắc muốn xoá chức danh <strong>{jobs.find(j => j.id === deleteConfirm)?.name}</strong>?</p>
+            <p className="text-[13px] text-muted-foreground">
+              Bạn có chắc muốn xoá chức danh{" "}
+              <strong>{jobs.find((j) => j.id === deleteConfirm)?.name}</strong>?
+            </p>
           </div>
-          <DlgFooter onCancel={() => setDeleteConfirm(null)} onConfirm={() => handleDelete(deleteConfirm)} label="Xoá" loading={saving} variant="danger" />
+          <DlgFooter
+            onCancel={() => setDeleteConfirm(null)}
+            onConfirm={() => handleDelete(deleteConfirm)}
+            label="Xoá"
+            loading={saving}
+            variant="danger"
+          />
         </Overlay>
       )}
     </div>
