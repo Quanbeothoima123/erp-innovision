@@ -289,7 +289,7 @@ export function Layout() {
           { label: "Chức danh", path: "/system/job-titles" },
           { label: "Ca làm việc", path: "/system/shifts" },
           { label: "Ngày lễ", path: "/system/holidays" },
-          { label: "Nhật ký kiểm toán", path: "/system/audit-log" },
+          { label: "Nhật ký hệ thống", path: "/system/audit-log" },
         ],
       });
     }

@@ -1,12 +1,12 @@
-'use strict';
+"use strict";
 
-const service = require('./system.service');
-const mapper  = require('./system.mapper');
+const service = require("./system.service");
+const mapper = require("./system.mapper");
 const {
   successResponse,
   noContentResponse,
   paginatedResponse,
-} = require('../../common/utils/response.util');
+} = require("../../common/utils/response.util");
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  SYSTEM CONFIG                                           ║
@@ -20,8 +20,14 @@ async function getAllConfigs(req, res, next) {
   try {
     const configs = await service.getAllConfigs();
     const grouped = mapper.toConfigsGroupedDto(configs);
-    return successResponse(res, { grouped, all: configs.map(mapper.toConfigDto) }, 'Lấy cấu hình hệ thống thành công');
-  } catch (err) { next(err); }
+    return successResponse(
+      res,
+      { grouped, all: configs.map(mapper.toConfigDto) },
+      "Lấy cấu hình hệ thống thành công",
+    );
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -30,8 +36,14 @@ async function getAllConfigs(req, res, next) {
 async function getConfigByKey(req, res, next) {
   try {
     const config = await service.getConfigByKey(req.params.key);
-    return successResponse(res, mapper.toConfigDto(config), 'Lấy cấu hình thành công');
-  } catch (err) { next(err); }
+    return successResponse(
+      res,
+      mapper.toConfigDto(config),
+      "Lấy cấu hình thành công",
+    );
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -43,8 +55,14 @@ async function upsertConfig(req, res, next) {
       { key: req.params.key, ...req.body },
       req.user,
     );
-    return successResponse(res, mapper.toConfigDto(config), 'Lưu cấu hình thành công');
-  } catch (err) { next(err); }
+    return successResponse(
+      res,
+      mapper.toConfigDto(config),
+      "Lưu cấu hình thành công",
+    );
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -53,8 +71,14 @@ async function upsertConfig(req, res, next) {
 async function batchUpsertConfigs(req, res, next) {
   try {
     await service.batchUpsertConfigs(req.body.configs, req.user);
-    return successResponse(res, null, `Đã lưu ${req.body.configs.length} cấu hình`);
-  } catch (err) { next(err); }
+    return successResponse(
+      res,
+      null,
+      `Đã lưu ${req.body.configs.length} cấu hình`,
+    );
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -63,8 +87,10 @@ async function batchUpsertConfigs(req, res, next) {
 async function deleteConfig(req, res, next) {
   try {
     await service.deleteConfig(req.params.key, req.user);
-    return noContentResponse(res, 'Xoá cấu hình thành công');
-  } catch (err) { next(err); }
+    return noContentResponse(res, "Xoá cấu hình thành công");
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -83,9 +109,11 @@ async function listAuditLogs(req, res, next) {
       res,
       logs.map(mapper.toAuditLogDto),
       pagination,
-      'Lấy nhật ký kiểm toán thành công',
+      "Lấy nhật ký hệ thống thành công",
     );
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -95,8 +123,14 @@ async function listAuditLogs(req, res, next) {
 async function getAuditLogById(req, res, next) {
   try {
     const log = await service.getAuditLogById(req.params.id);
-    return successResponse(res, mapper.toAuditLogDto(log), 'Lấy chi tiết log thành công');
-  } catch (err) { next(err); }
+    return successResponse(
+      res,
+      mapper.toAuditLogDto(log),
+      "Lấy chi tiết log thành công",
+    );
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -106,8 +140,10 @@ async function getAuditLogById(req, res, next) {
 async function getAuditStats(req, res, next) {
   try {
     const stats = await service.getAuditStats();
-    return successResponse(res, stats, 'Lấy thống kê audit thành công');
-  } catch (err) { next(err); }
+    return successResponse(res, stats, "Lấy thống kê audit thành công");
+  } catch (err) {
+    next(err);
+  }
 }
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -125,9 +161,11 @@ async function listAccounts(req, res, next) {
       res,
       users.map(mapper.toAccountDto),
       pagination,
-      'Lấy danh sách tài khoản thành công',
+      "Lấy danh sách tài khoản thành công",
     );
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -141,8 +179,10 @@ async function lockAccount(req, res, next) {
       req.user,
       req.body?.reason ?? null,
     );
-    return successResponse(res, result, 'Khoá tài khoản thành công');
-  } catch (err) { next(err); }
+    return successResponse(res, result, "Khoá tài khoản thành công");
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -152,8 +192,10 @@ async function lockAccount(req, res, next) {
 async function unlockAccount(req, res, next) {
   try {
     const result = await service.unlockAccount(req.params.id, req.user);
-    return successResponse(res, result, 'Mở khoá tài khoản thành công');
-  } catch (err) { next(err); }
+    return successResponse(res, result, "Mở khoá tài khoản thành công");
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -168,8 +210,14 @@ async function resetPassword(req, res, next) {
       req.user,
       req.body?.newPassword ?? null,
     );
-    return successResponse(res, result, 'Reset mật khẩu thành công. Hiển thị mật khẩu tạm 1 lần duy nhất.');
-  } catch (err) { next(err); }
+    return successResponse(
+      res,
+      result,
+      "Reset mật khẩu thành công. Hiển thị mật khẩu tạm 1 lần duy nhất.",
+    );
+  } catch (err) {
+    next(err);
+  }
 }
 
 /**
@@ -183,15 +231,27 @@ async function updateUserRoles(req, res, next) {
       req.body.roles,
       req.user,
     );
-    return successResponse(res, result, 'Cập nhật vai trò thành công');
-  } catch (err) { next(err); }
+    return successResponse(res, result, "Cập nhật vai trò thành công");
+  } catch (err) {
+    next(err);
+  }
 }
 
 module.exports = {
   // Config
-  getAllConfigs, getConfigByKey, upsertConfig, batchUpsertConfigs, deleteConfig,
+  getAllConfigs,
+  getConfigByKey,
+  upsertConfig,
+  batchUpsertConfigs,
+  deleteConfig,
   // Audit
-  listAuditLogs, getAuditLogById, getAuditStats,
+  listAuditLogs,
+  getAuditLogById,
+  getAuditStats,
   // Account
-  listAccounts, lockAccount, unlockAccount, resetPassword, updateUserRoles,
+  listAccounts,
+  lockAccount,
+  unlockAccount,
+  resetPassword,
+  updateUserRoles,
 };

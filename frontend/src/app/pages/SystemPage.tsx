@@ -1461,7 +1461,7 @@ export function AuditLogPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-[20px] flex items-center gap-2">
-          <ScrollText size={20} /> Nhat ky he thong
+          <ScrollText size={20} /> Nhật ký hệ thống
         </h1>
         <button
           onClick={() => fetchLogs(page)}
