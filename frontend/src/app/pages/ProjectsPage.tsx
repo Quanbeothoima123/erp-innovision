@@ -45,6 +45,9 @@ import {
   Legend,
 } from "recharts";
 import * as projectsService from "../../lib/services/projects.service";
+import * as clientsService from "../../lib/services/clients.service";
+import * as usersService from "../../lib/services/users.service";
+import type { ApiUser } from "../../lib/services/auth.service";
 import type {
   ApiProject,
   ApiExpense,
@@ -615,8 +618,69 @@ function ProjectFormDialog({
     startDate: project?.startDate?.split("T")[0] ?? "",
     endDate: project?.endDate?.split("T")[0] ?? "",
     budgetAmount: project?.budgetAmount?.toString() ?? "",
+    clientId: (project as any)?.clientId ?? project?.client?.id ?? "",
+    projectManagerUserId:
+      (project as any)?.projectManagerUserId ??
+      project?.projectManager?.id ??
+      "",
+    contractId: (project as any)?.contractId ?? "",
   });
   const [submitting, setSubmitting] = useState(false);
+
+  // Dropdown data
+  const [clients, setClients] = useState<
+    { id: string; companyName: string; shortName: string | null }[]
+  >([]);
+  const [users, setUsers] = useState<ApiUser[]>([]);
+  const [contracts, setContracts] = useState<
+    { id: string; contractCode: string | null; title: string }[]
+  >([]);
+  const [loadingDropdowns, setLoadingDropdowns] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoadingDropdowns(true);
+      try {
+        const [clientsRes, usersRes] = await Promise.all([
+          clientsService.listClients({ limit: 200, status: "ACTIVE" }),
+          usersService.listUsers({ limit: 200, accountStatus: "ACTIVE" }),
+        ]);
+        setClients(
+          clientsRes.items.map((c) => ({
+            id: c.id,
+            companyName: c.companyName,
+            shortName: c.shortName,
+          })),
+        );
+        setUsers(usersRes.items);
+      } catch {
+        // silently skip — dropdowns just won't be populated
+      } finally {
+        setLoadingDropdowns(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Load contracts when client changes
+  useEffect(() => {
+    if (!form.clientId) {
+      setContracts([]);
+      return;
+    }
+    clientsService
+      .listContracts({ clientId: form.clientId, limit: 100 })
+      .then((res) =>
+        setContracts(
+          res.items.map((c) => ({
+            id: c.id,
+            contractCode: c.contractCode,
+            title: c.title,
+          })),
+        ),
+      )
+      .catch(() => setContracts([]));
+  }, [form.clientId]);
 
   const handleSubmit = async () => {
     if (!form.projectName.trim()) {
@@ -633,6 +697,9 @@ function ProjectFormDialog({
       startDate: form.startDate || null,
       endDate: form.endDate || null,
       budgetAmount: form.budgetAmount ? parseFloat(form.budgetAmount) : null,
+      clientId: form.clientId || null,
+      projectManagerUserId: form.projectManagerUserId || null,
+      contractId: form.contractId || null,
     });
     setSubmitting(false);
   };
@@ -746,6 +813,83 @@ function ProjectFormDialog({
                 className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
               />
             </div>
+
+            {/* ── Project Manager ── */}
+            <div className="col-span-2">
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Quản lý dự án (PM)
+              </label>
+              <select
+                value={form.projectManagerUserId}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    projectManagerUserId: e.target.value,
+                  }))
+                }
+                disabled={loadingDropdowns}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] disabled:opacity-60"
+              >
+                <option value="">-- Chưa chọn PM --</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.fullName} ({u.userCode})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* ── Client ── */}
+            <div className="col-span-2">
+              <label className="block text-[12px] text-muted-foreground mb-1">
+                Khách hàng
+              </label>
+              <select
+                value={form.clientId}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    clientId: e.target.value,
+                    contractId: "",
+                  }))
+                }
+                disabled={loadingDropdowns}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] disabled:opacity-60"
+              >
+                <option value="">-- Nội bộ (không có KH) --</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.companyName}
+                    {c.shortName ? ` (${c.shortName})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* ── Contract (only show if client selected) ── */}
+            {form.clientId && (
+              <div className="col-span-2">
+                <label className="block text-[12px] text-muted-foreground mb-1">
+                  Hợp đồng liên kết
+                </label>
+                <select
+                  value={form.contractId}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, contractId: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                >
+                  <option value="">-- Không liên kết hợp đồng --</option>
+                  {contracts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.contractCode ? `${c.contractCode} — ` : ""}
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="col-span-2">
               <label className="block text-[12px] text-muted-foreground mb-1">
                 Ngân sách (VND)

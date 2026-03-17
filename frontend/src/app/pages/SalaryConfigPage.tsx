@@ -523,6 +523,11 @@ function CompensationFormDialog({
       standardWorkingDays: form.standardWorkingDays
         ? parseInt(form.standardWorkingDays)
         : null,
+      standardWorkingHours: 8,
+      currency: "VND",
+      payFrequency: "MONTHLY",
+      payDayOfMonth: null,
+      probationEndDate: null,
       effectiveFrom: form.effectiveFrom,
       effectiveTo: form.effectiveTo || null,
       changeReason: form.changeReason || null,
