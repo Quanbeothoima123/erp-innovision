@@ -3249,7 +3249,7 @@ async function main() {
       },
       {
         entityType: "LEAVE_REQUEST",
-        entityId: lr1.id,
+        entityId: uDev1.id,
         actionType: "APPROVE",
         actorUserId: uHRMgr.id,
         description: "HR duyệt đơn nghỉ phép của Đinh Văn Giang",
