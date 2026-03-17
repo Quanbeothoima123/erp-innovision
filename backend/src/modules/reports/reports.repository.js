@@ -122,17 +122,18 @@ async function getHRStats({ departmentId, year }) {
     orderBy: { name: "asc" },
   });
 
-  // Phân bố theo chức danh (top 10)
-  const jobTitleStats = await prisma.jobTitle.findMany({
+  // Phân bố theo chức danh (top 10) — sort in JS vì Prisma adapter không hỗ trợ orderBy._count
+  const jobTitleStatsRaw = await prisma.jobTitle.findMany({
     where: { isActive: true },
     include: {
       _count: {
         select: { users: true },
       },
     },
-    orderBy: { _count: { users: "desc" } },
-    take: 10,
   });
+  const jobTitleStats = jobTitleStatsRaw
+    .sort((a, b) => b._count.users - a._count.users)
+    .slice(0, 10);
 
   // Lịch sử tuyển dụng theo năm (5 năm gần nhất)
   const hireHistory = await prisma.$queryRaw`

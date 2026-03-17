@@ -1,6 +1,6 @@
 // ================================================================
-// REPORTS PAGE — Module 10 (Full API integration)
-// All sub-pages fetch from /api/reports/* via reports.service
+// REPORTS PAGE — Module 10 (Full API + Figma UI)
+// Combines figma design (filters, tables, rich charts) + real API
 // ================================================================
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +14,7 @@ import type {
   FinanceReport,
   OvertimeReport,
 } from "../../lib/services/reports.service";
+import * as departmentsService from "../../lib/services/departments.service";
 import { ApiError } from "../../lib/apiClient";
 import {
   Users,
@@ -24,20 +25,14 @@ import {
   FileText,
   TrendingUp,
   TrendingDown,
-  BarChart3,
-  PieChart as PieChartIcon,
   Download,
   ArrowUpRight,
   ArrowDownRight,
-  Briefcase,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Handshake,
   Receipt,
   Activity,
-  Target,
-  Calendar,
   CreditCard,
   Timer,
   Loader2,
@@ -57,31 +52,16 @@ import {
   Legend,
   AreaChart,
   Area,
-  LineChart,
-  Line,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
   ComposedChart,
+  Line,
 } from "recharts";
 
-// ─── Helpers ──────────────────────────────────────────────────
-const fmtVND = (n: number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(n);
-const fmtShort = (n: number) => {
-  if (Math.abs(n) >= 1_000_000_000)
-    return `${(n / 1_000_000_000).toFixed(1)}tỷ`;
-  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}tr`;
-  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-  return String(n);
-};
-const fmtAxis = (v: number) => fmtShort(v);
+// ─── Shared helpers ───────────────────────────────────────────
 const COLORS = [
   "#3b82f6",
   "#22c55e",
@@ -89,10 +69,12 @@ const COLORS = [
   "#ef4444",
   "#8b5cf6",
   "#06b6d4",
+  "#f97316",
   "#ec4899",
-  "#84cc16",
+  "#14b8a6",
 ];
-const MONTHS = [
+const DEDUCT_COLORS = ["#ef4444", "#f97316", "#eab308", "#8b5cf6"];
+const MONTHS_LABEL = [
   "",
   "T1",
   "T2",
@@ -109,31 +91,98 @@ const MONTHS = [
 ];
 const NOW = new Date();
 
+const fmtVND = (n: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(n);
+const fmtShort = (n: number) => {
+  if (Math.abs(n) >= 1_000_000_000)
+    return `${(n / 1_000_000_000).toFixed(1)}tỷ`;
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}tr`;
+  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
+  return String(n);
+};
+const fmtAxis = (v: number) => {
+  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+  return String(v);
+};
+
 // ─── Shared UI ────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-popover border border-border rounded-lg p-2.5 shadow-lg text-[12px]">
+      <div className="text-muted-foreground mb-1">
+        {typeof label === "number" && label >= 1 && label <= 12
+          ? MONTHS_LABEL[label]
+          : label}
+      </div>
+      {payload.map((p: any, i: number) => (
+        <div key={i} className="flex items-center gap-2">
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: p.color }}
+          />
+          <span className="text-muted-foreground">{p.name}:</span>
+          <span>
+            {typeof p.value === "number" && p.value > 10000
+              ? fmtVND(p.value)
+              : p.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 function StatCard({
   icon,
   label,
   value,
-  sub,
+  subValue,
   color,
+  trend,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | number;
-  sub?: string;
-  color?: string;
+  subValue?: string;
+  color: string;
+  trend?: { value: string; up: boolean } | null;
 }) {
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 ${color ?? "bg-blue-600"}`}
-      >
-        {icon}
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="flex items-start justify-between">
+        <div
+          className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center text-white shrink-0`}
+        >
+          {icon}
+        </div>
+        {trend && (
+          <div
+            className={`flex items-center gap-0.5 text-[11px] ${trend.up ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
+          >
+            {trend.up ? (
+              <ArrowUpRight size={12} />
+            ) : (
+              <ArrowDownRight size={12} />
+            )}
+            {trend.value}
+          </div>
+        )}
       </div>
-      <div>
-        <div className="text-[11px] text-muted-foreground">{label}</div>
-        <div className="text-[20px] leading-tight">{value}</div>
-        {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}
+      <div className="mt-3">
+        <div className="text-[22px]">{value}</div>
+        <div className="text-[12px] text-muted-foreground">{label}</div>
+        {subValue && (
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            {subValue}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -142,7 +191,7 @@ function StatCard({
 function ChartCard({
   title,
   children,
-  className,
+  className = "",
 }: {
   title: string;
   children: React.ReactNode;
@@ -150,39 +199,12 @@ function ChartCard({
 }) {
   return (
     <div
-      className={`bg-card border border-border rounded-xl p-4 ${className ?? ""}`}
+      className={`bg-card border border-border rounded-xl overflow-hidden ${className}`}
     >
-      <div className="text-[13px] text-muted-foreground mb-3">{title}</div>
-      {children}
-    </div>
-  );
-}
-
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-[12px]">
-      {label !== undefined && (
-        <div className="text-muted-foreground mb-1">
-          {typeof label === "number" && label >= 1 && label <= 12
-            ? MONTHS[label]
-            : label}
-        </div>
-      )}
-      {payload.map((p: any) => (
-        <div key={p.name} className="flex items-center gap-2">
-          <span
-            className="w-2 h-2 rounded-full"
-            style={{ background: p.color }}
-          />
-          <span className="text-muted-foreground">{p.name}:</span>
-          <span>
-            {typeof p.value === "number" && p.value > 1000
-              ? fmtVND(p.value)
-              : p.value}
-          </span>
-        </div>
-      ))}
+      <div className="px-5 py-3.5 border-b border-border">
+        <h3 className="text-[14px]">{title}</h3>
+      </div>
+      <div className="p-4">{children}</div>
     </div>
   );
 }
@@ -217,7 +239,7 @@ function ErrorState({
   );
 }
 
-function YearSelector({
+function YearSelect({
   year,
   onChange,
 }: {
@@ -240,8 +262,61 @@ function YearSelector({
   );
 }
 
+function MonthSelect({
+  month,
+  onChange,
+}: {
+  month: number;
+  onChange: (m: number) => void;
+}) {
+  return (
+    <select
+      value={month}
+      onChange={(e) => onChange(+e.target.value)}
+      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+    >
+      <option value={0}>Tất cả tháng</option>
+      {Array.from({ length: 12 }, (_, i) => (
+        <option key={i + 1} value={i + 1}>
+          Tháng {i + 1}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function DeptSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [depts, setDepts] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    departmentsService
+      .listDepartments({ limit: 100 })
+      .then((r: any) => setDepts(r.items ?? r))
+      .catch(() => {});
+  }, []);
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+    >
+      <option value="">Tất cả phòng ban</option>
+      {depts.map((d) => (
+        <option key={d.id} value={d.id}>
+          {d.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════
-// HR REPORT
+// 1. HR REPORT
 // ═══════════════════════════════════════════════════════════════
 export function HRReportPage() {
   const [year, setYear] = useState(NOW.getFullYear());
@@ -249,36 +324,33 @@ export function HRReportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetch = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await reportsService.getHRReport({ year });
-      setData(res);
+      setData(await reportsService.getHRReport({ year }));
     } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Không thể tải báo cáo nhân sự",
-      );
+      setError(e instanceof ApiError ? e.message : "Không thể tải báo cáo");
     } finally {
       setLoading(false);
     }
   }, [year]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    load();
+  }, [load]);
 
-  const summary = data?.summary;
+  const s = data?.summary;
   const deptData = (data?.departments ?? []).map((d) => ({
     name: d.name.replace("Phòng ", ""),
     value: d.headcount,
   }));
-  const statusData = summary
+  const statusData = s
     ? [
-        { name: "Đang làm", value: summary.active },
-        { name: "Thử việc", value: summary.probation },
-        { name: "Nghỉ phép", value: summary.onLeave },
-        { name: "Đã nghỉ", value: summary.terminated },
+        { name: "Chính thức", value: s.active, color: "#22c55e" },
+        { name: "Thử việc", value: s.probation, color: "#f59e0b" },
+        { name: "Nghỉ phép", value: s.onLeave, color: "#3b82f6" },
+        { name: "Đã nghỉ", value: s.terminated, color: "#94a3b8" },
       ].filter((d) => d.value > 0)
     : [];
   const hireData = (data?.hireHistory ?? []).map((h) => ({
@@ -289,15 +361,26 @@ export function HRReportPage() {
     name: r.role,
     count: r.count,
   }));
+  const avgTenure = (() => {
+    const t = data?.topTenured ?? [];
+    return t.length > 0
+      ? t.reduce((s, u) => s + (u.tenureYears ?? 0), 0) / t.length
+      : 0;
+  })();
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-[20px]">Báo cáo nhân sự</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[20px]">Báo cáo Nhân sự</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Tổng quan về lực lượng lao động của công ty
+          </p>
+        </div>
         <div className="flex items-center gap-2">
-          <YearSelector year={year} onChange={setYear} />
+          <YearSelect year={year} onChange={setYear} />
           <button
-            onClick={fetch}
+            onClick={load}
             disabled={loading}
             className="p-2 border border-border rounded-lg hover:bg-accent"
           >
@@ -309,40 +392,41 @@ export function HRReportPage() {
       {loading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState message={error} onRetry={fetch} />
-      ) : !summary ? null : (
+        <ErrorState message={error} onRetry={load} />
+      ) : !s ? null : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
-              icon={<Users size={18} />}
+              icon={<Users size={20} />}
               label="Tổng nhân viên"
-              value={summary.total}
+              value={s.total}
               color="bg-blue-600"
             />
             <StatCard
-              icon={<CheckCircle size={18} />}
+              icon={<CheckCircle size={20} />}
               label="Đang làm việc"
-              value={summary.active}
-              sub={`${Math.round((summary.active / Math.max(summary.total, 1)) * 100)}%`}
+              value={s.active}
+              subValue={`${Math.round((s.active / Math.max(s.total, 1)) * 100)}%`}
               color="bg-green-600"
+              trend={{ value: "+2", up: true }}
             />
             <StatCard
-              icon={<Timer size={18} />}
-              label="Thử việc"
-              value={summary.probation}
-              color="bg-amber-500"
+              icon={<AlertTriangle size={20} />}
+              label="Đang thử việc"
+              value={s.probation}
+              color="bg-yellow-500"
             />
             <StatCard
-              icon={<XCircle size={18} />}
-              label="Đã nghỉ việc"
-              value={summary.terminated}
-              color="bg-red-500"
+              icon={<Clock size={20} />}
+              label="Thâm niên TB"
+              value={`${avgTenure.toFixed(1)} năm`}
+              color="bg-purple-600"
             />
           </div>
 
-          <div className="grid lg:grid-cols-5 gap-4">
-            <ChartCard title="Phân bố theo phòng ban" className="lg:col-span-3">
-              <ResponsiveContainer width="100%" height={260}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ChartCard title="Phân bố theo phòng ban">
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart
                   data={deptData}
                   layout="vertical"
@@ -351,7 +435,6 @@ export function HRReportPage() {
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke="var(--color-border-tertiary)"
-                    horizontal={false}
                   />
                   <XAxis
                     type="number"
@@ -359,29 +442,29 @@ export function HRReportPage() {
                     allowDecimals={false}
                   />
                   <YAxis
-                    type="category"
                     dataKey="name"
-                    width={110}
+                    type="category"
+                    width={100}
                     tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="value" name="Nhân viên" radius={[0, 4, 4, 0]}>
-                    {deptData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    {deptData.map((d, i) => (
+                      <Cell key={d.name} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
 
-            <ChartCard title="Trạng thái nhân sự" className="lg:col-span-2">
-              <ResponsiveContainer width="100%" height={260}>
+            <ChartCard title="Tình trạng nhân sự">
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={statusData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={95}
+                    outerRadius={100}
                     innerRadius={50}
                     dataKey="value"
                     nameKey="name"
@@ -390,20 +473,18 @@ export function HRReportPage() {
                     }
                     labelLine={{ strokeWidth: 1 }}
                   >
-                    {statusData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    {statusData.map((s) => (
+                      <Cell key={s.name} fill={s.color} />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </ChartCard>
-          </div>
 
-          <div className="grid lg:grid-cols-2 gap-4">
             {hireData.length > 0 && (
-              <ChartCard title="Lịch sử tuyển dụng (5 năm)">
-                <ResponsiveContainer width="100%" height={220}>
+              <ChartCard title="Xu hướng tuyển dụng">
+                <ResponsiveContainer width="100%" height={280}>
                   <AreaChart data={hireData} margin={{ left: 0, right: 0 }}>
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -439,12 +520,12 @@ export function HRReportPage() {
             )}
 
             {roleData.length > 0 && (
-              <ChartCard title="Phân bố theo vai trò">
-                <ResponsiveContainer width="100%" height={220}>
+              <ChartCard title="Phân bố vai trò">
+                <ResponsiveContainer width="100%" height={280}>
                   <RadarChart
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={100}
                     data={roleData}
                   >
                     <PolarGrid stroke="var(--color-border-tertiary)" />
@@ -455,7 +536,12 @@ export function HRReportPage() {
                         fill: "var(--color-text-secondary)",
                       }}
                     />
-                    <PolarRadiusAxis tick={{ fontSize: 10 }} />
+                    <PolarRadiusAxis
+                      tick={{
+                        fontSize: 10,
+                        fill: "var(--color-text-secondary)",
+                      }}
+                    />
                     <Radar
                       name="Số lượng"
                       dataKey="count"
@@ -476,32 +562,32 @@ export function HRReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
                         Nhân viên
                       </th>
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
                         Phòng ban
                       </th>
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
                         Chức danh
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Thâm niên
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden lg:table-cell">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground hidden lg:table-cell">
                         Ngày vào
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data!.topTenured.map((u, i: number) => (
+                    {data!.topTenured.map((u, i) => (
                       <tr
                         key={u.id}
-                        className="border-b border-border last:border-0 hover:bg-accent/30"
+                        className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+                            <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
                               {i + 1}
                             </span>
                             <div>
@@ -512,18 +598,18 @@ export function HRReportPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-[12px] hidden md:table-cell">
+                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
                           {u.department?.name ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-[12px] hidden md:table-cell">
+                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
                           {u.jobTitle?.name ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-[13px] text-right text-blue-600">
+                        <td className="px-4 py-2.5 text-[13px] text-right text-blue-600">
                           {u.tenureYears
                             ? `${u.tenureYears.toFixed(1)} năm`
                             : "—"}
                         </td>
-                        <td className="px-3 py-2 text-[12px] text-right text-muted-foreground hidden lg:table-cell">
+                        <td className="px-4 py-2.5 text-[12px] text-right text-muted-foreground hidden lg:table-cell">
                           {u.hireDate
                             ? new Date(u.hireDate).toLocaleDateString("vi-VN")
                             : "—"}
@@ -542,122 +628,120 @@ export function HRReportPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ATTENDANCE REPORT
+// 2. ATTENDANCE REPORT
 // ═══════════════════════════════════════════════════════════════
 export function AttendanceReportPage() {
   const [year, setYear] = useState(NOW.getFullYear());
   const [month, setMonth] = useState(NOW.getMonth() + 1);
+  const [deptId, setDeptId] = useState("");
   const [data, setData] = useState<AttendanceReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetch = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await reportsService.getAttendanceReport({ year, month });
-      setData(res);
-    } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Không thể tải báo cáo chấm công",
+      setData(
+        await reportsService.getAttendanceReport({
+          year,
+          month,
+          departmentId: deptId || undefined,
+        }),
       );
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Không thể tải báo cáo");
     } finally {
       setLoading(false);
     }
-  }, [year, month]);
+  }, [year, month, deptId]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    load();
+  }, [load]);
 
   const s = data?.summary;
-  const statusPie = s
-    ? [
-        { name: "Có mặt", value: s.presentCount ?? 0 },
-        { name: "Vắng", value: s.absentCount ?? 0 },
-        { name: "Nghỉ phép", value: s.leaveCount ?? 0 },
-      ].filter((d) => d.value > 0)
-    : [];
-
   const dailyData = (data?.dailyTrend ?? []).map((d) => ({
-    date: d.date?.toString().slice(8, 10) ?? "",
+    date: String(d.date).slice(8, 10),
     present: Number(d.present ?? 0),
     absent: Number(d.absent ?? 0),
     leave: Number(d.onLeave ?? 0),
     late: Number(d.lateCount ?? 0),
   }));
-
+  const statusPie = s
+    ? [
+        { name: "Có mặt", value: s.presentCount ?? 0, color: "#22c55e" },
+        { name: "Vắng", value: s.absentCount ?? 0, color: "#ef4444" },
+        { name: "Nghỉ phép", value: s.leaveCount ?? 0, color: "#3b82f6" },
+      ].filter((d) => d.value > 0)
+    : [];
   const deptChart = (data?.deptRates ?? []).map((d) => ({
     name: d.deptName,
     rate: d.rate,
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-[20px]">Báo cáo chấm công</h1>
-        <div className="flex items-center gap-2">
-          <select
-            value={month}
-            onChange={(e) => setMonth(+e.target.value)}
-            className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          >
-            {MONTHS.slice(1).map((m, i) => (
-              <option key={i + 1} value={i + 1}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <YearSelector year={year} onChange={setYear} />
-          <button
-            onClick={fetch}
-            disabled={loading}
-            className="p-2 border border-border rounded-lg hover:bg-accent"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          </button>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[20px]">Báo cáo Chấm công</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Thống kê chấm công, đi trễ và tỷ lệ có mặt
+          </p>
         </div>
+        <button
+          onClick={load}
+          disabled={loading}
+          className="p-2 border border-border rounded-lg hover:bg-accent"
+        >
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <MonthSelect month={month} onChange={setMonth} />
+        <YearSelect year={year} onChange={setYear} />
+        <DeptSelect value={deptId} onChange={setDeptId} />
       </div>
 
       {loading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState message={error} onRetry={fetch} />
+        <ErrorState message={error} onRetry={load} />
       ) : !s ? null : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
-              icon={<Users size={18} />}
+              icon={<Users size={20} />}
               label="Tổng bản ghi"
               value={s.totalRecords}
               color="bg-blue-600"
             />
             <StatCard
-              icon={<CheckCircle size={18} />}
+              icon={<CheckCircle size={20} />}
               label="Tỷ lệ có mặt"
               value={`${s.attendanceRate ?? 0}%`}
               color="bg-green-600"
             />
             <StatCard
-              icon={<Clock size={18} />}
+              icon={<Clock size={20} />}
               label="TB phút trễ/ngày"
               value={`${Math.round(s.avgLateMinutes ?? 0)} phút`}
               color="bg-amber-500"
             />
             <StatCard
-              icon={<Activity size={18} />}
+              icon={<Activity size={20} />}
               label="TB giờ làm/ngày"
               value={`${(s.avgWorkHours ?? 0).toFixed(1)}h`}
               color="bg-purple-600"
             />
           </div>
 
-          <div className="grid lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
               title="Xu hướng chấm công hàng ngày"
               className="lg:col-span-3"
             >
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={280}>
                 <ComposedChart data={dailyData} margin={{ left: 0, right: 0 }}>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -705,27 +789,24 @@ export function AttendanceReportPage() {
                 </ComposedChart>
               </ResponsiveContainer>
             </ChartCard>
-
             <ChartCard title="Phân bổ trạng thái" className="lg:col-span-2">
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={statusPie}
                     cx="50%"
                     cy="50%"
-                    outerRadius={95}
-                    innerRadius={50}
+                    outerRadius={100}
+                    innerRadius={55}
                     dataKey="value"
                     nameKey="name"
                     label={({ name, percent }) =>
                       `${name} (${(percent * 100).toFixed(0)}%)`
                     }
+                    labelLine={{ strokeWidth: 1 }}
                   >
-                    {statusPie.map((_, i) => (
-                      <Cell
-                        key={i}
-                        fill={[COLORS[0], COLORS[3], COLORS[1]][i]}
-                      />
+                    {statusPie.map((d) => (
+                      <Cell key={d.name} fill={d.color} />
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
@@ -779,27 +860,27 @@ export function AttendanceReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
                         Nhân viên
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
-                        Số lần trễ
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Số lần
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Tổng phút
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         TB phút/lần
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data!.topLateUsers.map((t, i: number) => (
+                    {data!.topLateUsers.map((t, i) => (
                       <tr
                         key={i}
-                        className="border-b border-border last:border-0 hover:bg-accent/30"
+                        className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-2.5">
                           <div className="text-[13px]">
                             {t.user?.fullName ?? "—"}
                           </div>
@@ -807,13 +888,13 @@ export function AttendanceReportPage() {
                             {t.user?.department?.name ?? ""}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px] text-amber-600">
+                        <td className="px-4 py-2.5 text-right text-[13px] text-amber-600">
                           {t.lateCount}
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[13px]">
                           {t.totalMinutes} phút
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px] text-muted-foreground">
+                        <td className="px-4 py-2.5 text-right text-[12px] text-muted-foreground">
                           {t.avgMinutes} phút
                         </td>
                       </tr>
@@ -830,63 +911,74 @@ export function AttendanceReportPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LEAVE REPORT
+// 3. FINANCE REPORT
 // ═══════════════════════════════════════════════════════════════
-export function LeaveReportPage() {
+export function FinanceReportPage() {
   const [year, setYear] = useState(NOW.getFullYear());
-  const [data, setData] = useState<LeaveReport | null>(null);
+  const [data, setData] = useState<FinanceReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetch = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await reportsService.getLeaveReport({ year });
-      setData(res);
+      setData(await reportsService.getFinanceReport({ year }));
     } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Không thể tải báo cáo nghỉ phép",
-      );
+      setError(e instanceof ApiError ? e.message : "Không thể tải báo cáo");
     } finally {
       setLoading(false);
     }
   }, [year]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    load();
+  }, [load]);
 
-  const statusMap =
-    data?.statusBreakdown ??
-    ({} as Record<string, { count: number; days: number }>);
-  const approved = statusMap?.APPROVED ?? { count: 0, days: 0 };
-  const pending = statusMap?.PENDING ?? { count: 0, days: 0 };
-  const rejected = statusMap?.REJECTED ?? { count: 0, days: 0 };
-  const total = approved.count + pending.count + rejected.count;
-  const balance = data?.balanceSummary;
-
-  const typeData = (data?.byLeaveType ?? []).map((lt) => ({
-    name: lt.leaveType?.name ?? "Khác",
-    days: lt.days,
-    count: lt.count,
-  }));
-
-  const monthlyData = (data?.monthlyTrend ?? []).map((m) => ({
+  const rev = data?.revenue;
+  const ar = data?.ar;
+  const monthlyData = (rev?.monthlyTrend ?? []).map((m) => ({
     month: m.month,
-    approved: m.approved,
-    rejected: m.rejected,
-    approvedDays: m.approvedDays,
+    amount: m.amount,
   }));
+  const methodData = (data?.revenueByMethod ?? []).map((m) => ({
+    name: m.method,
+    value: m.amount,
+  }));
+  const clientData = (data?.revenueByClient ?? []).map((c) => ({
+    name: c.client?.shortName ?? c.client?.companyName ?? "—",
+    value: c.totalAmount,
+  }));
+  const invByStatus =
+    data?.invoices?.byStatus ??
+    ({} as Record<
+      string,
+      {
+        count: number;
+        totalAmount: number;
+        paidAmount: number;
+        outstanding: number;
+      }
+    >);
+  const invStatusData = Object.entries(invByStatus)
+    .map(([k, v]) => ({ name: k, value: v.count }))
+    .filter((d) => d.value > 0);
+  const totalInvoiced = data?.invoices?.totalInvoiced ?? 0;
+  const totalOutstandingInv = data?.invoices?.totalOutstanding ?? 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-[20px]">Báo cáo nghỉ phép</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[20px]">Báo cáo Tài chính</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Doanh thu, thanh toán & công nợ khách hàng
+          </p>
+        </div>
         <div className="flex items-center gap-2">
-          <YearSelector year={year} onChange={setYear} />
+          <YearSelect year={year} onChange={setYear} />
           <button
-            onClick={fetch}
+            onClick={load}
             disabled={loading}
             className="p-2 border border-border rounded-lg hover:bg-accent"
           >
@@ -898,105 +990,101 @@ export function LeaveReportPage() {
       {loading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState message={error} onRetry={fetch} />
+        <ErrorState message={error} onRetry={load} />
       ) : !data ? null : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
-              icon={<FileText size={18} />}
-              label="Tổng đơn"
-              value={total}
-              color="bg-blue-600"
-            />
-            <StatCard
-              icon={<CheckCircle size={18} />}
-              label="Đã duyệt"
-              value={approved.count}
-              sub={`${approved.days} ngày`}
+              icon={<DollarSign size={20} />}
+              label="Đã thu"
+              value={fmtShort(rev?.totalReceived ?? 0)}
               color="bg-green-600"
             />
             <StatCard
-              icon={<Clock size={18} />}
-              label="Chờ duyệt"
-              value={pending.count}
-              sub={`${pending.days} ngày`}
-              color="bg-amber-500"
+              icon={<FileText size={20} />}
+              label="Tổng hóa đơn"
+              value={fmtShort(totalInvoiced)}
+              subValue={`${invStatusData.reduce((s, v) => s + v.value, 0)} HĐ`}
+              color="bg-blue-600"
             />
             <StatCard
-              icon={<XCircle size={18} />}
-              label="Từ chối"
-              value={rejected.count}
+              icon={<AlertTriangle size={20} />}
+              label="Công nợ tồn đọng"
+              value={fmtShort(totalOutstandingInv)}
               color="bg-red-500"
+            />
+            <StatCard
+              icon={<TrendingUp size={20} />}
+              label="Tỷ lệ thu"
+              value={`${ar?.collectionRate ?? 0}%`}
+              subValue={`AR: ${fmtShort(ar?.totalOutstanding ?? 0)}`}
+              color="bg-purple-600"
             />
           </div>
 
-          {balance && (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-              {[
-                {
-                  label: "Tổng ngày được cấp",
-                  value: balance.totalEntitled,
-                  color: "text-blue-600",
-                },
-                {
-                  label: "Ngày chuyển kỳ",
-                  value: balance.totalCarried,
-                  color: "text-purple-600",
-                },
-                {
-                  label: "Đã sử dụng",
-                  value: balance.totalUsed,
-                  color: "text-amber-600",
-                },
-                {
-                  label: "Còn lại",
-                  value: balance.totalRemaining,
-                  color: "text-green-600",
-                },
-                {
-                  label: "Tỷ lệ sử dụng",
-                  value: `${balance.usageRate}%`,
-                  color: "text-foreground",
-                },
-              ].map((c) => (
-                <div
-                  key={c.label}
-                  className="bg-card border border-border rounded-xl p-3 text-center"
-                >
-                  <div className="text-[10px] text-muted-foreground">
-                    {c.label}
-                  </div>
-                  <div className={`text-[18px] ${c.color}`}>{c.value}</div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ChartCard title="Doanh thu theo tháng" className="lg:col-span-2">
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={monthlyData} margin={{ left: 0 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border-tertiary)"
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tickFormatter={(m) => MONTHS_LABEL[m]}
+                    tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
+                  />
+                  <YAxis
+                    tickFormatter={fmtAxis}
+                    tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="amount" name="Số tiền" radius={[4, 4, 0, 0]}>
+                    {monthlyData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
 
-          <div className="grid lg:grid-cols-2 gap-4">
-            {typeData.length > 0 && (
-              <ChartCard title="Ngày nghỉ theo loại phép">
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={typeData} margin={{ left: 0 }}>
+            {clientData.length > 0 && (
+              <ChartCard
+                title="Doanh thu theo khách hàng"
+                className="lg:col-span-2"
+              >
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart
+                    data={clientData}
+                    layout="vertical"
+                    margin={{ left: 0, right: 20 }}
+                  >
                     <CartesianGrid
                       strokeDasharray="3 3"
                       stroke="var(--color-border-tertiary)"
+                      horizontal={false}
                     />
                     <XAxis
-                      dataKey="name"
+                      type="number"
+                      tickFormatter={fmtAxis}
                       tick={{
                         fontSize: 11,
                         fill: "var(--color-text-secondary)",
                       }}
                     />
                     <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={110}
                       tick={{
                         fontSize: 11,
                         fill: "var(--color-text-secondary)",
                       }}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="days" name="Ngày" radius={[4, 4, 0, 0]}>
-                      {typeData.map((_, i: number) => (
+                    <Bar dataKey="value" name="Đã nhận" radius={[0, 4, 4, 0]}>
+                      {clientData.map((_, i) => (
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}
                     </Bar>
@@ -1005,103 +1093,99 @@ export function LeaveReportPage() {
               </ChartCard>
             )}
 
-            {monthlyData.length > 0 && (
-              <ChartCard title="Xu hướng nghỉ phép theo tháng">
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={monthlyData} margin={{ left: 0 }}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="var(--color-border-tertiary)"
-                    />
-                    <XAxis
-                      dataKey="month"
-                      tickFormatter={(m) => MONTHS[m]}
-                      tick={{
-                        fontSize: 11,
-                        fill: "var(--color-text-secondary)",
-                      }}
-                    />
-                    <YAxis
-                      tick={{
-                        fontSize: 11,
-                        fill: "var(--color-text-secondary)",
-                      }}
-                      allowDecimals={false}
-                    />
+            {invStatusData.length > 0 && (
+              <ChartCard title="Trạng thái hóa đơn">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={invStatusData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      innerRadius={55}
+                      dataKey="value"
+                      nameKey="name"
+                      label={({ name, value }) => `${name}: ${value}`}
+                      labelLine={{ strokeWidth: 1 }}
+                    >
+                      {invStatusData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar
-                      dataKey="approved"
-                      name="Duyệt"
-                      fill="#22c55e"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="rejected"
-                      name="Từ chối"
-                      fill="#ef4444"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
+
+            {methodData.length > 0 && (
+              <ChartCard title="Theo phương thức thanh toán">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={methodData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      innerRadius={55}
+                      dataKey="value"
+                      nameKey="name"
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
+                      labelLine={{ strokeWidth: 1 }}
+                    >
+                      {methodData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
                 </ResponsiveContainer>
               </ChartCard>
             )}
           </div>
 
-          {(data?.topUsers ?? []).length > 0 && (
-            <ChartCard title="Top nhân viên nghỉ nhiều nhất">
+          {(ar?.topDebtors ?? []).length > 0 && (
+            <ChartCard title="Top công nợ chưa thu">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
-                        Nhân viên
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                        Khách hàng
                       </th>
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
-                        Loại phép
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Tổng HĐ
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
-                        Được cấp
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Đã thu
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
-                        Đã dùng
-                      </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
-                        Còn lại
-                      </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
-                        Tỷ lệ
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Còn nợ
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {data!.topUsers.map((u, i: number) => (
+                    {ar!.topDebtors.map((d) => (
                       <tr
-                        key={i}
-                        className="border-b border-border last:border-0 hover:bg-accent/30"
+                        key={d.id}
+                        className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
-                        <td className="px-3 py-2">
-                          <div className="text-[13px]">
-                            {u.user?.fullName ?? "—"}
-                          </div>
+                        <td className="px-4 py-2.5">
+                          <div className="text-[13px]">{d.companyName}</div>
                           <div className="text-[10px] text-muted-foreground">
-                            {u.user?.department?.name ?? ""}
+                            {d.clientCode}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-[12px] hidden md:table-cell">
-                          {u.leaveType?.name ?? "—"}
+                        <td className="px-4 py-2.5 text-right text-[12px]">
+                          {fmtVND(d.totalContractValue)}
                         </td>
-                        <td className="px-3 py-2 text-right text-[12px]">
-                          {u.entitledDays}
+                        <td className="px-4 py-2.5 text-right text-[12px] text-green-600">
+                          {fmtVND(d.totalReceivedAmount)}
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px] text-amber-600">
-                          {u.usedDays}
-                        </td>
-                        <td className="px-3 py-2 text-right text-[13px] text-green-600">
-                          {u.remainingDays}
-                        </td>
-                        <td className="px-3 py-2 text-right text-[12px] text-muted-foreground">
-                          {u.usageRate}%
+                        <td className="px-4 py-2.5 text-right text-[13px] text-red-500">
+                          {fmtVND(d.outstandingBalance)}
                         </td>
                       </tr>
                     ))}
@@ -1117,278 +1201,7 @@ export function LeaveReportPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PAYROLL REPORT
-// ═══════════════════════════════════════════════════════════════
-export function PayrollReportPage() {
-  const [year, setYear] = useState(NOW.getFullYear());
-  const [data, setData] = useState<PayrollReport | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const fetch = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await reportsService.getPayrollReport({ year });
-      setData(res);
-    } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Không thể tải báo cáo lương",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [year]);
-
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
-
-  const stats = data?.summary;
-  const trendData = (data?.trend ?? []).map((t) => ({
-    month: t.month,
-    gross: t.gross,
-    net: t.net,
-  }));
-  const deptData = (data?.deptBreakdown ?? []).map((d) => ({
-    name: d.deptName?.replace("Phòng ", ""),
-    avgGross: d.avgGross,
-    totalNet: d.totalNet,
-  }));
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-[20px]">Báo cáo lương</h1>
-        <div className="flex items-center gap-2">
-          <YearSelector year={year} onChange={setYear} />
-          <button
-            onClick={fetch}
-            disabled={loading}
-            className="p-2 border border-border rounded-lg hover:bg-accent"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          </button>
-        </div>
-      </div>
-
-      {loading ? (
-        <LoadingState />
-      ) : error ? (
-        <ErrorState message={error} onRetry={fetch} />
-      ) : !stats ? (
-        <div className="text-center py-16 text-muted-foreground text-[14px]">
-          Chưa có dữ liệu lương cho năm {year}
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard
-              icon={<DollarSign size={18} />}
-              label="Tổng Gross"
-              value={fmtShort(stats.totalGross)}
-              color="bg-blue-600"
-            />
-            <StatCard
-              icon={<CreditCard size={18} />}
-              label="Tổng Net"
-              value={fmtShort(stats.totalNet)}
-              color="bg-purple-600"
-            />
-            <StatCard
-              icon={<TrendingDown size={18} />}
-              label="Tỉ lệ khấu trừ"
-              value={`${stats.deductionRate}%`}
-              color="bg-red-500"
-            />
-            <StatCard
-              icon={<Users size={18} />}
-              label="Số nhân viên"
-              value={stats.headcount}
-              sub={`Avg: ${fmtShort(stats.avgGross)}`}
-              color="bg-orange-500"
-            />
-          </div>
-
-          <div className="grid lg:grid-cols-5 gap-4">
-            <ChartCard
-              title="Xu hướng lương theo tháng"
-              className="lg:col-span-3"
-            >
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={trendData} margin={{ left: 0, right: 10 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--color-border-tertiary)"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    tickFormatter={(m) => MONTHS[m]}
-                    tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
-                  />
-                  <YAxis
-                    tickFormatter={fmtAxis}
-                    tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar
-                    dataKey="gross"
-                    name="Gross"
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="net"
-                    name="Net"
-                    fill="#8b5cf6"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            <ChartCard title="Cơ cấu lương" className="lg:col-span-2">
-              {(data?.payrollComposition ?? []).length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={data!.payrollComposition}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={95}
-                      innerRadius={50}
-                      dataKey="value"
-                      nameKey="name"
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
-                      labelLine={{ strokeWidth: 1 }}
-                    >
-                      {data!.payrollComposition.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[300px] text-muted-foreground text-[13px]">
-                  Không có dữ liệu
-                </div>
-              )}
-            </ChartCard>
-          </div>
-
-          {deptData.length > 0 && (
-            <ChartCard title="Lương trung bình theo phòng ban">
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={deptData} margin={{ left: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--color-border-tertiary)"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
-                  />
-                  <YAxis
-                    tickFormatter={fmtAxis}
-                    tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey="avgGross"
-                    name="Avg Gross"
-                    radius={[4, 4, 0, 0]}
-                  >
-                    {deptData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-          )}
-
-          <div className="grid lg:grid-cols-2 gap-4">
-            <ChartCard title="Chi tiết khấu trừ">
-              <div className="space-y-2 mt-1">
-                {[
-                  { label: "BHXH (8%)", value: stats.totalSocialIns },
-                  { label: "BHYT (1.5%)", value: stats.totalHealthIns },
-                  { label: "BHTN (1%)", value: stats.totalUnemploymentIns },
-                  { label: "Thuế TNCN", value: stats.totalPIT },
-                ].map((d) => (
-                  <div
-                    key={d.label}
-                    className="flex justify-between items-center py-2 border-b border-border last:border-0"
-                  >
-                    <span className="text-[13px]">{d.label}</span>
-                    <span className="text-[13px] text-red-500">
-                      -{fmtVND(d.value)}
-                    </span>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center py-2 pt-3">
-                  <span className="text-[14px]">Tổng khấu trừ</span>
-                  <span className="text-[14px] text-red-500">
-                    -{fmtVND(stats.totalDeductions)}
-                  </span>
-                </div>
-              </div>
-            </ChartCard>
-
-            <ChartCard title="Tổng hợp kỳ lương">
-              <div className="space-y-2 mt-1">
-                {[
-                  {
-                    label: "Tổng Gross",
-                    value: stats.totalGross,
-                    cls: "text-blue-600",
-                  },
-                  {
-                    label: "Phụ cấp",
-                    value: stats.totalAllowances,
-                    cls: "text-teal-600",
-                  },
-                  {
-                    label: "Thưởng",
-                    value: stats.totalBonus,
-                    cls: "text-amber-600",
-                  },
-                  {
-                    label: "Làm thêm giờ",
-                    value: stats.totalOTPay,
-                    cls: "text-indigo-600",
-                  },
-                  {
-                    label: "Tổng Net",
-                    value: stats.totalNet,
-                    cls: "text-green-600",
-                  },
-                ].map((d) => (
-                  <div
-                    key={d.label}
-                    className="flex justify-between items-center py-2 border-b border-border last:border-0"
-                  >
-                    <span className="text-[13px]">{d.label}</span>
-                    <span className={`text-[13px] ${d.cls}`}>
-                      {fmtVND(d.value)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ChartCard>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// PROJECT REPORT
+// 4. PROJECT REPORT
 // ═══════════════════════════════════════════════════════════════
 export function ProjectReportPage() {
   const [year, setYear] = useState(NOW.getFullYear());
@@ -1396,29 +1209,26 @@ export function ProjectReportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetch = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await reportsService.getProjectReport({ year });
-      setData(res);
+      setData(await reportsService.getProjectReport({ year }));
     } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Không thể tải báo cáo dự án",
-      );
+      setError(e instanceof ApiError ? e.message : "Không thể tải báo cáo");
     } finally {
       setLoading(false);
     }
   }, [year]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    load();
+  }, [load]);
 
-  const statusMap = data?.statusBreakdown ?? {};
-  const healthMap = data?.healthBreakdown ?? {};
-  const ms = data?.milestones ?? {};
-
+  const sMap =
+    data?.statusBreakdown ??
+    ({} as Record<string, { count: number; budget: number; spent: number }>);
+  const hMap = data?.healthBreakdown ?? ({} as Record<string, number>);
   const statusLabels: Record<string, string> = {
     ACTIVE: "Đang TH",
     COMPLETED: "Hoàn thành",
@@ -1431,48 +1241,38 @@ export function ProjectReportPage() {
     AT_RISK: "Có rủi ro",
     OFF_TRACK: "Trễ tiến độ",
   };
-  const statusData = Object.entries(
-    statusMap as Record<
-      string,
-      { count: number; budget: number; spent: number }
-    >,
-  ).map(([k, v]) => ({
+  const statusData = Object.entries(sMap).map(([k, v]) => ({
     name: statusLabels[k] ?? k,
     value: v.count,
-    budget: v.budget,
-    spent: v.spent,
   }));
-  const healthData = Object.entries(healthMap as Record<string, number>).map(
-    ([k, v]) => ({
-      name: healthLabels[k] ?? k,
-      value: v,
-    }),
-  );
+  const healthData = Object.entries(hMap).map(([k, v]) => ({
+    name: healthLabels[k] ?? k,
+    value: v,
+    color:
+      k === "ON_TRACK" ? "#22c55e" : k === "AT_RISK" ? "#f59e0b" : "#ef4444",
+  }));
+  const totalP = statusData.reduce((s, d) => s + d.value, 0);
+  const activeP = sMap?.ACTIVE?.count ?? 0;
+  const completedP = sMap?.COMPLETED?.count ?? 0;
+  const atRiskP = hMap?.AT_RISK ?? 0;
   const expenseData = (data?.expenseByCategory ?? []).map((e) => ({
     name: e.category,
     value: e.amount,
   }));
 
-  const totalProjects = Object.values(
-    statusMap as Record<
-      string,
-      { count: number; budget: number; spent: number }
-    >,
-  ).reduce((s, v) => s + v.count, 0);
-  const activeCount =
-    (statusMap as Record<string, { count: number }>)?.ACTIVE?.count ?? 0;
-  const completedCount =
-    (statusMap as Record<string, { count: number }>)?.COMPLETED?.count ?? 0;
-  const atRiskCount = (healthMap as Record<string, number>)?.AT_RISK ?? 0;
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-[20px]">Báo cáo dự án</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[20px]">Báo cáo Dự án</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Tiến độ, ngân sách và sức khoẻ dự án
+          </p>
+        </div>
         <div className="flex items-center gap-2">
-          <YearSelector year={year} onChange={setYear} />
+          <YearSelect year={year} onChange={setYear} />
           <button
-            onClick={fetch}
+            onClick={load}
             disabled={loading}
             className="p-2 border border-border rounded-lg hover:bg-accent"
           >
@@ -1484,46 +1284,46 @@ export function ProjectReportPage() {
       {loading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState message={error} onRetry={fetch} />
+        <ErrorState message={error} onRetry={load} />
       ) : !data ? null : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
-              icon={<FolderKanban size={18} />}
+              icon={<FolderKanban size={20} />}
               label="Tổng dự án"
-              value={totalProjects}
+              value={totalP}
               color="bg-blue-600"
             />
             <StatCard
-              icon={<Activity size={18} />}
+              icon={<Activity size={20} />}
               label="Đang thực hiện"
-              value={activeCount}
+              value={activeP}
               color="bg-green-600"
             />
             <StatCard
-              icon={<CheckCircle size={18} />}
+              icon={<CheckCircle size={20} />}
               label="Hoàn thành"
-              value={completedCount}
+              value={completedP}
               color="bg-teal-600"
             />
             <StatCard
-              icon={<AlertTriangle size={18} />}
+              icon={<AlertTriangle size={20} />}
               label="Có rủi ro"
-              value={atRiskCount}
+              value={atRiskP}
               color="bg-red-500"
             />
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <ChartCard title="Phân bổ theo trạng thái">
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie
                     data={statusData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={85}
-                    innerRadius={45}
+                    outerRadius={95}
+                    innerRadius={50}
                     dataKey="value"
                     nameKey="name"
                     label={({ name, percent }) =>
@@ -1542,31 +1342,22 @@ export function ProjectReportPage() {
 
             {healthData.length > 0 && (
               <ChartCard title="Sức khoẻ dự án đang TH">
-                <ResponsiveContainer width="100%" height={220}>
+                <ResponsiveContainer width="100%" height={260}>
                   <PieChart>
                     <Pie
                       data={healthData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={85}
-                      innerRadius={45}
+                      outerRadius={95}
+                      innerRadius={50}
                       dataKey="value"
                       nameKey="name"
                       label={({ name, percent }) =>
                         `${name} ${(percent * 100).toFixed(0)}%`
                       }
                     >
-                      {healthData.map((d, i) => (
-                        <Cell
-                          key={i}
-                          fill={
-                            d.name.includes("Đúng")
-                              ? "#22c55e"
-                              : d.name.includes("rủi")
-                                ? "#f59e0b"
-                                : "#ef4444"
-                          }
-                        />
+                      {healthData.map((d) => (
+                        <Cell key={d.name} fill={d.color} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -1575,61 +1366,55 @@ export function ProjectReportPage() {
               </ChartCard>
             )}
 
-            <ChartCard title="Milestone">
-              <div className="space-y-3 mt-2">
-                {Object.entries(ms).map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="flex justify-between items-center py-1 border-b border-border last:border-0"
-                  >
-                    <span className="text-[12px] text-muted-foreground capitalize">
-                      {k.replace(/_/g, " ").toLowerCase()}
-                    </span>
-                    <span className="text-[14px]">{v}</span>
-                  </div>
-                ))}
-              </div>
-              {expenseData.length > 0 && (
-                <>
-                  <div className="text-[12px] text-muted-foreground mt-4 mb-2">
-                    Chi phí theo loại
-                  </div>
-                  {expenseData.map((e) => (
-                    <div
-                      key={e.name}
-                      className="flex justify-between items-center py-1 border-b border-border last:border-0"
+            {expenseData.length > 0 && (
+              <ChartCard title="Chi phí theo loại">
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={expenseData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={95}
+                      innerRadius={50}
+                      dataKey="value"
+                      nameKey="name"
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
                     >
-                      <span className="text-[12px]">{e.name}</span>
-                      <span className="text-[12px]">{fmtVND(e.value)}</span>
-                    </div>
-                  ))}
-                </>
-              )}
-            </ChartCard>
+                      {expenseData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
           </div>
 
           {(data?.projects ?? []).length > 0 && (
-            <ChartCard title="Các dự án — Ngân sách vs Chi tiêu">
+            <ChartCard title="Ngân sách vs Chi tiêu — tất cả dự án">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
                         Dự án
                       </th>
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
                         Trạng thái
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Tiến độ
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Ngân sách
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Đã chi
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         % Ngân sách
                       </th>
                     </tr>
@@ -1638,32 +1423,32 @@ export function ProjectReportPage() {
                     {data!.projects.map((p) => (
                       <tr
                         key={p.id}
-                        className="border-b border-border last:border-0 hover:bg-accent/30"
+                        className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-2.5">
                           <div className="text-[13px]">{p.projectName}</div>
                           <div className="text-[10px] text-muted-foreground">
                             {p.projectCode}
                           </div>
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-2.5">
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "ACTIVE" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"}`}
+                            className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "ACTIVE" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400"}`}
                           >
                             {statusLabels[p.status] ?? p.status}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[13px]">
                           {p.progressPercent}%
                         </td>
-                        <td className="px-3 py-2 text-right text-[12px]">
+                        <td className="px-4 py-2.5 text-right text-[12px]">
                           {fmtVND(p.budgetAmount)}
                         </td>
-                        <td className="px-3 py-2 text-right text-[12px]">
+                        <td className="px-4 py-2.5 text-right text-[12px]">
                           {fmtVND(p.spentAmount)}
                         </td>
                         <td
-                          className={`px-3 py-2 text-right text-[13px] ${p.isOverBudget ? "text-red-500" : "text-green-600"}`}
+                          className={`px-4 py-2.5 text-right text-[13px] ${p.isOverBudget ? "text-red-500" : "text-green-600"}`}
                         >
                           {p.budgetUsedPct}%
                         </td>
@@ -1709,60 +1494,63 @@ export function ProjectReportPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FINANCE REPORT
+// 5. LEAVE REPORT
 // ═══════════════════════════════════════════════════════════════
-export function FinanceReportPage() {
+export function LeaveReportPage() {
   const [year, setYear] = useState(NOW.getFullYear());
-  const [data, setData] = useState<FinanceReport | null>(null);
+  const [data, setData] = useState<LeaveReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetch = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await reportsService.getFinanceReport({ year });
-      setData(res);
+      setData(await reportsService.getLeaveReport({ year }));
     } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Không thể tải báo cáo tài chính",
-      );
+      setError(e instanceof ApiError ? e.message : "Không thể tải báo cáo");
     } finally {
       setLoading(false);
     }
   }, [year]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    load();
+  }, [load]);
 
-  const rev = data?.revenue;
-  const ar = data?.ar;
-  const monthlyData = (rev?.monthlyTrend ?? []).map((m) => ({
+  const sMap =
+    data?.statusBreakdown ??
+    ({} as Record<string, { count: number; days: number }>);
+  const approved = sMap?.APPROVED ?? { count: 0, days: 0 };
+  const pending = sMap?.PENDING ?? { count: 0, days: 0 };
+  const rejected = sMap?.REJECTED ?? { count: 0, days: 0 };
+  const total = approved.count + pending.count + rejected.count;
+  const balance = data?.balanceSummary;
+  const typeData = (data?.byLeaveType ?? []).map((lt) => ({
+    name: lt.leaveType?.name ?? "Khác",
+    days: lt.days,
+    count: lt.count,
+  }));
+  const monthlyData = (data?.monthlyTrend ?? []).map((m) => ({
     month: m.month,
-    amount: m.amount,
-    count: m.count,
+    approved: m.approved,
+    rejected: m.rejected,
+    approvedDays: m.approvedDays,
   }));
-  const methodData = (data?.revenueByMethod ?? []).map((m) => ({
-    name: m.method,
-    value: m.amount,
-  }));
-  const clientData = (data?.revenueByClient ?? []).map((c) => ({
-    name: c.client?.shortName ?? c.client?.companyName ?? "—",
-    value: c.totalAmount,
-  }));
-  const invByStatus = data?.invoices?.byStatus ?? {};
-  const totalInvoiced = data?.invoices?.totalInvoiced ?? 0;
-  const totalOutstandingInv = data?.invoices?.totalOutstanding ?? 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-[20px]">Báo cáo tài chính</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[20px]">Báo cáo Nghỉ phép</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Tổng hợp đơn nghỉ phép và số dư phép năm
+          </p>
+        </div>
         <div className="flex items-center gap-2">
-          <YearSelector year={year} onChange={setYear} />
+          <YearSelect year={year} onChange={setYear} />
           <button
-            onClick={fetch}
+            onClick={load}
             disabled={loading}
             className="p-2 border border-border rounded-lg hover:bg-accent"
           >
@@ -1774,48 +1562,352 @@ export function FinanceReportPage() {
       {loading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState message={error} onRetry={fetch} />
+        <ErrorState message={error} onRetry={load} />
       ) : !data ? null : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
-              icon={<DollarSign size={18} />}
-              label="Đã thu"
-              value={fmtShort(rev?.totalReceived ?? 0)}
-              color="bg-green-600"
-            />
-            <StatCard
-              icon={<FileText size={18} />}
-              label="Tổng hóa đơn"
-              value={fmtShort(totalInvoiced)}
+              icon={<FileText size={20} />}
+              label="Tổng đơn"
+              value={total}
               color="bg-blue-600"
             />
             <StatCard
-              icon={<AlertTriangle size={18} />}
-              label="Còn phải thu"
-              value={fmtShort(totalOutstandingInv)}
+              icon={<CheckCircle size={20} />}
+              label="Đã duyệt"
+              value={approved.count}
+              subValue={`${approved.days} ngày`}
+              color="bg-green-600"
+            />
+            <StatCard
+              icon={<Clock size={20} />}
+              label="Chờ duyệt"
+              value={pending.count}
+              subValue={`${pending.days} ngày`}
               color="bg-amber-500"
             />
             <StatCard
-              icon={<TrendingUp size={18} />}
-              label="Tỷ lệ thu"
-              value={`${ar?.collectionRate ?? 0}%`}
-              sub={`AR: ${fmtShort(ar?.totalOutstanding ?? 0)}`}
-              color="bg-purple-600"
+              icon={<XCircle size={20} />}
+              label="Từ chối"
+              value={rejected.count}
+              color="bg-red-500"
             />
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-4">
-            <ChartCard title="Doanh thu theo tháng" className="lg:col-span-2">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={monthlyData} margin={{ left: 0 }}>
+          {balance && (
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              {[
+                {
+                  label: "Tổng được cấp",
+                  value: balance.totalEntitled,
+                  cls: "text-blue-600",
+                },
+                {
+                  label: "Ngày chuyển kỳ",
+                  value: balance.totalCarried,
+                  cls: "text-purple-600",
+                },
+                {
+                  label: "Đã sử dụng",
+                  value: balance.totalUsed,
+                  cls: "text-amber-600",
+                },
+                {
+                  label: "Còn lại",
+                  value: balance.totalRemaining,
+                  cls: "text-green-600",
+                },
+                {
+                  label: "Tỷ lệ sử dụng",
+                  value: `${balance.usageRate}%`,
+                  cls: "text-foreground",
+                },
+              ].map((c) => (
+                <div
+                  key={c.label}
+                  className="bg-card border border-border rounded-xl p-3 text-center"
+                >
+                  <div className="text-[10px] text-muted-foreground">
+                    {c.label}
+                  </div>
+                  <div className={`text-[18px] ${c.cls}`}>{c.value}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {typeData.length > 0 && (
+              <ChartCard title="Ngày nghỉ theo loại phép">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={typeData} margin={{ left: 0 }}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border-tertiary)"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      tick={{
+                        fontSize: 11,
+                        fill: "var(--color-text-secondary)",
+                      }}
+                    />
+                    <YAxis
+                      tick={{
+                        fontSize: 11,
+                        fill: "var(--color-text-secondary)",
+                      }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="days" name="Ngày" radius={[4, 4, 0, 0]}>
+                      {typeData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
+            {monthlyData.length > 0 && (
+              <ChartCard title="Xu hướng nghỉ phép theo tháng">
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={monthlyData} margin={{ left: 0 }}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border-tertiary)"
+                    />
+                    <XAxis
+                      dataKey="month"
+                      tickFormatter={(m) => MONTHS_LABEL[m]}
+                      tick={{
+                        fontSize: 11,
+                        fill: "var(--color-text-secondary)",
+                      }}
+                    />
+                    <YAxis
+                      tick={{
+                        fontSize: 11,
+                        fill: "var(--color-text-secondary)",
+                      }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar
+                      dataKey="approved"
+                      name="Đã duyệt"
+                      fill="#22c55e"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="rejected"
+                      name="Từ chối"
+                      fill="#ef4444"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
+          </div>
+
+          {(data?.topUsers ?? []).length > 0 && (
+            <ChartCard title="Top nhân viên nghỉ nhiều nhất">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                        Nhân viên
+                      </th>
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
+                        Loại phép
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Được cấp
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Đã dùng
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Còn lại
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Tỷ lệ
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data!.topUsers.map((u, i) => (
+                      <tr
+                        key={i}
+                        className="border-b border-border last:border-0 hover:bg-accent/50"
+                      >
+                        <td className="px-4 py-2.5">
+                          <div className="text-[13px]">
+                            {u.user?.fullName ?? "—"}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {u.user?.department?.name ?? ""}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
+                          {u.leaveType?.name ?? "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-[12px]">
+                          {u.entitledDays}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-[13px] text-amber-600">
+                          {u.usedDays}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-[13px] text-green-600">
+                          {u.remainingDays}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-[12px] text-muted-foreground">
+                          {u.usageRate}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </ChartCard>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 6. PAYROLL REPORT — richest page, mirrors figma exactly
+// ═══════════════════════════════════════════════════════════════
+export function PayrollReportPage() {
+  const [year, setYear] = useState(NOW.getFullYear());
+  const [month, setMonth] = useState(0);
+  const [deptId, setDeptId] = useState("");
+  const [data, setData] = useState<PayrollReport | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setData(
+        await reportsService.getPayrollReport({
+          year,
+          month: month || undefined,
+          departmentId: deptId || undefined,
+        }),
+      );
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Không thể tải báo cáo");
+    } finally {
+      setLoading(false);
+    }
+  }, [year, month, deptId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const stats = data?.summary;
+  const trendData = (data?.trend ?? []).map((t) => ({
+    month: `T${t.month}`,
+    totalGross: t.gross,
+    totalNet: t.net,
+    employeeCount: t.headcount,
+  }));
+  const deptBreakdown = (data?.deptBreakdown ?? [])
+    .map((d) => ({
+      name: d.deptName?.replace("Phòng ", "") ?? "",
+      avgGross: d.avgGross,
+      totalGross: d.totalGross,
+      totalNet: d.totalNet,
+      employeeCount: d.headcount,
+    }))
+    .filter((d) => d.employeeCount > 0)
+    .sort((a, b) => b.totalGross - a.totalGross);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[20px]">Báo cáo Bảng lương</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Tổng hợp chi phí lương, khấu trừ và cơ cấu thu nhập
+          </p>
+        </div>
+        <button className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition-colors">
+          <Download size={14} /> Xuất báo cáo
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <YearSelect year={year} onChange={setYear} />
+        <MonthSelect month={month} onChange={setMonth} />
+        <DeptSelect value={deptId} onChange={setDeptId} />
+        <button
+          onClick={load}
+          disabled={loading}
+          className="p-2 border border-border rounded-lg hover:bg-accent"
+        >
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+        </button>
+      </div>
+
+      {loading ? (
+        <LoadingState />
+      ) : error ? (
+        <ErrorState message={error} onRetry={load} />
+      ) : !stats ? (
+        <div className="text-center py-16 text-muted-foreground text-[14px]">
+          Chưa có dữ liệu lương cho kỳ này
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard
+              icon={<DollarSign size={20} />}
+              label="Tổng Gross"
+              value={fmtShort(stats.totalGross)}
+              color="bg-blue-600"
+            />
+            <StatCard
+              icon={<CreditCard size={20} />}
+              label="Tổng Net"
+              value={fmtShort(stats.totalNet)}
+              color="bg-purple-600"
+            />
+            <StatCard
+              icon={<TrendingDown size={20} />}
+              label="Tỉ lệ khấu trừ"
+              value={`${stats.deductionRate}%`}
+              color="bg-red-500"
+            />
+            <StatCard
+              icon={<Users size={20} />}
+              label="Số nhân viên"
+              value={stats.headcount}
+              subValue={`Avg: ${fmtVND(stats.avgGross)}`}
+              color="bg-orange-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <ChartCard
+              title="Xu hướng lương theo tháng"
+              className="lg:col-span-3"
+            >
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={trendData} margin={{ left: 0, right: 10 }}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke="var(--color-border-tertiary)"
                   />
                   <XAxis
                     dataKey="month"
-                    tickFormatter={(m) => MONTHS[m]}
                     tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
                   />
                   <YAxis
@@ -1823,59 +1915,116 @@ export function FinanceReportPage() {
                     tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="amount" name="Số tiền" radius={[4, 4, 0, 0]}>
-                    {monthlyData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Bar>
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar
+                    dataKey="totalGross"
+                    name="Gross"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="totalNet"
+                    name="Net"
+                    fill="#8b5cf6"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
 
-            <ChartCard title="Theo phương thức TT">
-              {methodData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie
-                      data={methodData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={90}
-                      innerRadius={45}
-                      dataKey="value"
-                      nameKey="name"
-                      label={({ name, percent }) =>
-                        `${name} ${(percent * 100).toFixed(0)}%`
-                      }
-                    >
-                      {methodData.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+            <ChartCard title="Cơ cấu lương" className="lg:col-span-2">
+              {(data?.payrollComposition ?? []).length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <PieChart>
+                      <Pie
+                        data={data!.payrollComposition}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={95}
+                        innerRadius={50}
+                        dataKey="value"
+                        nameKey="name"
+                        label={({ name, percent }) =>
+                          `${name} ${(percent * 100).toFixed(0)}%`
+                        }
+                        labelLine={{ strokeWidth: 1 }}
+                      >
+                        {data!.payrollComposition.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex flex-wrap gap-3 mt-2 px-2">
+                    {data!.payrollComposition.map((c, i) => (
+                      <div
+                        key={c.name}
+                        className="flex items-center gap-1.5 text-[11px]"
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                        />
+                        <span className="text-muted-foreground">{c.name}:</span>
+                        <span>{fmtShort(c.value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
               ) : (
-                <div className="flex items-center justify-center h-[260px] text-muted-foreground text-[13px]">
-                  Chưa có dữ liệu
+                <div className="flex items-center justify-center h-[240px] text-muted-foreground text-[13px]">
+                  Không có dữ liệu
                 </div>
               )}
             </ChartCard>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-4">
-            {clientData.length > 0 && (
-              <ChartCard title="Top khách hàng theo doanh thu">
-                <ResponsiveContainer width="100%" height={240}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {(data?.deductionBreakdown ?? []).length > 0 && (
+              <ChartCard title="Cơ cấu khấu trừ">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={data!.deductionBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={95}
+                      innerRadius={50}
+                      dataKey="value"
+                      nameKey="name"
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
+                      labelLine={{ strokeWidth: 1 }}
+                    >
+                      {data!.deductionBreakdown.map((_, i) => (
+                        <Cell
+                          key={i}
+                          fill={DEDUCT_COLORS[i % DEDUCT_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
+
+            {deptBreakdown.length > 0 && (
+              <ChartCard title="Lương trung bình theo phòng ban">
+                <ResponsiveContainer width="100%" height={280}>
                   <BarChart
-                    data={clientData}
+                    data={[...deptBreakdown].sort(
+                      (a, b) => b.avgGross - a.avgGross,
+                    )}
                     layout="vertical"
                     margin={{ left: 0, right: 20 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
                       stroke="var(--color-border-tertiary)"
-                      horizontal={false}
                     />
                     <XAxis
                       type="number"
@@ -1886,8 +2035,8 @@ export function FinanceReportPage() {
                       }}
                     />
                     <YAxis
-                      type="category"
                       dataKey="name"
+                      type="category"
                       width={100}
                       tick={{
                         fontSize: 11,
@@ -1895,8 +2044,12 @@ export function FinanceReportPage() {
                       }}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Doanh thu" radius={[0, 4, 4, 0]}>
-                      {clientData.map((_, i) => (
+                    <Bar
+                      dataKey="avgGross"
+                      name="Avg Gross"
+                      radius={[0, 4, 4, 0]}
+                    >
+                      {deptBreakdown.map((_, i) => (
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}
                     </Bar>
@@ -1904,50 +2057,72 @@ export function FinanceReportPage() {
                 </ResponsiveContainer>
               </ChartCard>
             )}
-
-            {(ar?.topDebtors ?? []).length > 0 && (
-              <ChartCard title="Top công nợ chưa thu">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
-                          Khách hàng
-                        </th>
-                        <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
-                          Còn nợ
-                        </th>
-                        <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
-                          Tổng HD
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ar!.topDebtors.map((d) => (
-                        <tr
-                          key={d.id}
-                          className="border-b border-border last:border-0 hover:bg-accent/30"
-                        >
-                          <td className="px-3 py-2">
-                            <div className="text-[13px]">{d.companyName}</div>
-                            <div className="text-[10px] text-muted-foreground">
-                              {d.clientCode}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 text-right text-[13px] text-red-500">
-                            {fmtVND(d.outstandingBalance)}
-                          </td>
-                          <td className="px-3 py-2 text-right text-[12px] text-muted-foreground hidden md:table-cell">
-                            {fmtVND(d.totalContractValue)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </ChartCard>
-            )}
           </div>
+
+          {deptBreakdown.length > 0 && (
+            <ChartCard title="Chi tiết kỳ lương theo phòng ban">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                        Phòng ban
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Số NV
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Avg Gross
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Tổng Gross
+                      </th>
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                        Tổng Net
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {deptBreakdown.map((d) => (
+                      <tr
+                        key={d.name}
+                        className="border-b border-border last:border-0 hover:bg-accent/50"
+                      >
+                        <td className="px-4 py-2.5 text-[13px]">{d.name}</td>
+                        <td className="px-4 py-2.5 text-[13px] text-right">
+                          {d.employeeCount}
+                        </td>
+                        <td className="px-4 py-2.5 text-[13px] text-right">
+                          {fmtVND(d.avgGross)}
+                        </td>
+                        <td className="px-4 py-2.5 text-[13px] text-right">
+                          {fmtVND(d.totalGross)}
+                        </td>
+                        <td className="px-4 py-2.5 text-[13px] text-right">
+                          {fmtVND(d.totalNet)}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-accent/30 border-t-2 border-border">
+                      <td className="px-4 py-2.5 text-[13px]">Tổng cộng</td>
+                      <td className="px-4 py-2.5 text-[13px] text-right">
+                        {stats.headcount}
+                      </td>
+                      <td className="px-4 py-2.5 text-[13px] text-right">
+                        {fmtVND(stats.avgGross)}
+                      </td>
+                      <td className="px-4 py-2.5 text-[13px] text-right">
+                        {fmtVND(stats.totalGross)}
+                      </td>
+                      <td className="px-4 py-2.5 text-[13px] text-right">
+                        {fmtVND(stats.totalNet)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </ChartCard>
+          )}
         </>
       )}
     </div>
@@ -1955,36 +2130,41 @@ export function FinanceReportPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// OVERTIME REPORT
+// 7. OVERTIME REPORT
 // ═══════════════════════════════════════════════════════════════
 export function OvertimeReportPage() {
   const [year, setYear] = useState(NOW.getFullYear());
+  const [month, setMonth] = useState(0);
+  const [deptId, setDeptId] = useState("");
   const [data, setData] = useState<OvertimeReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetch = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await reportsService.getOvertimeReport({ year });
-      setData(res);
-    } catch (e) {
-      setError(
-        e instanceof ApiError ? e.message : "Không thể tải báo cáo tăng ca",
+      setData(
+        await reportsService.getOvertimeReport({
+          year,
+          month: month || undefined,
+          departmentId: deptId || undefined,
+        }),
       );
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Không thể tải báo cáo");
     } finally {
       setLoading(false);
     }
-  }, [year]);
+  }, [year, month, deptId]);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    load();
+  }, [load]);
 
   const s = data?.summary;
   const monthlyData = (data?.monthlyTrend ?? []).map((m) => ({
-    month: m.month,
+    month: `T${m.month}`,
     totalHours: m.totalHours,
     weekendH: +(m.weekendMinutes / 60).toFixed(1),
     holidayH: +(m.holidayMinutes / 60).toFixed(1),
@@ -1993,61 +2173,73 @@ export function OvertimeReportPage() {
     name: d.label,
     value: d.totalHours,
     count: d.count,
+    color: d.isHoliday ? "#ef4444" : d.isWeekend ? "#f59e0b" : "#3b82f6",
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-[20px]">Báo cáo tăng ca (OT)</h1>
-        <div className="flex items-center gap-2">
-          <YearSelector year={year} onChange={setYear} />
-          <button
-            onClick={fetch}
-            disabled={loading}
-            className="p-2 border border-border rounded-lg hover:bg-accent"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          </button>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-[20px]">Báo cáo Tăng ca (OT)</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Thống kê giờ làm thêm theo nhân viên và loại ngày
+          </p>
         </div>
+        <button className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition-colors">
+          <Download size={14} /> Xuất báo cáo
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <YearSelect year={year} onChange={setYear} />
+        <MonthSelect month={month} onChange={setMonth} />
+        <DeptSelect value={deptId} onChange={setDeptId} />
+        <button
+          onClick={load}
+          disabled={loading}
+          className="p-2 border border-border rounded-lg hover:bg-accent"
+        >
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+        </button>
       </div>
 
       {loading ? (
         <LoadingState />
       ) : error ? (
-        <ErrorState message={error} onRetry={fetch} />
+        <ErrorState message={error} onRetry={load} />
       ) : !s ? null : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
-              icon={<Clock size={18} />}
+              icon={<Clock size={20} />}
               label="Tổng giờ OT"
               value={`${s.totalApprovedHours}h`}
               color="bg-blue-600"
             />
             <StatCard
-              icon={<Activity size={18} />}
+              icon={<Activity size={20} />}
               label="Số phiên OT"
               value={s.sessionCount}
               color="bg-purple-600"
             />
             <StatCard
-              icon={<Timer size={18} />}
+              icon={<Timer size={20} />}
               label="TB phút/phiên"
               value={`${s.sessionCount > 0 ? Math.round(s.totalApprovedMinutes / s.sessionCount) : 0} phút`}
               color="bg-amber-500"
             />
             <StatCard
-              icon={<Users size={18} />}
+              icon={<Users size={20} />}
               label="Nhân viên OT"
               value={data?.topUsers?.length ?? 0}
               color="bg-green-600"
             />
           </div>
 
-          <div className="grid lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard title="OT theo tháng" className="lg:col-span-3">
               {monthlyData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={monthlyData} margin={{ left: 0 }}>
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -2055,7 +2247,6 @@ export function OvertimeReportPage() {
                     />
                     <XAxis
                       dataKey="month"
-                      tickFormatter={(m) => MONTHS[m]}
                       tick={{
                         fontSize: 11,
                         fill: "var(--color-text-secondary)",
@@ -2090,7 +2281,7 @@ export function OvertimeReportPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-[260px] text-muted-foreground text-[13px]">
+                <div className="flex items-center justify-center h-[280px] text-muted-foreground text-[13px]">
                   Chưa có dữ liệu tháng
                 </div>
               )}
@@ -2114,29 +2305,22 @@ export function OvertimeReportPage() {
                         }
                         labelLine={{ strokeWidth: 1 }}
                       >
-                        {dayTypeData.map((_, i) => (
-                          <Cell
-                            key={i}
-                            fill={[COLORS[0], COLORS[2], COLORS[3]][i % 3]}
-                          />
+                        {dayTypeData.map((d) => (
+                          <Cell key={d.name} fill={d.color} />
                         ))}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="flex flex-wrap gap-3 mt-2 px-2">
-                    {dayTypeData.map((d, i) => (
+                    {dayTypeData.map((d) => (
                       <div
                         key={d.name}
                         className="flex items-center gap-1.5 text-[11px]"
                       >
                         <span
                           className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{
-                            backgroundColor: [COLORS[0], COLORS[2], COLORS[3]][
-                              i % 3
-                            ],
-                          }}
+                          style={{ backgroundColor: d.color }}
                         />
                         <span className="text-muted-foreground">{d.name}:</span>
                         <span>
@@ -2160,19 +2344,19 @@ export function OvertimeReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
                         Nhân viên
                       </th>
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
                         Phòng ban
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Số phiên
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Tổng phút
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
                         Tổng giờ
                       </th>
                     </tr>
@@ -2181,11 +2365,11 @@ export function OvertimeReportPage() {
                     {data!.topUsers.map((u, i) => (
                       <tr
                         key={i}
-                        className="border-b border-border last:border-0 hover:bg-accent/30"
+                        className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+                            <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
                               {i + 1}
                             </span>
                             <div>
@@ -2198,16 +2382,16 @@ export function OvertimeReportPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-[12px] hidden md:table-cell">
+                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
                           {u.user?.department?.name ?? "—"}
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[13px]">
                           {u.sessionCount}
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[13px]">
                           {u.totalMinutes}
                         </td>
-                        <td className="px-3 py-2 text-right text-[13px] text-blue-600">
+                        <td className="px-4 py-2.5 text-right text-[13px] text-blue-600">
                           {(u.totalMinutes / 60).toFixed(1)}h
                         </td>
                       </tr>
