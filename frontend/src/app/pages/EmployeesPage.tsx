@@ -30,6 +30,10 @@ import type { ApiUser } from "../../lib/services/auth.service";
 import type { DepartmentOption } from "../../lib/services/departments.service";
 import type { JobTitleOption } from "../../lib/services/jobTitles.service";
 import { ApiError } from "../../lib/apiClient";
+import * as attendanceService from "../../lib/services/attendance.service";
+import type { ApiWorkShift } from "../../lib/services/attendance.service";
+import * as payrollService from "../../lib/services/payroll.service";
+import type { ApiSalaryComponent } from "../../lib/services/payroll.service";
 
 // ── Mock fallback ──────────────────────────────────────────────
 import {
@@ -282,6 +286,17 @@ export function EmployeesPage() {
   const [sortAsc, setSortAsc] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [createStep, setCreateStep] = useState(1);
+  // Step 3 extras: shift + salary
+  const [shiftOptions, setShiftOptions] = useState<ApiWorkShift[]>([]);
+  const [salaryComponentOptions, setSalaryComponentOptions] = useState<
+    ApiSalaryComponent[]
+  >([]);
+  const [createExtras, setCreateExtras] = useState({
+    shiftId: "",
+    shiftEffectiveFrom: new Date().toISOString().slice(0, 10),
+    baseSalary: "",
+    salaryComponentId: "",
+  });
   const [createForm, setCreateForm] = useState(emptyCreateForm);
 
   const toggleSort = (key: SortKey) => {
@@ -453,7 +468,7 @@ export function EmployeesPage() {
     setLoadingCreate(true);
     try {
       if (USE_API) {
-        await usersService.createUser({
+        const newUser = await usersService.createUser({
           fullName: createForm.fullName,
           email: createForm.email,
           phoneNumber: createForm.phoneNumber || undefined,
@@ -463,6 +478,37 @@ export function EmployeesPage() {
           hireDate: createForm.hireDate,
           employmentStatus: createForm.employmentStatus,
         });
+
+        // Gán ca làm việc nếu đã chọn
+        if (createExtras.shiftId && newUser?.id) {
+          try {
+            await attendanceService.assignUserShift({
+              userId: newUser.id,
+              shiftId: createExtras.shiftId,
+              effectiveFrom: createExtras.shiftEffectiveFrom,
+            });
+          } catch {
+            /* không block nếu gán ca lỗi */
+          }
+        }
+
+        // Gán lương ban đầu nếu đã điền
+        if (
+          createExtras.salaryComponentId &&
+          createExtras.baseSalary &&
+          newUser?.id
+        ) {
+          try {
+            await payrollService.assignSalaryComponent({
+              userId: newUser.id,
+              salaryComponentId: createExtras.salaryComponentId,
+              amount: Number(createExtras.baseSalary),
+              effectiveFrom: createForm.hireDate,
+            });
+          } catch {
+            /* không block nếu gán lương lỗi */
+          }
+        }
       }
       toast.success(
         `Đã tạo nhân viên ${createForm.fullName}. Email kích hoạt đã được gửi.`,
@@ -470,6 +516,12 @@ export function EmployeesPage() {
       setShowCreate(false);
       setCreateStep(1);
       setCreateForm(emptyCreateForm);
+      setCreateExtras({
+        shiftId: "",
+        shiftEffectiveFrom: new Date().toISOString().slice(0, 10),
+        baseSalary: "",
+        salaryComponentId: "",
+      });
       fetchUsers();
     } catch (err) {
       toast.error(
@@ -904,6 +956,12 @@ export function EmployeesPage() {
             onClick={() => {
               setShowCreate(false);
               setCreateStep(1);
+              setCreateExtras({
+                shiftId: "",
+                shiftEffectiveFrom: new Date().toISOString().slice(0, 10),
+                baseSalary: "",
+                salaryComponentId: "",
+              });
             }}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -912,16 +970,23 @@ export function EmployeesPage() {
                 <h3 className="text-[16px] font-semibold">
                   Thêm nhân viên mới
                 </h3>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-1.5 mt-1">
                   <span
                     className={`text-[11px] px-2 py-0.5 rounded-full ${createStep === 1 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
                   >
                     1. Thông tin
                   </span>
+                  <span className="text-muted-foreground text-[10px]">›</span>
                   <span
                     className={`text-[11px] px-2 py-0.5 rounded-full ${createStep === 2 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
                   >
-                    2. Xác nhận
+                    2. Ca &amp; Lương
+                  </span>
+                  <span className="text-muted-foreground text-[10px]">›</span>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full ${createStep === 3 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
+                  >
+                    3. Xác nhận
                   </span>
                 </div>
               </div>
@@ -1042,6 +1107,23 @@ export function EmployeesPage() {
                         toast.error("Vui lòng điền đầy đủ các trường bắt buộc");
                         return;
                       }
+                      // Load shift + salary options for step 2
+                      if (USE_API && shiftOptions.length === 0) {
+                        attendanceService
+                          .getShiftOptions()
+                          .then((res) =>
+                            setShiftOptions(
+                              res.filter((s: ApiWorkShift) => s.isActive),
+                            ),
+                          )
+                          .catch(() => {});
+                      }
+                      if (USE_API && salaryComponentOptions.length === 0) {
+                        payrollService
+                          .getSalaryComponentOptions()
+                          .then((res) => setSalaryComponentOptions(res))
+                          .catch(() => {});
+                      }
                       setCreateStep(2);
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition"
@@ -1052,7 +1134,138 @@ export function EmployeesPage() {
               </>
             )}
 
+            {/* ── STEP 2: Ca làm việc & Lương ban đầu ── */}
             {createStep === 2 && (
+              <>
+                <div className="p-5 space-y-4">
+                  {/* Ca làm việc */}
+                  <div>
+                    <div className="text-[13px] font-medium mb-3 flex items-center gap-2">
+                      🕐 Gán ca làm việc
+                      <span className="text-[11px] text-muted-foreground font-normal">
+                        (tuỳ chọn)
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[12px] text-muted-foreground block mb-1">
+                          Ca làm việc
+                        </label>
+                        <select
+                          value={createExtras.shiftId}
+                          onChange={(e) =>
+                            setCreateExtras((p) => ({
+                              ...p,
+                              shiftId: e.target.value,
+                            }))
+                          }
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">-- Bỏ qua, gán sau --</option>
+                          {shiftOptions.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.startTime} – {s.endTime})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {createExtras.shiftId && (
+                        <div>
+                          <label className="text-[12px] text-muted-foreground block mb-1">
+                            Hiệu lực từ
+                          </label>
+                          <input
+                            type="date"
+                            value={createExtras.shiftEffectiveFrom}
+                            onChange={(e) =>
+                              setCreateExtras((p) => ({
+                                ...p,
+                                shiftEffectiveFrom: e.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border" />
+
+                  {/* Lương ban đầu */}
+                  <div>
+                    <div className="text-[13px] font-medium mb-3 flex items-center gap-2">
+                      💰 Lương ban đầu
+                      <span className="text-[11px] text-muted-foreground font-normal">
+                        (tuỳ chọn)
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[12px] text-muted-foreground block mb-1">
+                          Thành phần lương
+                        </label>
+                        <select
+                          value={createExtras.salaryComponentId}
+                          onChange={(e) =>
+                            setCreateExtras((p) => ({
+                              ...p,
+                              salaryComponentId: e.target.value,
+                            }))
+                          }
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">-- Bỏ qua, cấu hình sau --</option>
+                          {salaryComponentOptions
+                            .filter((c) => c.isActive)
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name} ({c.componentType})
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      {createExtras.salaryComponentId && (
+                        <div>
+                          <label className="text-[12px] text-muted-foreground block mb-1">
+                            Mức lương (VNĐ)
+                          </label>
+                          <input
+                            type="number"
+                            value={createExtras.baseSalary}
+                            onChange={(e) =>
+                              setCreateExtras((p) => ({
+                                ...p,
+                                baseSalary: e.target.value,
+                              }))
+                            }
+                            placeholder="VD: 10000000"
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 p-5 border-t border-border">
+                  <button
+                    onClick={() => setCreateStep(1)}
+                    className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+                  >
+                    ← Quay lại
+                  </button>
+                  <button
+                    onClick={() => setCreateStep(3)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition"
+                  >
+                    Tiếp theo →
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ── STEP 3: Xác nhận ── */}
+            {createStep === 3 && (
               <>
                 <div className="p-5 space-y-3">
                   <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 text-[13px]">
@@ -1084,6 +1297,21 @@ export function EmployeesPage() {
                             ? "Thử việc"
                             : "Chính thức",
                         ],
+                        [
+                          "Ca làm việc",
+                          createExtras.shiftId
+                            ? (shiftOptions.find(
+                                (s) => s.id === createExtras.shiftId,
+                              )?.name ?? "—")
+                            : "Bỏ qua",
+                        ],
+                        [
+                          "Lương",
+                          createExtras.salaryComponentId &&
+                          createExtras.baseSalary
+                            ? `${Number(createExtras.baseSalary).toLocaleString("vi-VN")} đ`
+                            : "Bỏ qua",
+                        ],
                       ] as [string, string][]
                     ).map(([k, v]) => (
                       <div key={k} className="flex justify-between gap-2">
@@ -1094,13 +1322,12 @@ export function EmployeesPage() {
                   </div>
                   <p className="text-[12px] text-muted-foreground">
                     Sau khi tạo, email kích hoạt sẽ gửi đến{" "}
-                    <strong>{createForm.email}</strong>. Có thể cài đặt lương
-                    sau trong trang chi tiết.
+                    <strong>{createForm.email}</strong>.
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-2 p-5 border-t border-border">
                   <button
-                    onClick={() => setCreateStep(1)}
+                    onClick={() => setCreateStep(2)}
                     className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
                   >
                     ← Quay lại

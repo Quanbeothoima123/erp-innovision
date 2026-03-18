@@ -66,8 +66,32 @@ export interface ApiWorkShift {
   startTime: string;
   endTime: string;
   breakMinutes: number;
+  workMinutes?: number;
   isActive: boolean;
   description: string | null;
+  // So NV dang o ca nay
+  _count?: { members: number };
+}
+
+export interface ShiftMember {
+  id: string;
+  fullName: string;
+  avatarUrl?: string | null;
+  department?: { name: string } | null;
+  jobTitle?: { name: string } | null;
+  employmentStatus: string;
+  accountStatus: string;
+  assignmentId: string;
+  effectiveFrom: string;
+}
+
+export interface AssignShiftPayload {
+  userId: string;
+  shiftId: string;
+  effectiveFrom: string;
+  effectiveTo?: string | null;
+  dayOfWeek?: number | null;
+  notes?: string | null;
 }
 
 export interface ApiHoliday {
@@ -116,12 +140,26 @@ export interface ListRequestsParams {
 // FIX: Backend paginatedResponse trả về { items, pagination } không phải { data, meta }
 export interface PaginatedRecords {
   items: ApiAttendanceRecord[];
-  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 export interface PaginatedRequests {
   items: ApiAttendanceRequest[];
-  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 // ─── My Attendance ───────────────────────────────────────────
@@ -252,7 +290,12 @@ export async function listShifts(params?: {
   limit?: number;
 }): Promise<{
   items: ApiWorkShift[];
-  pagination: { total: number; page: number; limit: number; totalPages: number };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }> {
   return api.get("/attendance/shifts", {
     params: params as Record<string, string>,
@@ -290,15 +333,6 @@ export async function getUserWorkShifts(
   return api.get<ApiWorkShift[]>(`/attendance/shifts/user/${userId}`);
 }
 
-export async function assignUserShift(payload: {
-  userId: string;
-  shiftId: string;
-  effectiveFrom: string;
-  effectiveTo?: string;
-}): Promise<void> {
-  return api.post("/attendance/shifts/assign", payload);
-}
-
 // ─── Holidays ────────────────────────────────────────────────
 
 export async function listHolidays(params?: {
@@ -307,7 +341,12 @@ export async function listHolidays(params?: {
   limit?: number;
 }): Promise<{
   items: ApiHoliday[];
-  pagination: { total: number; page: number; limit: number; totalPages: number };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }> {
   return api.get("/attendance/holidays", {
     params: params as Record<string, string>,
@@ -333,4 +372,21 @@ export async function updateHoliday(
 
 export async function deleteHoliday(id: string): Promise<void> {
   return api.delete(`/attendance/holidays/${id}`);
+}
+
+// Lay danh sach nhan vien trong ca
+export async function getShiftMembers(shiftId: string): Promise<ShiftMember[]> {
+  return api.get<ShiftMember[]>(`/attendance/shifts/${shiftId}/members`);
+}
+
+// Gan ca cho nhan vien
+export async function assignUserShift(
+  payload: AssignShiftPayload,
+): Promise<{ id: string }> {
+  return api.post("/attendance/shifts/assign", payload);
+}
+
+// Xoa gan ca
+export async function removeUserShift(assignmentId: string): Promise<void> {
+  return api.delete(`/attendance/user-shifts/${assignmentId}`);
 }

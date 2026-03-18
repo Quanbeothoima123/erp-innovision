@@ -109,6 +109,15 @@ async function getUserWorkShifts(req, res, next) {
   }
 }
 
+async function getShiftMembers(req, res, next) {
+  try {
+    const members = await service.getShiftMembers(req.params.id);
+    return successResponse(res, members, "Lay danh sach nhan vien thanh cong");
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function assignUserShift(req, res, next) {
   try {
     const uws = await service.assignUserShift(req.body);
@@ -399,6 +408,7 @@ module.exports = {
   deleteShift,
   // UserWorkShift
   getUserWorkShifts,
+  getShiftMembers,
   assignUserShift,
   removeUserShift,
   // Holiday

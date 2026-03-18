@@ -73,6 +73,7 @@ router.delete("/shifts/:id", authorize(ROLES.ADMIN), ctrl.deleteShift);
  * DELETE /api/attendance/user-shifts/:id     — Xóa gán ca (HR/Admin)
  */
 router.get("/shifts/user/:userId", hrOrAdmin, ctrl.getUserWorkShifts);
+router.get("/shifts/:id/members", hrOrAdmin, ctrl.getShiftMembers);
 router.post(
   "/shifts/assign",
   hrOrAdmin,

@@ -30,16 +30,44 @@ async function findManyShifts({
     ...(shiftType && { shiftType }),
     ...(isActive !== undefined && { isActive }),
   };
-  const [total, shifts] = await prisma.$transaction([
+  // Promise.all thay transaction + kèm _count số NV đang ở ca
+  const [total, shifts] = await Promise.all([
     prisma.workShift.count({ where }),
     prisma.workShift.findMany({
       where,
+      include: { _count: { select: { userWorkShifts: true } } },
       orderBy: { name: "asc" },
       skip,
       take: limit,
     }),
   ]);
   return { shifts, total };
+}
+
+// Lấy danh sách nhân viên đang được gán vào ca này
+async function findShiftMembers(shiftId) {
+  const assignments = await prisma.userWorkShift.findMany({
+    where: { shiftId, isActive: true },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          avatarUrl: true,
+          department: { select: { name: true } },
+          jobTitle: { select: { name: true } },
+          employmentStatus: true,
+          accountStatus: true,
+        },
+      },
+    },
+    orderBy: { effectiveFrom: "desc" },
+  });
+  return assignments.map((a) => ({
+    ...a.user,
+    assignmentId: a.id,
+    effectiveFrom: a.effectiveFrom,
+  }));
 }
 
 async function findShiftById(id) {
@@ -414,6 +442,7 @@ async function getMonthlyStats(userId, year, month) {
 module.exports = {
   // Shift
   findManyShifts,
+  findShiftMembers,
   findShiftById,
   findShiftByCode,
   findShiftByName,

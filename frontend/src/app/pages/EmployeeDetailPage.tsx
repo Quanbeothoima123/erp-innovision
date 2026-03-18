@@ -8,6 +8,8 @@ import { useAuth } from "../context/AuthContext";
 import { ApiError } from "../../lib/apiClient";
 import * as usersService from "../../lib/services/users.service";
 import * as payrollService from "../../lib/services/payroll.service";
+import * as attendanceService from "../../lib/services/attendance.service";
+import type { ApiWorkShift as ApiShift } from "../../lib/services/attendance.service";
 import type {
   ApiCompensation,
   ApiUserSalaryComponent,
@@ -319,6 +321,15 @@ export function EmployeeDetailPage() {
   // ── Work shift state ────────────────────────────────────────
   const [workShifts, setWorkShifts] = useState<ApiWorkShift[]>([]);
   const [shiftsLoading, setShiftsLoading] = useState(false);
+  // Assign shift modal
+  const [showAssignShift, setShowAssignShift] = useState(false);
+  const [availableShifts, setAvailableShifts] = useState<ApiShift[]>([]);
+  const [assignShiftForm, setAssignShiftForm] = useState({
+    shiftId: "",
+    effectiveFrom: new Date().toISOString().split("T")[0],
+    notes: "",
+  });
+  const [assigningSavng, setAssigningSavng] = useState(false);
   const shiftsFetched = useRef(false);
 
   // ── Audit log state ─────────────────────────────────────────
@@ -549,6 +560,48 @@ export function EmployeeDetailPage() {
       toast.error(err instanceof ApiError ? err.message : "Thao tác thất bại");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Open assign-shift modal + load shift options
+  const openAssignShift = async () => {
+    setAssignShiftForm({
+      shiftId: "",
+      effectiveFrom: new Date().toISOString().split("T")[0],
+      notes: "",
+    });
+    if (USE_API && availableShifts.length === 0) {
+      try {
+        const opts = await attendanceService.getShiftOptions();
+        setAvailableShifts(opts.filter((s: ApiShift) => s.isActive));
+      } catch {
+        /* ignore */
+      }
+    }
+    setShowAssignShift(true);
+  };
+
+  const handleAssignShift = async () => {
+    if (!user || !assignShiftForm.shiftId) {
+      return;
+    }
+    setAssigningSavng(true);
+    try {
+      if (USE_API) {
+        await attendanceService.assignUserShift({
+          userId: user.id,
+          shiftId: assignShiftForm.shiftId,
+          effectiveFrom: assignShiftForm.effectiveFrom,
+          notes: assignShiftForm.notes || null,
+        });
+        await fetchWorkShifts();
+      }
+      toast.success("Da gan ca lam viec cho nhan vien");
+      setShowAssignShift(false);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Gan ca that bai");
+    } finally {
+      setAssigningSavng(false);
     }
   };
 
@@ -1159,6 +1212,21 @@ export function EmployeeDetailPage() {
             </div>
           ) : (
             <>
+              {/* Header + Gan ca button */}
+              {isAdminHR && (
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-[14px] font-medium flex items-center gap-2">
+                    <Clock size={15} /> Ca làm việc
+                  </h3>
+                  <button
+                    onClick={openAssignShift}
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+                  >
+                    <Plus size={13} /> Gán ca mới
+                  </button>
+                </div>
+              )}
+
               {/* Ca đang áp dụng */}
               {(() => {
                 const activeShift = workShifts.find((s) => s.isActive);
@@ -1572,6 +1640,83 @@ export function EmployeeDetailPage() {
             saving={saving}
             onCancel={() => setShowTerminate(false)}
           />
+        </Overlay>
+      )}
+
+      {/* ── Assign Shift Modal ─────────────────────────────────── */}
+      {showAssignShift && (
+        <Overlay onClose={() => setShowAssignShift(false)}>
+          <DlgHeader
+            title="Gán ca làm việc"
+            onClose={() => setShowAssignShift(false)}
+          />
+          <div className="p-5 space-y-4">
+            <div>
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Chọn ca *
+              </label>
+              <select
+                value={assignShiftForm.shiftId}
+                onChange={(e) =>
+                  setAssignShiftForm((p) => ({ ...p, shiftId: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">-- Chọn ca --</option>
+                {availableShifts.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.startTime} – {s.endTime})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Hiệu lực từ *
+              </label>
+              <input
+                type="date"
+                value={assignShiftForm.effectiveFrom}
+                onChange={(e) =>
+                  setAssignShiftForm((p) => ({
+                    ...p,
+                    effectiveFrom: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Ghi chú
+              </label>
+              <input
+                type="text"
+                value={assignShiftForm.notes}
+                onChange={(e) =>
+                  setAssignShiftForm((p) => ({ ...p, notes: e.target.value }))
+                }
+                placeholder="VD: Chuyển ca theo yêu cầu..."
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 p-4 border-t border-border">
+            <button
+              onClick={() => setShowAssignShift(false)}
+              className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+            >
+              Huỷ
+            </button>
+            <button
+              onClick={handleAssignShift}
+              disabled={assigningSavng || !assignShiftForm.shiftId}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {assigningSavng && <Loader2 size={13} className="animate-spin" />}{" "}
+              Gán ca
+            </button>
+          </div>
         </Overlay>
       )}
     </div>

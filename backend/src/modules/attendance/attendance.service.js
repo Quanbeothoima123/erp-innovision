@@ -71,6 +71,12 @@ async function getUserWorkShifts(userId) {
   return repo.findUserWorkShifts(userId);
 }
 
+async function getShiftMembers(shiftId) {
+  const shift = await repo.findShiftById(shiftId);
+  if (!shift) throw AppError.badRequest("Ca làm viec khong ton tai.");
+  return repo.findShiftMembers(shiftId);
+}
+
 async function assignUserShift(dto) {
   const shift = await repo.findShiftById(dto.shiftId);
   if (!shift) throw AppError.badRequest("Ca làm việc không tồn tại.");
@@ -163,7 +169,8 @@ async function deleteHoliday(id) {
 
 async function listRequests(filters, requestingUser) {
   // Map alias startDate/endDate → fromDate/toDate
-  if (filters.startDate && !filters.fromDate) filters.fromDate = filters.startDate;
+  if (filters.startDate && !filters.fromDate)
+    filters.fromDate = filters.startDate;
   if (filters.endDate && !filters.toDate) filters.toDate = filters.endDate;
   if (filters.type && !filters.requestType) filters.requestType = filters.type;
   // Nhân viên chỉ xem của chính mình
@@ -389,7 +396,8 @@ async function rejectRequest(requestId, reviewerId, rejectReason) {
 
 async function listRecords(filters, requestingUser) {
   // Map alias startDate/endDate → fromDate/toDate
-  if (filters.startDate && !filters.fromDate) filters.fromDate = filters.startDate;
+  if (filters.startDate && !filters.fromDate)
+    filters.fromDate = filters.startDate;
   if (filters.endDate && !filters.toDate) filters.toDate = filters.endDate;
   if (!_isHrOrAdmin(requestingUser)) {
     filters.userId = requestingUser.id;
@@ -486,7 +494,8 @@ async function deleteRecord(id) {
 
 async function getMyAttendance(filters, userId) {
   // Map alias startDate/endDate → fromDate/toDate
-  if (filters.startDate && !filters.fromDate) filters.fromDate = filters.startDate;
+  if (filters.startDate && !filters.fromDate)
+    filters.fromDate = filters.startDate;
   if (filters.endDate && !filters.toDate) filters.toDate = filters.endDate;
   // Nếu truyền month + year thì tính fromDate/toDate
   if (filters.month && filters.year) {
@@ -607,6 +616,7 @@ module.exports = {
   deleteShift,
   // UserWorkShift
   getUserWorkShifts,
+  getShiftMembers,
   assignUserShift,
   removeUserShift,
   // Holiday

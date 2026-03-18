@@ -16,6 +16,8 @@ function toShiftDto(shift) {
     isNightShift: shift.isNightShift,
     overtimeAfterMinutes: shift.overtimeAfterMinutes,
     isActive: shift.isActive,
+    // Map _count.userWorkShifts từ Prisma include
+    _count: { members: shift._count?.userWorkShifts ?? 0 },
     createdAt: shift.createdAt,
     updatedAt: shift.updatedAt,
   };
