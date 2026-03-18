@@ -14,6 +14,10 @@ function toDepartmentDto(dept) {
     headUserId: dept.headUserId,
     headUser: dept.headUser ?? null,
     isActive: dept.isActive,
+    // ✅ Map từ Prisma _count (luôn có nhờ DEPARTMENT_INCLUDE) hoặc memberCount từ service
+    _count: {
+      members: dept._count?.members ?? dept.memberCount ?? 0,
+    },
     createdAt: dept.createdAt,
     updatedAt: dept.updatedAt,
   };

@@ -1,9 +1,12 @@
 // ================================================================
 // DEPARTMENTS PAGE + JOB TITLES PAGE — Module 3
 // Fixed: headUserOptions now loads from API, mockUsers used in mock mode
+// Fixed: _count.members luôn hiển thị đúng
+// Feature: click card → slide-over hiển thị danh sách nhân viên
 // UI: upgraded to match Figma design
 // ================================================================
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import {
   Search,
@@ -17,6 +20,9 @@ import {
   ToggleRight,
   RefreshCw,
   Loader2,
+  ChevronRight,
+  UserCircle2,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ApiError } from "../../lib/apiClient";
@@ -34,6 +40,16 @@ import {
 } from "../data/mockData";
 
 const USE_API = !!import.meta.env.VITE_API_URL;
+
+// ── Member type (từ GET /departments/:id/members) ─────────────
+interface DeptMember {
+  id: string;
+  fullName: string;
+  avatarUrl?: string | null;
+  jobTitle?: { name: string } | null;
+  employmentStatus: string;
+  accountStatus: string;
+}
 
 // ── Shared UI helpers ──────────────────────────────────────────
 function Overlay({
@@ -117,6 +133,11 @@ export function DepartmentsPage() {
     headUserId: "",
     isActive: true,
   });
+
+  // Member panel state
+  const [selectedDept, setSelectedDept] = useState<ApiDepartment | null>(null);
+  const [deptMembers, setDeptMembers] = useState<DeptMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
 
   // ── Head-user options: load from API or fall back to mock ──────
   const [headUserOptions, setHeadUserOptions] = useState<
@@ -291,6 +312,35 @@ export function DepartmentsPage() {
     }
   };
 
+  // Open member slide-over panel
+  const openMemberPanel = async (dept: ApiDepartment) => {
+    setSelectedDept(dept);
+    setDeptMembers([]);
+    setMembersLoading(true);
+    try {
+      if (USE_API) {
+        const members = await departmentsService.getDepartmentMembers(dept.id);
+        setDeptMembers(members as DeptMember[]);
+      } else {
+        const mock = mockUsers
+          .filter((u) => u.departmentId === dept.id)
+          .map((u) => ({
+            id: u.id,
+            fullName: u.fullName,
+            avatarUrl: null,
+            jobTitle: null,
+            employmentStatus: u.employmentStatus ?? "ACTIVE",
+            accountStatus: u.accountStatus ?? "ACTIVE",
+          }));
+        setDeptMembers(mock);
+      }
+    } catch {
+      toast.error("Không tải được danh sách nhân viên");
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
   // Resolve head user display name
   const getHeadName = (d: ApiDepartment) => {
     if (d.headUser?.fullName) return d.headUser.fullName;
@@ -370,7 +420,8 @@ export function DepartmentsPage() {
             return (
               <div
                 key={d.id}
-                className={`bg-card border border-border rounded-xl p-4 transition-opacity ${!d.isActive ? "opacity-60" : ""}`}
+                onClick={() => openMemberPanel(d)}
+                className={`bg-card border border-border rounded-xl p-4 transition-all cursor-pointer hover:border-blue-400 hover:shadow-md ${!d.isActive ? "opacity-60" : ""}`}
               >
                 {/* Card header */}
                 <div className="flex items-center justify-between mb-2">
@@ -418,7 +469,10 @@ export function DepartmentsPage() {
                     </div>
                   </div>
                   {isAdmin && (
-                    <div className="flex items-center gap-0.5">
+                    <div
+                      className="flex items-center gap-0.5"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         onClick={() => toggleActive(d)}
                         className="p-1.5 rounded-lg hover:bg-accent transition"
@@ -557,6 +611,146 @@ export function DepartmentsPage() {
             variant="danger"
           />
         </Overlay>
+      )}
+
+      {/* ── Member Slide-Over Panel ───────────────────────────── */}
+      {selectedDept && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setSelectedDept(null)}
+          />
+          {/* Panel */}
+          <div className="relative w-full max-w-md bg-card border-l border-border h-full flex flex-col shadow-2xl">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
+                  <Building size={15} />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-semibold leading-tight">
+                    {selectedDept.name}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    {membersLoading
+                      ? "Đang tải..."
+                      : `${deptMembers.length} nhân viên`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedDept(null)}
+                className="p-1.5 rounded-lg hover:bg-accent transition"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Member List */}
+            <div className="flex-1 overflow-y-auto">
+              {membersLoading ? (
+                <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+                  <Loader2 size={18} className="animate-spin" />
+                  <span className="text-[13px]">Đang tải nhân viên...</span>
+                </div>
+              ) : deptMembers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <Users size={32} className="opacity-20 mb-2" />
+                  <p className="text-[13px]">Chưa có nhân viên nào</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {deptMembers.map((m) => (
+                    <Link
+                      key={m.id}
+                      to={`/employees/${m.id}`}
+                      onClick={() => setSelectedDept(null)}
+                      className="flex items-center gap-3 px-5 py-3 hover:bg-accent transition group"
+                    >
+                      {/* Avatar */}
+                      <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
+                        {m.avatarUrl ? (
+                          <img
+                            src={m.avatarUrl}
+                            alt={m.fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[13px] font-semibold text-indigo-600 dark:text-indigo-400">
+                            {m.fullName
+                              .split(" ")
+                              .slice(-2)
+                              .map((w) => w[0])
+                              .join("")
+                              .toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-medium truncate group-hover:text-blue-600 transition">
+                          {m.fullName}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                          <UserCircle2 size={10} />
+                          {m.jobTitle?.name ?? "—"}
+                        </div>
+                      </div>
+
+                      {/* Status badges */}
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                            m.employmentStatus === "ACTIVE"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                              : m.employmentStatus === "PROBATION"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                          }`}
+                        >
+                          {m.employmentStatus === "ACTIVE"
+                            ? "Chính thức"
+                            : m.employmentStatus === "PROBATION"
+                              ? "Thử việc"
+                              : m.employmentStatus}
+                        </span>
+                        {m.accountStatus !== "ACTIVE" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium">
+                            {m.accountStatus === "LOCKED"
+                              ? "Bị khoá"
+                              : "Vô hiệu"}
+                          </span>
+                        )}
+                      </div>
+
+                      <ChevronRight
+                        size={13}
+                        className="text-muted-foreground group-hover:text-blue-500 flex-shrink-0 transition"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Panel Footer */}
+            {!membersLoading && deptMembers.length > 0 && (
+              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[11px] text-muted-foreground flex items-center justify-between">
+                <span>{deptMembers.length} nhân viên trong phòng ban</span>
+                <Link
+                  to={`/employees?department=${selectedDept.id}`}
+                  onClick={() => setSelectedDept(null)}
+                  className="text-blue-600 hover:underline text-[11px] flex items-center gap-1"
+                >
+                  Xem tất cả <ChevronRight size={11} />
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

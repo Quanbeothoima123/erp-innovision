@@ -11,6 +11,10 @@ const DEPARTMENT_INCLUDE = {
       jobTitle: { select: { name: true } },
     },
   },
+  // ✅ Luôn kèm số lượng thành viên để toDepartmentDto có thể map _count.members
+  _count: {
+    select: { members: true },
+  },
 };
 
 async function findMany({
