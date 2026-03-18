@@ -1,8 +1,15 @@
-'use strict';
+"use strict";
 
-const { prisma } = require('../../config/db');
+const { prisma } = require("../../config/db");
 
-async function findMany({ search, isActive, sortBy = 'name', sortOrder = 'asc', page = 1, limit = 50 }) {
+async function findMany({
+  search,
+  isActive,
+  sortBy = "name",
+  sortOrder = "asc",
+  page = 1,
+  limit = 50,
+}) {
   // FIX: Prisma yêu cầu Int — coerce phòng trường hợp nhận string từ query
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 50;
@@ -10,18 +17,17 @@ async function findMany({ search, isActive, sortBy = 'name', sortOrder = 'asc', 
 
   const where = {
     ...(search && {
-      OR: [
-        { name: { contains: search } },
-        { code: { contains: search } },
-      ],
+      OR: [{ name: { contains: search } }, { code: { contains: search } }],
     }),
     ...(isActive !== undefined && { isActive }),
   };
 
-  const [total, jobTitles] = await prisma.$transaction([
+  // ✅ Promise.all thay transaction, kèm _count.users để hiển thị đúng số NV
+  const [total, jobTitles] = await Promise.all([
     prisma.jobTitle.count({ where }),
     prisma.jobTitle.findMany({
       where,
+      include: { _count: { select: { users: true } } },
       orderBy: { [sortBy]: sortOrder },
       skip,
       take: limitNum,
@@ -45,7 +51,7 @@ async function findByCode(code) {
 
 async function countActiveUsers(jobTitleId) {
   return prisma.user.count({
-    where: { jobTitleId, employmentStatus: { not: 'TERMINATED' } },
+    where: { jobTitleId, employmentStatus: { not: "TERMINATED" } },
   });
 }
 
@@ -69,7 +75,26 @@ async function findAllActive() {
   return prisma.jobTitle.findMany({
     where: { isActive: true },
     select: { id: true, name: true, code: true },
-    orderBy: { name: 'asc' },
+    orderBy: { name: "asc" },
+  });
+}
+
+// ✅ Lấy danh sách nhân viên thuộc chức danh này
+async function findMembers(jobTitleId) {
+  return prisma.user.findMany({
+    where: {
+      jobTitleId,
+      employmentStatus: { not: "TERMINATED" },
+    },
+    select: {
+      id: true,
+      fullName: true,
+      avatarUrl: true,
+      department: { select: { name: true } },
+      employmentStatus: true,
+      accountStatus: true,
+    },
+    orderBy: { fullName: "asc" },
   });
 }
 
@@ -84,4 +109,5 @@ module.exports = {
   deactivate,
   hardDelete,
   findAllActive,
+  findMembers,
 };

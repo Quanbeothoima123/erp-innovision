@@ -86,3 +86,17 @@ export async function updateJobTitle(
 export async function deleteJobTitle(id: string): Promise<void> {
   return api.delete(`/job-titles/${id}`);
 }
+
+// ✅ Lấy danh sách nhân viên thuộc chức danh
+export async function getJobTitleMembers(id: string): Promise<
+  {
+    id: string;
+    fullName: string;
+    avatarUrl?: string | null;
+    department?: { name: string } | null;
+    employmentStatus: string;
+    accountStatus: string;
+  }[]
+> {
+  return api.get(`/job-titles/${id}/members`);
+}

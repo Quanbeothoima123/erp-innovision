@@ -777,6 +777,20 @@ export function JobTitlesPage() {
     isActive: true,
   });
 
+  // ── Member panel state ──────────────────────────────────────
+  const [selectedJob, setSelectedJob] = useState<ApiJobTitle | null>(null);
+  const [jobMembers, setJobMembers] = useState<
+    {
+      id: string;
+      fullName: string;
+      avatarUrl?: string | null;
+      department?: { name: string } | null;
+      employmentStatus: string;
+      accountStatus: string;
+    }[]
+  >([]);
+  const [jobMembersLoading, setJobMembersLoading] = useState(false);
+
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
@@ -909,6 +923,35 @@ export function JobTitlesPage() {
     }
   };
 
+  // Open member slide-over panel
+  const openJobMemberPanel = async (job: ApiJobTitle) => {
+    setSelectedJob(job);
+    setJobMembers([]);
+    setJobMembersLoading(true);
+    try {
+      if (USE_API) {
+        const members = await jobTitlesService.getJobTitleMembers(job.id);
+        setJobMembers(members);
+      } else {
+        const mock = mockUsers
+          .filter((u) => u.jobTitleId === job.id)
+          .map((u) => ({
+            id: u.id,
+            fullName: u.fullName,
+            avatarUrl: null,
+            department: null,
+            employmentStatus: u.employmentStatus ?? "ACTIVE",
+            accountStatus: u.accountStatus ?? "ACTIVE",
+          }));
+        setJobMembers(mock);
+      }
+    } catch {
+      toast.error("Không tải được danh sách nhân viên");
+    } finally {
+      setJobMembersLoading(false);
+    }
+  };
+
   const filtered = search
     ? jobs.filter(
         (j) =>
@@ -994,7 +1037,8 @@ export function JobTitlesPage() {
             {filtered.map((j) => (
               <div
                 key={j.id}
-                className="grid gap-3 px-4 py-3 items-center hover:bg-muted/30 transition"
+                onClick={() => openJobMemberPanel(j)}
+                className="grid gap-3 px-4 py-3 items-center hover:bg-accent transition cursor-pointer"
                 style={{ gridTemplateColumns: "90px 1fr 2fr 80px 100px 120px" }}
               >
                 {/* Mã */}
@@ -1024,7 +1068,10 @@ export function JobTitlesPage() {
                 </span>
                 {/* Thao tác */}
                 {isAdmin ? (
-                  <div className="flex items-center gap-0.5">
+                  <div
+                    className="flex items-center gap-0.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       onClick={() => toggleActive(j)}
                       className="p-1.5 rounded-lg hover:bg-accent transition"
@@ -1165,6 +1212,160 @@ export function JobTitlesPage() {
             variant="danger"
           />
         </Overlay>
+      )}
+
+      {/* ── Job Member Slide-Over Panel ───────────────────────── */}
+      {selectedJob && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setSelectedJob(null)}
+          />
+          {/* Panel */}
+          <div className="relative w-full max-w-md bg-card border-l border-border h-full flex flex-col shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center text-white">
+                  <UserCircle2 size={15} />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-semibold leading-tight">
+                    {selectedJob.name}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    {jobMembersLoading
+                      ? "Đang tải..."
+                      : `${jobMembers.length} nhân viên`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedJob(null)}
+                className="p-1.5 rounded-lg hover:bg-accent transition"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            {/* Code badge */}
+            {selectedJob.code && (
+              <div className="px-5 py-2 border-b border-border bg-muted/30 flex items-center gap-2">
+                <span className="font-mono text-[11px] bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                  {selectedJob.code}
+                </span>
+                {selectedJob.description && (
+                  <span className="text-[11px] text-muted-foreground truncate">
+                    {selectedJob.description}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Member List */}
+            <div className="flex-1 overflow-y-auto">
+              {jobMembersLoading ? (
+                <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+                  <Loader2 size={18} className="animate-spin" />
+                  <span className="text-[13px]">Đang tải nhân viên...</span>
+                </div>
+              ) : jobMembers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <Users size={32} className="opacity-20 mb-2" />
+                  <p className="text-[13px]">Chưa có nhân viên nào</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {jobMembers.map((m) => (
+                    <Link
+                      key={m.id}
+                      to={`/employees/${m.id}`}
+                      onClick={() => setSelectedJob(null)}
+                      className="flex items-center gap-3 px-5 py-3 hover:bg-accent transition group"
+                    >
+                      {/* Avatar */}
+                      <div className="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
+                        {m.avatarUrl ? (
+                          <img
+                            src={m.avatarUrl}
+                            alt={m.fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[13px] font-semibold text-violet-600 dark:text-violet-400">
+                            {m.fullName
+                              .split(" ")
+                              .slice(-2)
+                              .map((w: string) => w[0])
+                              .join("")
+                              .toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-medium truncate group-hover:text-blue-600 transition">
+                          {m.fullName}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                          <Building size={10} />
+                          {m.department?.name ?? "—"}
+                        </div>
+                      </div>
+
+                      {/* Status badges */}
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                            m.employmentStatus === "ACTIVE"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                              : m.employmentStatus === "PROBATION"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                          }`}
+                        >
+                          {m.employmentStatus === "ACTIVE"
+                            ? "Chính thức"
+                            : m.employmentStatus === "PROBATION"
+                              ? "Thử việc"
+                              : m.employmentStatus}
+                        </span>
+                        {m.accountStatus !== "ACTIVE" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium">
+                            {m.accountStatus === "LOCKED"
+                              ? "Bị khoá"
+                              : "Vô hiệu"}
+                          </span>
+                        )}
+                      </div>
+
+                      <ChevronRight
+                        size={13}
+                        className="text-muted-foreground group-hover:text-blue-500 flex-shrink-0 transition"
+                      />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            {!jobMembersLoading && jobMembers.length > 0 && (
+              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[11px] text-muted-foreground flex items-center justify-between">
+                <span>{jobMembers.length} nhân viên giữ chức danh này</span>
+                <Link
+                  to={`/employees?jobTitle=${selectedJob.id}`}
+                  onClick={() => setSelectedJob(null)}
+                  className="text-blue-600 hover:underline text-[11px] flex items-center gap-1"
+                >
+                  Xem tất cả <ChevronRight size={11} />
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

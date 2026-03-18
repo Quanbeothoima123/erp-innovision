@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 function toJobTitleDto(jt) {
   if (!jt) return null;
@@ -8,6 +8,10 @@ function toJobTitleDto(jt) {
     code: jt.code,
     description: jt.description,
     isActive: jt.isActive,
+    // ✅ Map _count.users từ Prisma include
+    _count: {
+      users: jt._count?.users ?? 0,
+    },
     createdAt: jt.createdAt,
     updatedAt: jt.updatedAt,
   };
