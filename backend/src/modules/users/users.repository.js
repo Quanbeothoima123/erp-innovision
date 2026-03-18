@@ -58,7 +58,9 @@ async function findMany({
     }),
   };
 
-  const [total, users] = await prisma.$transaction([
+  // ✅ Dùng Promise.all thay vì prisma.$transaction([]) để tránh lỗi P2028
+  // (transaction timeout khi DB có nhiều kết nối đồng thời)
+  const [total, users] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
@@ -152,7 +154,12 @@ async function updateAccountStatus(userId, accountStatus) {
   });
 }
 
-async function terminateUser({ userId, terminatedAt, terminationReason, revokeAccess }) {
+async function terminateUser({
+  userId,
+  terminatedAt,
+  terminationReason,
+  revokeAccess,
+}) {
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.update({
       where: { id: userId },
@@ -240,10 +247,7 @@ async function findWorkShifts(userId) {
         },
       },
     },
-    orderBy: [
-      { isActive: "desc" },
-      { effectiveFrom: "desc" },
-    ],
+    orderBy: [{ isActive: "desc" }, { effectiveFrom: "desc" }],
   });
 }
 
@@ -255,13 +259,16 @@ async function findWorkShifts(userId) {
  * - Các log có actorUserId = userId (hành động do user đó thực hiện)
  * Hỗ trợ filter theo entityType, actionType và phân trang.
  */
-async function findAuditLogs(userId, {
-  entityType,
-  actionType,
-  mode = "about", // "about" | "by" | "all"
-  page = 1,
-  limit = 20,
-} = {}) {
+async function findAuditLogs(
+  userId,
+  {
+    entityType,
+    actionType,
+    mode = "about", // "about" | "by" | "all"
+    page = 1,
+    limit = 20,
+  } = {},
+) {
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 20;
   const skip = (pageNum - 1) * limitNum;
@@ -278,7 +285,18 @@ async function findAuditLogs(userId, {
     // "about" — mặc định: log về user này (các entityType liên quan đến user)
     userCondition = {
       OR: [
-        { entityId: userId, entityType: { in: ["USER", "USER_PROFILE", "USER_COMPENSATION", "USER_SALARY_COMPONENT", "WORK_SHIFT"] } },
+        {
+          entityId: userId,
+          entityType: {
+            in: [
+              "USER",
+              "USER_PROFILE",
+              "USER_COMPENSATION",
+              "USER_SALARY_COMPONENT",
+              "WORK_SHIFT",
+            ],
+          },
+        },
         // Cũng lấy cả log leave/attendance/overtime có entityId là userId
         { entityId: userId },
       ],

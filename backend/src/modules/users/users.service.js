@@ -189,6 +189,9 @@ async function updateAccountStatus(targetId, accountStatus, requestingUser) {
       data: { revokedAt: new Date() },
     });
   }
+
+  // ✅ Trả về user đã cập nhật để frontend có thể setUser()
+  return repo.findById(targetId);
 }
 
 // ── Terminate ─────────────────────────────────────────────────

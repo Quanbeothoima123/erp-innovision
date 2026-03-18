@@ -242,12 +242,18 @@ async function updateUserRoles(req, res, next) {
  */
 async function updateAccountStatus(req, res, next) {
   try {
-    await usersService.updateAccountStatus(
+    // ✅ Service giờ trả về user đã cập nhật
+    const user = await usersService.updateAccountStatus(
       req.params.id,
       req.body.accountStatus,
       req.user,
     );
-    return noContentResponse(res, "Cập nhật trạng thái tài khoản thành công");
+    const dto = _pickUserDto(user, req.user, req.params.id);
+    return successResponse(
+      res,
+      dto,
+      "Cập nhật trạng thái tài khoản thành công",
+    );
   } catch (err) {
     next(err);
   }
@@ -351,7 +357,7 @@ async function getUserAuditLogs(req, res, next) {
       req.user,
       req.query,
     );
-    const page  = parseInt(req.query.page,  10) || 1;
+    const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 20;
     return paginatedResponse(
       res,

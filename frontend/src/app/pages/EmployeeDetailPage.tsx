@@ -184,12 +184,15 @@ function Avatar({
   name: string;
   avatarUrl?: string | null;
 }) {
-  const initials = name
-    .split(" ")
-    .slice(-2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
+  // ✅ Guard: tránh crash khi name là undefined/null (e.g. API trả về data lỗi)
+  const safeName = name ?? "";
+  const initials =
+    safeName
+      .split(" ")
+      .slice(-2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "?";
   const colors = [
     "bg-blue-500",
     "bg-purple-500",
@@ -198,12 +201,12 @@ function Avatar({
     "bg-rose-500",
     "bg-teal-500",
   ];
-  const color = colors[name.charCodeAt(0) % colors.length];
+  const color = colors[(safeName.charCodeAt(0) || 0) % colors.length];
   if (avatarUrl)
     return (
       <img
         src={avatarUrl}
-        alt={name}
+        alt={safeName}
         className="w-full h-full object-cover rounded-2xl"
       />
     );
@@ -525,7 +528,14 @@ export function EmployeeDetailPage() {
         const updated = await usersService.updateAccountStatus(user.id, {
           accountStatus: newStatus as "ACTIVE" | "LOCKED" | "DISABLED",
         });
-        setUser(updated);
+        // ✅ Guard: chỉ setUser nếu API trả về object hợp lệ có fullName
+        // (tránh crash Avatar khi backend trả về null hoặc response không đúng format)
+        if (updated && updated.fullName) {
+          setUser(updated);
+        } else {
+          // Fallback: fetch lại user từ server để đảm bảo UI đồng bộ
+          await fetchUser();
+        }
       } else {
         setUser((prev) =>
           prev ? { ...prev, accountStatus: newStatus } : null,
