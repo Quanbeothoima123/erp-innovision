@@ -35,8 +35,6 @@ import { InvoicesPage, PaymentsPage } from "./pages/InvoicesPage";
 import {
   AccountsPage,
   AuditLogPage,
-  SystemShiftsPage,
-  SystemHolidaysPage,
   SystemConfigPage,
 } from "./pages/SystemPage";
 import {
@@ -100,10 +98,6 @@ export const router = createBrowserRouter([
           { path: "reports/overtime", Component: OvertimeReportPage },
           { path: "system/config", Component: SystemConfigPage },
           { path: "system/accounts", Component: AccountsPage },
-          { path: "system/departments", Component: DepartmentsPage },
-          { path: "system/job-titles", Component: JobTitlesPage },
-          { path: "system/shifts", Component: SystemShiftsPage },
-          { path: "system/holidays", Component: SystemHolidaysPage },
           { path: "system/audit-log", Component: AuditLogPage },
           { path: "notifications", Component: NotificationsPage },
           { path: "profile", Component: ProfilePage },

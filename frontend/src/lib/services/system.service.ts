@@ -9,12 +9,11 @@ import { api } from "../apiClient";
 
 export interface ApiSystemConfig {
   id: string;
-  configKey: string;
-  configValue: string;
-  dataType: "STRING" | "NUMBER" | "BOOLEAN" | "JSON";
-  category: string;
+  key: string; // backend returns "key" not "configKey"
+  value: string; // backend returns "value" not "configValue"
   description: string | null;
-  isPublic: boolean;
+  group: string | null;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -34,18 +33,31 @@ export interface ApiAuditLog {
 
 export interface ApiAuditStats {
   topActions: { actionType: string; count: number }[];
-  topActors: { actor: { id: string; fullName: string } | null; count: number }[];
+  topActors: {
+    actor: { id: string; fullName: string } | null;
+    count: number;
+  }[];
   topEntities: { entityType: string; count: number }[];
 }
 
 export type Paginated<T> = {
   items: T[];
-  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 };
 
 // ─── Config ───────────────────────────────────────────────────
 
-export async function getAllConfigs(): Promise<{ grouped: Record<string, ApiSystemConfig[]>; flat: ApiSystemConfig[] }> {
+export async function getAllConfigs(): Promise<{
+  grouped: Record<string, ApiSystemConfig[]>;
+  all: ApiSystemConfig[];
+}> {
   return api.get("/system/configs");
 }
 
@@ -55,13 +67,13 @@ export async function getConfigByKey(key: string): Promise<ApiSystemConfig> {
 
 export async function upsertConfig(
   key: string,
-  payload: { configValue: string; description?: string | null },
+  payload: { value: string; description?: string | null },
 ): Promise<ApiSystemConfig> {
   return api.put<ApiSystemConfig>(`/system/configs/${key}`, payload);
 }
 
 export async function batchUpsertConfigs(
-  configs: Array<{ configKey: string; configValue: string; description?: string | null }>,
+  configs: Array<{ key: string; value: string; description?: string | null }>,
 ): Promise<ApiSystemConfig[]> {
   return api.put<ApiSystemConfig[]>("/system/configs", { configs });
 }
@@ -98,9 +110,23 @@ export async function getAuditLogById(id: string): Promise<ApiAuditLog> {
 // ─── Accounts ─────────────────────────────────────────────────
 
 export async function listAccounts(params?: {
-  search?: string; page?: number; limit?: number;
-}): Promise<Paginated<{ id: string; fullName: string; userCode: string; email: string; accountStatus: string; roles: string[]; lastLoginAt: string | null }>> {
-  return api.get("/system/accounts", { params: params as Record<string, string> });
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<
+  Paginated<{
+    id: string;
+    fullName: string;
+    userCode: string;
+    email: string;
+    accountStatus: string;
+    roles: string[];
+    lastLoginAt: string | null;
+  }>
+> {
+  return api.get("/system/accounts", {
+    params: params as Record<string, string>,
+  });
 }
 
 export async function lockAccount(id: string, reason?: string): Promise<void> {
@@ -111,10 +137,16 @@ export async function unlockAccount(id: string): Promise<void> {
   return api.post(`/system/accounts/${id}/unlock`);
 }
 
-export async function resetPassword(id: string, newPassword: string): Promise<void> {
+export async function resetPassword(
+  id: string,
+  newPassword: string,
+): Promise<void> {
   return api.post(`/system/accounts/${id}/reset-password`, { newPassword });
 }
 
-export async function updateAccountRoles(id: string, roles: string[]): Promise<void> {
+export async function updateAccountRoles(
+  id: string,
+  roles: string[],
+): Promise<void> {
   return api.put(`/system/accounts/${id}/roles`, { roles });
 }

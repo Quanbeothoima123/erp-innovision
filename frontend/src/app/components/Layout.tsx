@@ -285,10 +285,6 @@ export function Layout() {
         children: [
           { label: "Cấu hình hệ thống", path: "/system/config" },
           { label: "Tài khoản & Phân quyền", path: "/system/accounts" },
-          { label: "Phòng ban", path: "/system/departments" },
-          { label: "Chức danh", path: "/system/job-titles" },
-          { label: "Ca làm việc", path: "/system/shifts" },
-          { label: "Ngày lễ", path: "/system/holidays" },
           { label: "Nhật ký hệ thống", path: "/system/audit-log" },
         ],
       });

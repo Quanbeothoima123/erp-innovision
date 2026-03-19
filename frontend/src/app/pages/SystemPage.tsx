@@ -24,13 +24,6 @@ import {
   ChevronDown,
   ArrowRight,
   Clock,
-  Calendar,
-  Sun,
-  Moon,
-  Sunrise,
-  Sunset,
-  Zap,
-  Filter,
   RefreshCcw,
   AlertTriangle,
   Activity,
@@ -45,21 +38,21 @@ import {
   Pencil,
   ScrollText,
   Loader2,
+  Sunrise,
+  Sun,
+  Moon,
+  Zap,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
-import type {
-  RoleCode,
-  WorkShift,
-  ShiftType,
-  Holiday,
-  SystemConfig,
-} from "../data/mockData";
-import {
-  workShifts as initialShifts,
-  holidays as initialHolidays,
-  systemConfigs as initialConfigs,
-  departments,
-} from "../data/mockData";
+type RoleCode =
+  | "ADMIN"
+  | "HR"
+  | "MANAGER"
+  | "EMPLOYEE"
+  | "SALES"
+  | "ACCOUNTANT"
+  | "DIRECTOR";
 import { useEmployeeData } from "../context/EmployeeContext";
 
 // ─── CONFIG constants (used by SystemConfigPage) ──────────────
@@ -456,7 +449,6 @@ export function AccountsPage() {
             </thead>
             <tbody>
               {filtered.map((u) => {
-                const dept = departments.find((d) => d.id === u.departmentId);
                 return (
                   <tr
                     key={u.id}
@@ -479,7 +471,7 @@ export function AccountsPage() {
                       {u.email}
                     </td>
                     <td className="px-4 py-3 text-[13px] hidden lg:table-cell">
-                      {dept?.name || "—"}
+                      {(u as any).department?.name || u.departmentId || "—"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
@@ -720,642 +712,6 @@ const shiftTypeIcons: Record<string, React.ReactNode> = {
   FLEXIBLE: <Zap size={14} className="text-green-500" />,
   SPLIT: <RefreshCcw size={14} className="text-blue-500" />,
 };
-
-export function SystemShiftsPage() {
-  const [shifts, setShifts] = useState<WorkShift[]>(initialShifts);
-  const [showForm, setShowForm] = useState(false);
-  const [editShift, setEditShift] = useState<WorkShift | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-
-  const emptyForm = () => ({
-    code: "",
-    name: "",
-    shiftType: "MORNING" as ShiftType,
-    startTime: "08:00",
-    endTime: "17:00",
-    breakMinutes: "60",
-    workMinutes: "480",
-  });
-  const [form, setForm] = useState(emptyForm());
-
-  const openCreate = () => {
-    setEditShift(null);
-    setForm(emptyForm());
-    setShowForm(true);
-  };
-  const openEdit = (s: WorkShift) => {
-    setEditShift(s);
-    setForm({
-      code: s.code,
-      name: s.name,
-      shiftType: s.shiftType,
-      startTime: s.startTime,
-      endTime: s.endTime,
-      breakMinutes: String(s.breakMinutes),
-      workMinutes: String(s.workMinutes),
-    });
-    setShowForm(true);
-  };
-
-  const handleSave = () => {
-    if (!form.code || !form.name) {
-      toast.error("Vui lòng nhập mã và tên ca");
-      return;
-    }
-    if (editShift) {
-      setShifts((prev) =>
-        prev.map((s) =>
-          s.id === editShift.id
-            ? {
-                ...s,
-                code: form.code,
-                name: form.name,
-                shiftType: form.shiftType,
-                startTime: form.startTime,
-                endTime: form.endTime,
-                breakMinutes: parseInt(form.breakMinutes) || 0,
-                workMinutes: parseInt(form.workMinutes) || 0,
-              }
-            : s,
-        ),
-      );
-      toast.success(`Đã cập nhật ca ${form.name}`);
-    } else {
-      const newShift: WorkShift = {
-        id: `ws-${Date.now()}`,
-        code: form.code,
-        name: form.name,
-        shiftType: form.shiftType,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        breakMinutes: parseInt(form.breakMinutes) || 0,
-        workMinutes: parseInt(form.workMinutes) || 0,
-      };
-      setShifts((prev) => [...prev, newShift]);
-      toast.success(`Đã tạo ca ${form.name}`);
-    }
-    setShowForm(false);
-    setEditShift(null);
-  };
-
-  const handleDelete = (id: string) => {
-    setShifts((prev) => prev.filter((s) => s.id !== id));
-    setDeleteConfirm(null);
-    toast.success("Đã xoá ca làm việc");
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-[20px]">Ca làm việc</h1>
-        <button
-          onClick={openCreate}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
-        >
-          <Plus size={16} /> Thêm ca
-        </button>
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {shifts.map((s) => (
-          <div
-            key={s.id}
-            className="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                {shiftTypeIcons[s.shiftType]}
-                <span className="text-[14px]">{s.name}</span>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-muted">
-                {s.code}
-              </span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">Loại ca:</span>
-                <span className="px-2 py-0.5 rounded text-[11px] bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                  {shiftTypeLabels[s.shiftType]}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">Giờ làm:</span>
-                <span>
-                  {s.startTime} — {s.endTime}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">Nghỉ:</span>
-                <span>{s.breakMinutes} phút</span>
-              </div>
-              <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">Thời gian làm:</span>
-                <span>
-                  {s.workMinutes} phút (
-                  {Math.round((s.workMinutes / 60) * 10) / 10}h)
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-end gap-1 mt-3 pt-3 border-t border-border">
-              <button
-                onClick={() => openEdit(s)}
-                className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground"
-              >
-                <Edit2 size={14} />
-              </button>
-              <button
-                onClick={() => setDeleteConfirm(s.id)}
-                className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Create/Edit Form */}
-      {showForm && (
-        <Overlay onClose={() => setShowForm(false)}>
-          <DlgHeader
-            title={editShift ? "Cập nhật ca làm việc" : "Thêm ca làm việc mới"}
-            onClose={() => setShowForm(false)}
-          />
-          <div className="p-4 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[12px] text-muted-foreground mb-1">
-                  Mã ca *
-                </label>
-                <input
-                  type="text"
-                  value={form.code}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      code: e.target.value.toUpperCase(),
-                    }))
-                  }
-                  placeholder="CA_SANG"
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] text-muted-foreground mb-1">
-                  Tên ca *
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                  placeholder="Ca sáng"
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
-                Loại ca
-              </label>
-              <select
-                value={form.shiftType}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    shiftType: e.target.value as ShiftType,
-                  }))
-                }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-              >
-                {Object.entries(shiftTypeLabels).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[12px] text-muted-foreground mb-1">
-                  Giờ bắt đầu
-                </label>
-                <input
-                  type="time"
-                  value={form.startTime}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, startTime: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] text-muted-foreground mb-1">
-                  Giờ kết thúc
-                </label>
-                <input
-                  type="time"
-                  value={form.endTime}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, endTime: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[12px] text-muted-foreground mb-1">
-                  Phút nghỉ
-                </label>
-                <input
-                  type="number"
-                  value={form.breakMinutes}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, breakMinutes: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-                />
-              </div>
-              <div>
-                <label className="block text-[12px] text-muted-foreground mb-1">
-                  Phút làm việc
-                </label>
-                <input
-                  type="number"
-                  value={form.workMinutes}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, workMinutes: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 p-4 border-t border-border">
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
-            >
-              Huỷ
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700"
-            >
-              {editShift ? "Cập nhật" : "Tạo ca"}
-            </button>
-          </div>
-        </Overlay>
-      )}
-
-      {/* Delete Confirm */}
-      {deleteConfirm && (
-        <Overlay onClose={() => setDeleteConfirm(null)} narrow>
-          <div className="p-6 text-center space-y-4">
-            <div className="w-14 h-14 rounded-full mx-auto flex items-center justify-center bg-red-100 dark:bg-red-900/20">
-              <Trash2 size={28} className="text-red-500" />
-            </div>
-            <h3 className="text-[16px]">Xoá ca làm việc?</h3>
-            <p className="text-[13px] text-muted-foreground">
-              Hành động này không thể hoàn tác.
-            </p>
-            <div className="flex justify-center gap-2">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
-              >
-                Huỷ
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-[13px] hover:bg-red-700"
-              >
-                Xoá
-              </button>
-            </div>
-          </div>
-        </Overlay>
-      )}
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SYSTEM HOLIDAYS PAGE — Full CRUD with year management
-// ═══════════════════════════════════════════════════════════════
-export function SystemHolidaysPage() {
-  const [allHolidays, setAllHolidays] = useState<Holiday[]>(initialHolidays);
-  const [selectedYear, setSelectedYear] = useState(2025);
-  const [showForm, setShowForm] = useState(false);
-  const [editHoliday, setEditHoliday] = useState<Holiday | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-
-  const emptyForm = () => ({ name: "", date: "", isRecurring: false });
-  const [form, setForm] = useState(emptyForm());
-
-  const years = [...new Set(allHolidays.map((h) => h.year))].sort();
-  const filtered = allHolidays
-    .filter((h) => h.year === selectedYear)
-    .sort((a, b) => a.date.localeCompare(b.date));
-  const totalDays = filtered.length;
-
-  const openCreate = () => {
-    setEditHoliday(null);
-    setForm(emptyForm());
-    setShowForm(true);
-  };
-  const openEdit = (h: Holiday) => {
-    setEditHoliday(h);
-    setForm({ name: h.name, date: h.date, isRecurring: h.isRecurring });
-    setShowForm(true);
-  };
-
-  const handleSave = () => {
-    if (!form.name || !form.date) {
-      toast.error("Vui lòng nhập tên và ngày lễ");
-      return;
-    }
-    const year = parseInt(form.date.split("-")[0]);
-    if (editHoliday) {
-      setAllHolidays((prev) =>
-        prev.map((h) =>
-          h.id === editHoliday.id
-            ? {
-                ...h,
-                name: form.name,
-                date: form.date,
-                year,
-                isRecurring: form.isRecurring,
-              }
-            : h,
-        ),
-      );
-      toast.success(`Đã cập nhật ${form.name}`);
-    } else {
-      const newH: Holiday = {
-        id: `h-${Date.now()}`,
-        name: form.name,
-        date: form.date,
-        year,
-        isRecurring: form.isRecurring,
-      };
-      setAllHolidays((prev) => [...prev, newH]);
-      toast.success(`Đã thêm ngày lễ ${form.name}`);
-    }
-    setShowForm(false);
-    setEditHoliday(null);
-  };
-
-  const handleDelete = (id: string) => {
-    setAllHolidays((prev) => prev.filter((h) => h.id !== id));
-    setDeleteConfirm(null);
-    toast.success("Đã xoá ngày lễ");
-  };
-
-  const getDayOfWeek = (dateStr: string) => {
-    const days = [
-      "Chủ nhật",
-      "Thứ hai",
-      "Thứ ba",
-      "Thứ tư",
-      "Thứ năm",
-      "Thứ sáu",
-      "Thứ bảy",
-    ];
-    return days[new Date(dateStr).getDay()];
-  };
-
-  const getMonthGroup = (dateStr: string) => {
-    return parseInt(dateStr.split("-")[1]);
-  };
-
-  // Group by month
-  const grouped = useMemo(() => {
-    const map = new Map<number, Holiday[]>();
-    filtered.forEach((h) => {
-      const m = getMonthGroup(h.date);
-      if (!map.has(m)) map.set(m, []);
-      map.get(m)!.push(h);
-    });
-    return map;
-  }, [filtered]);
-
-  const monthNames = [
-    "",
-    "Tháng 1",
-    "Tháng 2",
-    "Tháng 3",
-    "Tháng 4",
-    "Tháng 5",
-    "Tháng 6",
-    "Tháng 7",
-    "Tháng 8",
-    "Tháng 9",
-    "Tháng 10",
-    "Tháng 11",
-    "Tháng 12",
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-[20px]">Ngày lễ</h1>
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                Năm {y}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={openCreate}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
-          >
-            <Plus size={16} /> Thêm ngày lễ
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-          <Calendar size={24} className="text-red-600" />
-        </div>
-        <div>
-          <div className="text-[11px] text-muted-foreground">
-            Tổng ngày lễ năm {selectedYear}
-          </div>
-          <div className="text-[24px] text-red-600">{totalDays} ngày</div>
-        </div>
-      </div>
-
-      {/* Grouped by month */}
-      <div className="space-y-4">
-        {Array.from(grouped.entries()).map(([month, hols]) => (
-          <div
-            key={month}
-            className="bg-card border border-border rounded-xl overflow-hidden"
-          >
-            <div className="px-4 py-3 bg-muted/50 border-b border-border flex items-center justify-between">
-              <span className="text-[14px]">{monthNames[month]}</span>
-              <span className="text-[12px] text-muted-foreground">
-                {hols.length} ngày
-              </span>
-            </div>
-            <div className="divide-y divide-border">
-              {hols.map((h) => (
-                <div
-                  key={h.id}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/10 flex flex-col items-center justify-center">
-                      <span className="text-[14px] text-red-600">
-                        {parseInt(h.date.split("-")[2])}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="text-[13px]">{h.name}</div>
-                      <div className="text-[11px] text-muted-foreground">
-                        {getDayOfWeek(h.date)} •{" "}
-                        {new Date(h.date).toLocaleDateString("vi-VN")}
-                        {h.isRecurring && (
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                            Hàng năm
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => openEdit(h)}
-                      className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground"
-                    >
-                      <Edit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(h.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-red-500"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground text-[13px]">
-            Chưa có ngày lễ nào cho năm {selectedYear}
-          </div>
-        )}
-      </div>
-
-      {/* Create/Edit Form */}
-      {showForm && (
-        <Overlay onClose={() => setShowForm(false)} narrow>
-          <DlgHeader
-            title={editHoliday ? "Cập nhật ngày lễ" : "Thêm ngày lễ mới"}
-            onClose={() => setShowForm(false)}
-          />
-          <div className="p-4 space-y-3">
-            <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
-                Tên ngày lễ *
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                placeholder="Tết Nguyên Đán"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-              />
-            </div>
-            <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
-                Ngày *
-              </label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, date: e.target.value }))
-                }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-[12px] text-muted-foreground">
-                Lặp lại hàng năm:
-              </label>
-              <button
-                onClick={() =>
-                  setForm((f) => ({ ...f, isRecurring: !f.isRecurring }))
-                }
-                className={`px-3 py-1 rounded-lg text-[12px] border transition-colors ${form.isRecurring ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700" : "border-border text-muted-foreground hover:bg-accent"}`}
-              >
-                {form.isRecurring ? "Có" : "Không"}
-              </button>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 p-4 border-t border-border">
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
-            >
-              Huỷ
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700"
-            >
-              {editHoliday ? "Cập nhật" : "Thêm"}
-            </button>
-          </div>
-        </Overlay>
-      )}
-
-      {/* Delete Confirm */}
-      {deleteConfirm && (
-        <Overlay onClose={() => setDeleteConfirm(null)} narrow>
-          <div className="p-6 text-center space-y-4">
-            <div className="w-14 h-14 rounded-full mx-auto flex items-center justify-center bg-red-100 dark:bg-red-900/20">
-              <Trash2 size={28} className="text-red-500" />
-            </div>
-            <h3 className="text-[16px]">Xoá ngày lễ?</h3>
-            <p className="text-[13px] text-muted-foreground">
-              Hành động này không thể hoàn tác.
-            </p>
-            <div className="flex justify-center gap-2">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
-              >
-                Huỷ
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-[13px] hover:bg-red-700"
-              >
-                Xoá
-              </button>
-            </div>
-          </div>
-        </Overlay>
-      )}
-    </div>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════
 // AUDIT LOG PAGE — Enhanced with diff view & timeline
@@ -1709,46 +1065,55 @@ export function AuditLogPage() {
 }
 
 export function SystemConfigPage() {
-  const { addAuditLog } = useEmployeeData();
-  const { currentUser } = useAuth();
-  const [configs, setConfigs] = useState<SystemConfig[]>(initialConfigs);
+  const [configs, setConfigs] = useState<Record<string, string>>({});
+  const [descriptions, setDescriptions] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const getVal = (key: string) =>
-    configs.find((c) => c.key === key)?.value || "";
+  useEffect(() => {
+    systemService
+      .getAllConfigs()
+      .then(({ all }) => {
+        const vals: Record<string, string> = {};
+        const descs: Record<string, string> = {};
+        all.forEach((c) => {
+          vals[c.key] = c.value;
+          descs[c.key] = c.description ?? "";
+        });
+        setConfigs(vals);
+        setDescriptions(descs);
+      })
+      .catch(() => toast.error("Không tải được cấu hình hệ thống"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const getVal = (key: string) => configs[key] ?? "";
   const getDesc = (key: string) =>
-    configs.find((c) => c.key === key)?.description || "";
+    descriptions[key] ?? CONFIG_LABELS[key] ?? "";
 
   const startEdit = (key: string) => {
     setEditingKey(key);
     setEditValue(getVal(key));
   };
-
   const cancelEdit = () => {
     setEditingKey(null);
     setEditValue("");
   };
 
-  const saveEdit = (key: string) => {
-    const oldValue = getVal(key);
-    setConfigs((prev) =>
-      prev.map((c) => (c.key === key ? { ...c, value: editValue } : c)),
-    );
-    addAuditLog({
-      id: `al-${Date.now()}`,
-      actorUserId: currentUser!.id,
-      entityType: "SYSTEM_CONFIG",
-      actionType: "UPDATE",
-      description: `Cập nhật cấu hình: ${CONFIG_LABELS[key] || key}`,
-      ipAddress: "192.168.1.100",
-      createdAt: new Date().toISOString(),
-      oldValues: { key, value: oldValue },
-      newValues: { key, value: editValue },
-    });
-    setEditingKey(null);
-    setEditValue("");
-    toast.success("Đã lưu cấu hình");
+  const saveEdit = async (key: string) => {
+    setSaving(true);
+    try {
+      await systemService.upsertConfig(key, { value: editValue });
+      setConfigs((prev) => ({ ...prev, [key]: editValue }));
+      toast.success("Đã lưu cấu hình");
+      setEditingKey(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Lỗi lưu cấu hình");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderInput = (key: string) => {
@@ -1805,6 +1170,15 @@ export function SystemConfigPage() {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
+        <Loader2 size={20} className="animate-spin" />
+        <span className="text-[13px]">Đang tải cấu hình...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -1841,10 +1215,15 @@ export function SystemConfigPage() {
                         {renderInput(key)}
                         <button
                           onClick={() => saveEdit(key)}
-                          className="p-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                          disabled={saving}
+                          className="p-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
                           title="Lưu"
                         >
-                          <Check size={14} />
+                          {saving ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Check size={14} />
+                          )}
                         </button>
                         <button
                           onClick={cancelEdit}
@@ -1857,7 +1236,11 @@ export function SystemConfigPage() {
                     ) : (
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-[13px] bg-muted/50 px-3 py-1 rounded-lg">
-                          {getVal(key)}
+                          {getVal(key) || (
+                            <span className="text-muted-foreground italic">
+                              Chưa cấu hình
+                            </span>
+                          )}
                         </span>
                         <button
                           onClick={() => startEdit(key)}
