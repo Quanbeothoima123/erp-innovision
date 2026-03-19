@@ -558,7 +558,14 @@ function EmployeePayslipView() {
               <div
                 key={r.id}
                 className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => setSelectedRecord(r)}
+                onClick={async () => {
+                  try {
+                    const full = await payrollService.getRecordById(r.id);
+                    setSelectedRecord(full);
+                  } catch {
+                    setSelectedRecord({ ...r, items: r.items ?? [] });
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -960,7 +967,16 @@ function PeriodDetailModal({
                     </td>
                     <td className="px-2 py-2 text-center">
                       <button
-                        onClick={() => setSelectedRecord(r)}
+                        onClick={async () => {
+                          try {
+                            const full = await payrollService.getRecordById(
+                              r.id,
+                            );
+                            setSelectedRecord(full);
+                          } catch {
+                            setSelectedRecord({ ...r, items: r.items ?? [] });
+                          }
+                        }}
                         className="p-1 rounded hover:bg-accent"
                       >
                         <Eye size={14} className="text-muted-foreground" />
@@ -1130,13 +1146,10 @@ function PayslipDialog({
 }) {
   const u = record.user;
   const p = record.payrollPeriod;
-  const earnings = record.items.filter((i) => i.itemType === "EARNING");
-  const deductions = record.items.filter((i) => i.itemType === "DEDUCTION");
-  const insTotal =
-    record.socialInsuranceEmployee +
-    record.healthInsuranceEmployee +
-    record.unemploymentInsuranceEmployee;
-
+  // items chỉ có khi fetch getRecordById — listRecords trả về summary không có items
+  const items = record.items ?? [];
+  const earnings = items.filter((i) => i.itemType === "EARNING");
+  const deductions = items.filter((i) => i.itemType === "DEDUCTION");
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -1198,45 +1211,23 @@ function PayslipDialog({
             </div>
           </div>
 
-          {/* Deductions */}
+          {/* Deductions — đọc từ items (engine mới lưu BHXH/BHYT/BHTN vào items) */}
           <div className="space-y-1 mb-3">
             <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2">
               Khấu trừ
             </div>
-            <div className="flex justify-between text-[13px]">
-              <span>BHXH (8%)</span>
-              <span className="text-red-500">
-                -{fmtVND(record.socialInsuranceEmployee)}
-              </span>
-            </div>
-            <div className="flex justify-between text-[13px]">
-              <span>BHYT (1.5%)</span>
-              <span className="text-red-500">
-                -{fmtVND(record.healthInsuranceEmployee)}
-              </span>
-            </div>
-            <div className="flex justify-between text-[13px]">
-              <span>BHTN (1%)</span>
-              <span className="text-red-500">
-                -{fmtVND(record.unemploymentInsuranceEmployee)}
-              </span>
-            </div>
-            {record.personalIncomeTax > 0 && (
-              <div className="flex justify-between text-[13px]">
-                <span>Thuế TNCN</span>
-                <span className="text-red-500">
-                  -{fmtVND(record.personalIncomeTax)}
-                </span>
+            {deductions.length === 0 ? (
+              <div className="text-[12px] text-muted-foreground italic">
+                Không có khấu trừ
               </div>
-            )}
-            {deductions
-              .filter((d) => d.sourceType === "ADJUSTMENT")
-              .map((item, i) => (
+            ) : (
+              deductions.map((item, i) => (
                 <div key={i} className="flex justify-between text-[13px]">
-                  <span>{item.itemName}</span>
+                  <span className="text-muted-foreground">{item.itemName}</span>
                   <span className="text-red-500">-{fmtVND(item.amount)}</span>
                 </div>
-              ))}
+              ))
+            )}
             <div className="flex justify-between text-[13px] pt-1 border-t border-border font-medium text-red-500">
               <span>Tổng khấu trừ</span>
               <span>-{fmtVND(record.totalDeductions)}</span>

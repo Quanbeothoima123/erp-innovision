@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const repo = require('./payroll.repository');
-const { AppError } = require('../../common/errors/AppError');
-const { prisma } = require('../../config/db');
+const repo = require("./payroll.repository");
+const { AppError } = require("../../common/errors/AppError");
+const { prisma } = require("../../config/db");
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  PAYROLL PERIOD                                          ║
@@ -15,17 +15,19 @@ async function listPeriods(filters) {
 
 async function getPeriodById(id) {
   const p = await repo.findPeriodById(id);
-  if (!p) throw AppError.notFound('Không tìm thấy kỳ lương.');
+  if (!p) throw AppError.notFound("Không tìm thấy kỳ lương.");
   return p;
 }
 
 async function createPeriod(dto) {
   const existing = await repo.findPeriodByMonthYear(dto.month, dto.year);
   if (existing) {
-    throw AppError.conflict(`Kỳ lương tháng ${dto.month}/${dto.year} đã tồn tại.`);
+    throw AppError.conflict(
+      `Kỳ lương tháng ${dto.month}/${dto.year} đã tồn tại.`,
+    );
   }
 
-  const periodCode = `${dto.year}-${String(dto.month).padStart(2, '0')}`;
+  const periodCode = `${dto.year}-${String(dto.month).padStart(2, "0")}`;
 
   return repo.createPeriod({
     periodCode,
@@ -36,14 +38,16 @@ async function createPeriod(dto) {
     payDate: dto.payDate ? _toDateOnly(dto.payDate) : null,
     workingDaysInPeriod: dto.workingDaysInPeriod ?? null,
     notes: dto.notes ?? null,
-    status: 'DRAFT',
+    status: "DRAFT",
   });
 }
 
 async function updatePeriod(id, dto) {
   const period = await _assertPeriodExists(id);
-  if (['APPROVED', 'PAID'].includes(period.status)) {
-    throw AppError.badRequest('Không thể chỉnh sửa kỳ lương đã duyệt hoặc đã thanh toán.');
+  if (["APPROVED", "PAID"].includes(period.status)) {
+    throw AppError.badRequest(
+      "Không thể chỉnh sửa kỳ lương đã duyệt hoặc đã thanh toán.",
+    );
   }
   return repo.updatePeriod(id, _clean(dto));
 }
@@ -56,12 +60,14 @@ async function updatePeriod(id, dto) {
 async function calculatePeriod(id, requestingUser) {
   const period = await _assertPeriodExists(id);
 
-  if (['APPROVED', 'PAID', 'CANCELLED'].includes(period.status)) {
-    throw AppError.badRequest(`Không thể tính lại kỳ ở trạng thái '${period.status}'.`);
+  if (["APPROVED", "PAID", "CANCELLED"].includes(period.status)) {
+    throw AppError.badRequest(
+      `Không thể tính lại kỳ ở trạng thái '${period.status}'.`,
+    );
   }
 
   // Chuyển sang CALCULATING
-  await repo.updatePeriod(id, { status: 'CALCULATING' });
+  await repo.updatePeriod(id, { status: "CALCULATING" });
 
   const users = await repo.findActiveUsersForPayroll();
   const [insurancePolicies, taxPolicy] = await Promise.all([
@@ -74,10 +80,19 @@ async function calculatePeriod(id, requestingUser) {
 
   for (const user of users) {
     try {
-      await _calculateUserPayroll(user.id, period, insurancePolicies, taxPolicy);
+      await _calculateUserPayroll(
+        user.id,
+        period,
+        insurancePolicies,
+        taxPolicy,
+      );
       calculatedCount++;
     } catch (err) {
-      errors.push({ userId: user.id, fullName: user.fullName, error: err.message });
+      errors.push({
+        userId: user.id,
+        fullName: user.fullName,
+        error: err.message,
+      });
     }
   }
 
@@ -95,28 +110,36 @@ async function calculatePeriod(id, requestingUser) {
 async function approvePeriod(id, requestingUser, notes) {
   const period = await _assertPeriodExists(id);
 
-  if (period.status !== 'CALCULATING') {
-    throw AppError.badRequest('Chỉ có thể duyệt kỳ lương ở trạng thái CALCULATING.');
+  if (period.status !== "CALCULATING") {
+    throw AppError.badRequest(
+      "Chỉ có thể duyệt kỳ lương ở trạng thái CALCULATING.",
+    );
   }
 
-  // Kiểm tra còn record DRAFT không
+  // FIX: Kiểm tra có ít nhất 1 DRAFT để duyệt (logic cũ bị ngược)
   const draftCount = await prisma.payrollRecord.count({
-    where: { payrollPeriodId: id, status: 'DRAFT' },
+    where: { payrollPeriodId: id, status: "DRAFT" },
   });
-  if (draftCount > 0) {
-    throw AppError.badRequest(
-      `Còn ${draftCount} phiếu lương chưa được tính. Vui lòng chạy tính lương lại.`,
-    );
+  if (draftCount === 0) {
+    const approvedCount = await prisma.payrollRecord.count({
+      where: { payrollPeriodId: id, status: "APPROVED" },
+    });
+    if (approvedCount === 0) {
+      throw AppError.badRequest(
+        "Chưa có phiếu lương nào. Vui lòng chạy tính lương trước.",
+      );
+    }
+    // Đã approve rồi thì chỉ cập nhật period status
   }
 
   // Approve toàn bộ records
   await prisma.payrollRecord.updateMany({
-    where: { payrollPeriodId: id, status: 'DRAFT' },
-    data: { status: 'APPROVED', approvedAt: new Date() },
+    where: { payrollPeriodId: id, status: "DRAFT" },
+    data: { status: "APPROVED", approvedAt: new Date() },
   });
 
   return repo.updatePeriod(id, {
-    status: 'APPROVED',
+    status: "APPROVED",
     approvedAt: new Date(),
     lockedAt: new Date(),
     approvedByUserId: requestingUser.id,
@@ -129,17 +152,19 @@ async function approvePeriod(id, requestingUser, notes) {
  */
 async function markPeriodPaid(id, dto) {
   const period = await _assertPeriodExists(id);
-  if (period.status !== 'APPROVED') {
-    throw AppError.badRequest('Chỉ có thể đánh dấu đã trả cho kỳ lương đã duyệt.');
+  if (period.status !== "APPROVED") {
+    throw AppError.badRequest(
+      "Chỉ có thể đánh dấu đã trả cho kỳ lương đã duyệt.",
+    );
   }
 
   await prisma.payrollRecord.updateMany({
-    where: { payrollPeriodId: id, status: 'APPROVED' },
-    data: { status: 'PAID', paidAt: dto.paidAt ?? new Date() },
+    where: { payrollPeriodId: id, status: "APPROVED" },
+    data: { status: "PAID", paidAt: dto.paidAt ?? new Date() },
   });
 
   return repo.updatePeriod(id, {
-    status: 'PAID',
+    status: "PAID",
     paidAt: dto.paidAt ?? new Date(),
     ...(dto.notes && { notes: dto.notes }),
   });
@@ -147,10 +172,12 @@ async function markPeriodPaid(id, dto) {
 
 async function cancelPeriod(id) {
   const period = await _assertPeriodExists(id);
-  if (['APPROVED', 'PAID'].includes(period.status)) {
-    throw AppError.badRequest('Không thể hủy kỳ lương đã duyệt hoặc đã thanh toán.');
+  if (["APPROVED", "PAID"].includes(period.status)) {
+    throw AppError.badRequest(
+      "Không thể hủy kỳ lương đã duyệt hoặc đã thanh toán.",
+    );
   }
-  return repo.updatePeriod(id, { status: 'CANCELLED' });
+  return repo.updatePeriod(id, { status: "CANCELLED" });
 }
 
 /**
@@ -159,9 +186,9 @@ async function cancelPeriod(id) {
  */
 async function deletePeriod(id) {
   const period = await _assertPeriodExists(id);
-  if (period.status !== 'CANCELLED') {
+  if (period.status !== "CANCELLED") {
     throw AppError.badRequest(
-      'Chỉ có thể xóa kỳ lương đã hủy (CANCELLED). Vui lòng hủy kỳ lương trước.',
+      "Chỉ có thể xóa kỳ lương đã hủy (CANCELLED). Vui lòng hủy kỳ lương trước.",
     );
   }
   // Xóa records và adjustments liên quan trước
@@ -181,7 +208,7 @@ async function listCompensations(filters) {
 
 async function getCompensationById(id) {
   const c = await repo.findCompensationById(id);
-  if (!c) throw AppError.notFound('Không tìm thấy cấu hình lương.');
+  if (!c) throw AppError.notFound("Không tìm thấy cấu hình lương.");
   return c;
 }
 
@@ -224,8 +251,8 @@ async function createCompensation(dto) {
         probationSalary: dto.probationSalary ?? null,
         standardWorkingDays: dto.standardWorkingDays ?? 26,
         standardWorkingHours: dto.standardWorkingHours ?? 8,
-        currency: dto.currency ?? 'VND',
-        payFrequency: dto.payFrequency ?? 'MONTHLY',
+        currency: dto.currency ?? "VND",
+        payFrequency: dto.payFrequency ?? "MONTHLY",
         payDayOfMonth: dto.payDayOfMonth ?? null,
         probationEndDate: dto.probationEndDate ?? null,
         changeReason: dto.changeReason ?? null,
@@ -237,14 +264,16 @@ async function createCompensation(dto) {
         isActive: true,
         notes: dto.notes ?? null,
       },
-      include: { user: { select: { id: true, fullName: true, userCode: true } } },
+      include: {
+        user: { select: { id: true, fullName: true, userCode: true } },
+      },
     });
   });
 }
 
 async function updateCompensation(id, dto) {
   const comp = await repo.findCompensationById(id);
-  if (!comp) throw AppError.notFound('Không tìm thấy cấu hình lương.');
+  if (!comp) throw AppError.notFound("Không tìm thấy cấu hình lương.");
   return repo.updateCompensation(id, _clean(dto));
 }
 
@@ -263,19 +292,20 @@ async function getSalaryComponentOptions() {
 
 async function getSalaryComponentById(id) {
   const sc = await repo.findSalaryComponentById(id);
-  if (!sc) throw AppError.notFound('Không tìm thấy thành phần lương.');
+  if (!sc) throw AppError.notFound("Không tìm thấy thành phần lương.");
   return sc;
 }
 
 async function createSalaryComponent(dto) {
   const existing = await repo.findSalaryComponentByCode(dto.code);
-  if (existing) throw AppError.conflict(`Mã thành phần '${dto.code}' đã tồn tại.`);
+  if (existing)
+    throw AppError.conflict(`Mã thành phần '${dto.code}' đã tồn tại.`);
   return repo.createSalaryComponent(dto);
 }
 
 async function updateSalaryComponent(id, dto) {
   const sc = await repo.findSalaryComponentById(id);
-  if (!sc) throw AppError.notFound('Không tìm thấy thành phần lương.');
+  if (!sc) throw AppError.notFound("Không tìm thấy thành phần lương.");
   return repo.updateSalaryComponent(id, _clean(dto));
 }
 
@@ -287,8 +317,9 @@ async function getUserSalaryComponents(userId) {
 
 async function assignSalaryComponent(dto) {
   const sc = await repo.findSalaryComponentById(dto.salaryComponentId);
-  if (!sc) throw AppError.badRequest('Thành phần lương không tồn tại.');
-  if (!sc.isActive) throw AppError.badRequest('Thành phần lương đã bị vô hiệu hóa.');
+  if (!sc) throw AppError.badRequest("Thành phần lương không tồn tại.");
+  if (!sc.isActive)
+    throw AppError.badRequest("Thành phần lương đã bị vô hiệu hóa.");
 
   return repo.assignSalaryComponent({
     userId: dto.userId,
@@ -316,7 +347,7 @@ async function listAdjustments(filters) {
 
 async function getAdjustmentById(id) {
   const adj = await repo.findAdjustmentById(id);
-  if (!adj) throw AppError.notFound('Không tìm thấy điều chỉnh lương.');
+  if (!adj) throw AppError.notFound("Không tìm thấy điều chỉnh lương.");
   return adj;
 }
 
@@ -327,32 +358,32 @@ async function createAdjustment(dto, createdByUserId) {
     adjustmentType: dto.adjustmentType,
     amount: dto.amount,
     reason: dto.reason ?? null,
-    status: 'PENDING',
-    isAdvance: dto.adjustmentType === 'ADVANCE',
+    status: "PENDING",
+    isAdvance: dto.adjustmentType === "ADVANCE",
     createdByUserId,
   });
 }
 
 async function approveAdjustment(id, requestingUser) {
   const adj = await repo.findAdjustmentById(id);
-  if (!adj) throw AppError.notFound('Không tìm thấy điều chỉnh lương.');
-  if (adj.status !== 'PENDING') {
+  if (!adj) throw AppError.notFound("Không tìm thấy điều chỉnh lương.");
+  if (adj.status !== "PENDING") {
     throw AppError.badRequest(`Điều chỉnh đã ở trạng thái '${adj.status}'.`);
   }
   return repo.updateAdjustment(id, {
-    status: 'APPROVED',
+    status: "APPROVED",
     approvedByUserId: requestingUser.id,
   });
 }
 
 async function rejectAdjustment(id, requestingUser, reason) {
   const adj = await repo.findAdjustmentById(id);
-  if (!adj) throw AppError.notFound('Không tìm thấy điều chỉnh lương.');
-  if (adj.status !== 'PENDING') {
+  if (!adj) throw AppError.notFound("Không tìm thấy điều chỉnh lương.");
+  if (adj.status !== "PENDING") {
     throw AppError.badRequest(`Điều chỉnh đã ở trạng thái '${adj.status}'.`);
   }
   return repo.updateAdjustment(id, {
-    status: 'REJECTED',
+    status: "REJECTED",
     approvedByUserId: requestingUser.id,
     reason: reason ?? adj.reason,
   });
@@ -373,32 +404,35 @@ async function listRecords(filters, requestingUser) {
 
 async function getRecordById(id, requestingUser) {
   const record = await repo.findRecordById(id);
-  if (!record) throw AppError.notFound('Không tìm thấy phiếu lương.');
+  if (!record) throw AppError.notFound("Không tìm thấy phiếu lương.");
   if (!_isHrOrAdmin(requestingUser) && record.userId !== requestingUser.id) {
-    throw AppError.forbidden('Bạn không có quyền xem phiếu lương này.');
+    throw AppError.forbidden("Bạn không có quyền xem phiếu lương này.");
   }
   return record;
 }
 
 async function getMyPayslip(userId, payrollPeriodId) {
   const record = await repo.findRecordByPeriodAndUser(payrollPeriodId, userId);
-  if (!record) throw AppError.notFound('Không tìm thấy phiếu lương trong kỳ này.');
+  if (!record)
+    throw AppError.notFound("Không tìm thấy phiếu lương trong kỳ này.");
   return record;
 }
 
 async function updateRecordNotes(id, notes) {
   const record = await repo.findRecordById(id);
-  if (!record) throw AppError.notFound('Không tìm thấy phiếu lương.');
-  if (record.status === 'PAID') throw AppError.badRequest('Không thể chỉnh sửa phiếu đã thanh toán.');
+  if (!record) throw AppError.notFound("Không tìm thấy phiếu lương.");
+  if (record.status === "PAID")
+    throw AppError.badRequest("Không thể chỉnh sửa phiếu đã thanh toán.");
   return repo.updatePayrollRecord(id, { notes });
 }
 
 async function markRecordPaid(id, dto) {
   const record = await repo.findRecordById(id);
-  if (!record) throw AppError.notFound('Không tìm thấy phiếu lương.');
-  if (record.status === 'PAID') throw AppError.badRequest('Phiếu đã được đánh dấu thanh toán.');
+  if (!record) throw AppError.notFound("Không tìm thấy phiếu lương.");
+  if (record.status === "PAID")
+    throw AppError.badRequest("Phiếu đã được đánh dấu thanh toán.");
   return repo.updatePayrollRecord(id, {
-    status: 'PAID',
+    status: "PAID",
     paidAt: dto.paidAt ?? new Date(),
     paymentRef: dto.paymentRef ?? null,
   });
@@ -412,7 +446,12 @@ async function markRecordPaid(id, dto) {
  * Tính lương cho 1 nhân viên trong 1 kỳ.
  * Được gọi trong vòng lặp của calculatePeriod().
  */
-async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolicy) {
+async function _calculateUserPayroll(
+  userId,
+  period,
+  insurancePolicies,
+  taxPolicy,
+) {
   // 1. Lấy cấu hình lương
   const compensation = await repo.findActiveCompensation(userId);
   if (!compensation) return; // Skip nếu chưa cấu hình lương
@@ -424,19 +463,37 @@ async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolic
   const hourlyRate = dailyRate / workingHoursStandard;
 
   // 2. Tổng hợp chấm công
+  // FIX: normalize dates để tránh timezone mismatch với @db.Date
+  const _normStart =
+    period.startDate instanceof Date
+      ? period.startDate.toISOString().split("T")[0]
+      : String(period.startDate).split("T")[0];
+  const _normEnd =
+    period.endDate instanceof Date
+      ? period.endDate.toISOString().split("T")[0]
+      : String(period.endDate).split("T")[0];
+  const _startNorm = new Date(_normStart + "T00:00:00.000Z");
+  const _endNorm = new Date(_normEnd + "T23:59:59.999Z");
+
   const attendanceRecords = await repo.getAttendanceSummary(
-    userId, period.startDate, period.endDate,
+    userId,
+    _startNorm,
+    _endNorm,
   );
 
-  const workingDays = attendanceRecords.filter(
-    (r) => ['PRESENT', 'MANUAL_ADJUSTED', 'HOLIDAY', 'LEAVE'].includes(r.status),
+  const workingDays = attendanceRecords.filter((r) =>
+    ["PRESENT", "MANUAL_ADJUSTED", "HOLIDAY", "LEAVE"].includes(r.status),
   ).length;
-  const absentDays = attendanceRecords.filter((r) => r.status === 'ABSENT').length;
+  const absentDays = attendanceRecords.filter(
+    (r) => r.status === "ABSENT",
+  ).length;
   const lateDays = attendanceRecords.filter((r) => r.lateMinutes > 30).length; // > 30 phút mới tính ngày trễ
 
   // 3. Nghỉ phép
   const leaveRecords = await repo.getApprovedLeaveSummary(
-    userId, period.startDate, period.endDate,
+    userId,
+    _startNorm,
+    _endNorm,
   );
   let paidLeaveDays = 0;
   let unpaidLeaveDays = 0;
@@ -452,7 +509,10 @@ async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolic
   const actualBaseSalary = baseSalary * (effectiveDays / workingDaysStandard);
 
   // 5. Phụ cấp & khấu trừ cố định từ UserSalaryComponent
-  const userComponents = await repo.findUserSalaryComponentsAtDate(userId, period.endDate);
+  const userComponents = await repo.findUserSalaryComponentsAtDate(
+    userId,
+    period.endDate,
+  );
   const allowanceItems = [];
   const deductionItems = [];
   let totalAllowances = 0;
@@ -460,31 +520,41 @@ async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolic
   for (const uc of userComponents) {
     const sc = uc.salaryComponent;
     const amount = Number(uc.amount);
-    if (sc.componentType === 'EARNING') {
+    if (sc.componentType === "EARNING") {
       totalAllowances += amount;
       allowanceItems.push({
         salaryComponentId: sc.id,
         itemName: sc.name,
-        itemType: 'EARNING',
+        itemType: "EARNING",
         amount,
-        sourceType: 'ALLOWANCE',
-        quantity: null, unitRate: null, notes: null,
+        sourceType: "ALLOWANCE",
+        quantity: null,
+        unitRate: null,
+        notes: null,
       });
     } else {
       deductionItems.push({
         salaryComponentId: sc.id,
         itemName: sc.name,
-        itemType: 'DEDUCTION',
+        itemType: "DEDUCTION",
         amount,
-        sourceType: 'MANUAL',
-        quantity: null, unitRate: null, notes: null,
+        sourceType: "MANUAL",
+        quantity: null,
+        unitRate: null,
+        notes: null,
       });
     }
   }
 
   // 6. Tính OT
-  const otRecords = await repo.getApprovedOTSummary(userId, period.startDate, period.endDate);
-  let otWeekdayMins = 0, otWeekendMins = 0, otHolidayMins = 0;
+  const otRecords = await repo.getApprovedOTSummary(
+    userId,
+    _startNorm,
+    _endNorm,
+  );
+  let otWeekdayMins = 0,
+    otWeekendMins = 0,
+    otHolidayMins = 0;
   let totalOvertimePay = 0;
 
   for (const ot of otRecords) {
@@ -510,78 +580,121 @@ async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolic
   if (totalOvertimePay > 0) {
     allowanceItems.push({
       salaryComponentId: null,
-      itemName: 'Lương làm thêm giờ',
-      itemType: 'EARNING',
+      itemName: "Lương làm thêm giờ",
+      itemType: "EARNING",
       amount: totalOvertimePay,
-      sourceType: 'OVERTIME',
-      quantity: null, unitRate: null, notes: null,
+      sourceType: "OVERTIME",
+      quantity: null,
+      unitRate: null,
+      notes: null,
     });
   }
 
   // 7. Điều chỉnh lương (bonus / deduction đã duyệt)
-  const adjustments = await repo.findApprovedAdjustmentsForPeriod(userId, period.id);
+  const adjustments = await repo.findApprovedAdjustmentsForPeriod(
+    userId,
+    period.id,
+  );
   let totalBonus = 0;
   let totalAdjDeductions = 0;
 
   for (const adj of adjustments) {
     const amount = Number(adj.amount);
-    if (['BONUS', 'REIMBURSEMENT'].includes(adj.adjustmentType)) {
+    if (["BONUS", "REIMBURSEMENT"].includes(adj.adjustmentType)) {
       totalBonus += amount;
       allowanceItems.push({
         salaryComponentId: null,
-        itemName: adj.adjustmentType === 'BONUS' ? 'Thưởng' : 'Hoàn tiền',
-        itemType: 'EARNING',
+        itemName: adj.adjustmentType === "BONUS" ? "Thưởng" : "Hoàn tiền",
+        itemType: "EARNING",
         amount,
-        sourceType: 'BONUS',
-        quantity: null, unitRate: null,
+        sourceType: "BONUS",
+        quantity: null,
+        unitRate: null,
         notes: adj.reason ?? null,
       });
-    } else if (['DEDUCTION', 'ADVANCE'].includes(adj.adjustmentType)) {
+    } else if (["DEDUCTION", "ADVANCE"].includes(adj.adjustmentType)) {
       totalAdjDeductions += amount;
       deductionItems.push({
         salaryComponentId: null,
-        itemName: adj.adjustmentType === 'ADVANCE' ? 'Khấu trừ tạm ứng' : 'Khấu trừ khác',
-        itemType: 'DEDUCTION',
+        itemName:
+          adj.adjustmentType === "ADVANCE"
+            ? "Khấu trừ tạm ứng"
+            : "Khấu trừ khác",
+        itemType: "DEDUCTION",
         amount,
-        sourceType: adj.adjustmentType === 'ADVANCE' ? 'ADVANCE' : 'MANUAL',
-        quantity: null, unitRate: null,
+        sourceType: adj.adjustmentType === "ADVANCE" ? "ADVANCE" : "MANUAL",
+        quantity: null,
+        unitRate: null,
         notes: adj.reason ?? null,
       });
     }
   }
 
   // 8. Tổng gross = lương thực tế + phụ cấp + OT + bonus
-  const grossSalary = actualBaseSalary + totalAllowances + totalOvertimePay + totalBonus;
+  const grossSalary =
+    actualBaseSalary + totalAllowances + totalOvertimePay + totalBonus;
 
-  // 9. Bảo hiểm xã hội (BHXH, BHYT, BHTN) — trích trên lương cơ bản
-  const insuranceBase = Math.min(baseSalary, _getInsuranceCap(insurancePolicies));
+  // 9. Bảo hiểm xã hội (BHXH, BHYT, BHTN)
+  // FIX: trích trên actualBaseSalary (lương thực nhận) chứ không phải baseSalary gốc
+  // → khi nhân viên không đi làm ngày nào, actualBaseSalary=0 → khấu trừ=0
+  const insuranceBase = Math.min(
+    actualBaseSalary,
+    _getInsuranceCap(insurancePolicies),
+  );
 
-  const socialIns = _getInsuranceAmount(insurancePolicies, 'SOCIAL', insuranceBase);
-  const healthIns = _getInsuranceAmount(insurancePolicies, 'HEALTH', insuranceBase);
-  const unemploymentIns = _getInsuranceAmount(insurancePolicies, 'UNEMPLOYMENT', insuranceBase);
+  const socialIns = _getInsuranceAmount(
+    insurancePolicies,
+    "SOCIAL",
+    insuranceBase,
+  );
+  const healthIns = _getInsuranceAmount(
+    insurancePolicies,
+    "HEALTH",
+    insuranceBase,
+  );
+  const unemploymentIns = _getInsuranceAmount(
+    insurancePolicies,
+    "UNEMPLOYMENT",
+    insuranceBase,
+  );
 
   const totalInsurance = socialIns + healthIns + unemploymentIns;
 
   // Thêm items bảo hiểm
   if (socialIns > 0) {
     deductionItems.push({
-      salaryComponentId: null, itemName: 'BHXH (8%)',
-      itemType: 'DEDUCTION', amount: socialIns, sourceType: 'INSURANCE',
-      quantity: null, unitRate: null, notes: null,
+      salaryComponentId: null,
+      itemName: "BHXH (8%)",
+      itemType: "DEDUCTION",
+      amount: socialIns,
+      sourceType: "INSURANCE",
+      quantity: null,
+      unitRate: null,
+      notes: null,
     });
   }
   if (healthIns > 0) {
     deductionItems.push({
-      salaryComponentId: null, itemName: 'BHYT (1.5%)',
-      itemType: 'DEDUCTION', amount: healthIns, sourceType: 'INSURANCE',
-      quantity: null, unitRate: null, notes: null,
+      salaryComponentId: null,
+      itemName: "BHYT (1.5%)",
+      itemType: "DEDUCTION",
+      amount: healthIns,
+      sourceType: "INSURANCE",
+      quantity: null,
+      unitRate: null,
+      notes: null,
     });
   }
   if (unemploymentIns > 0) {
     deductionItems.push({
-      salaryComponentId: null, itemName: 'BHTN (1%)',
-      itemType: 'DEDUCTION', amount: unemploymentIns, sourceType: 'INSURANCE',
-      quantity: null, unitRate: null, notes: null,
+      salaryComponentId: null,
+      itemName: "BHTN (1%)",
+      itemType: "DEDUCTION",
+      amount: unemploymentIns,
+      sourceType: "INSURANCE",
+      quantity: null,
+      unitRate: null,
+      notes: null,
     });
   }
 
@@ -599,7 +712,8 @@ async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolic
     const dependants = userProfile?.dependantCount ?? 0;
 
     const personalDeduction = Number(taxPolicy.personalDeduction);
-    const dependantDeduction = Number(taxPolicy.dependantDeduction) * dependants;
+    const dependantDeduction =
+      Number(taxPolicy.dependantDeduction) * dependants;
 
     taxableIncome = Math.max(
       0,
@@ -610,30 +724,38 @@ async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolic
 
     if (personalIncomeTax > 0) {
       deductionItems.push({
-        salaryComponentId: null, itemName: 'Thuế TNCN',
-        itemType: 'DEDUCTION', amount: Math.round(personalIncomeTax),
-        sourceType: 'TAX', quantity: null, unitRate: null, notes: null,
+        salaryComponentId: null,
+        itemName: "Thuế TNCN",
+        itemType: "DEDUCTION",
+        amount: Math.round(personalIncomeTax),
+        sourceType: "TAX",
+        quantity: null,
+        unitRate: null,
+        notes: null,
       });
     }
   }
 
   // 11. Tổng khấu trừ & lương thực nhận
   const fixedDeductions = deductionItems
-    .filter((i) => !['INSURANCE', 'TAX'].includes(i.sourceType))
+    .filter((i) => !["INSURANCE", "TAX"].includes(i.sourceType))
     .reduce((s, i) => s + Number(i.amount), 0);
 
-  const totalDeductions = totalInsurance + Math.round(personalIncomeTax) +
-    totalAdjDeductions + fixedDeductions;
+  const totalDeductions =
+    totalInsurance +
+    Math.round(personalIncomeTax) +
+    totalAdjDeductions +
+    fixedDeductions;
 
   const netSalary = Math.round(grossSalary - totalDeductions);
 
   // 12. Item lương cơ bản (đặt đầu tiên)
   const baseItem = {
     salaryComponentId: null,
-    itemName: 'Lương cơ bản',
-    itemType: 'EARNING',
+    itemName: "Lương cơ bản",
+    itemType: "EARNING",
     amount: Math.round(actualBaseSalary),
-    sourceType: 'BASE',
+    sourceType: "BASE",
     quantity: effectiveDays,
     unitRate: Math.round(dailyRate),
     notes: `${effectiveDays}/${workingDaysStandard} ngày`,
@@ -642,38 +764,43 @@ async function _calculateUserPayroll(userId, period, insurancePolicies, taxPolic
   const allItems = [baseItem, ...allowanceItems, ...deductionItems];
 
   // 13. Upsert PayrollRecord
-  await repo.upsertPayrollRecord(period.id, userId, {
-    baseSalary: Math.round(actualBaseSalary),
-    workingDays: effectiveDays,
-    paidLeaveDays,
-    unpaidLeaveDays,
-    absentDays,
-    lateDays,
-    overtimeWeekdayMinutes: otWeekdayMins,
-    overtimeWeekendMinutes: otWeekendMins,
-    overtimeHolidayMinutes: otHolidayMins,
-    totalOvertimePay: Math.round(totalOvertimePay),
-    grossSalary: Math.round(grossSalary),
-    totalAllowances: Math.round(totalAllowances),
-    totalBonus: Math.round(totalBonus),
-    socialInsuranceEmployee: Math.round(socialIns),
-    healthInsuranceEmployee: Math.round(healthIns),
-    unemploymentInsuranceEmployee: Math.round(unemploymentIns),
-    taxableIncome: Math.round(taxableIncome),
-    personalIncomeTax: Math.round(personalIncomeTax),
-    totalDeductions: Math.round(totalDeductions),
-    netSalary: Math.max(0, netSalary),
-    dailyRate: Math.round(dailyRate),
-    hourlyRate: Math.round(hourlyRate),
-    status: 'DRAFT',
-    generatedAt: new Date(),
-  }, allItems);
+  await repo.upsertPayrollRecord(
+    period.id,
+    userId,
+    {
+      baseSalary: Math.round(actualBaseSalary),
+      workingDays: effectiveDays,
+      paidLeaveDays,
+      unpaidLeaveDays,
+      absentDays,
+      lateDays,
+      overtimeWeekdayMinutes: otWeekdayMins,
+      overtimeWeekendMinutes: otWeekendMins,
+      overtimeHolidayMinutes: otHolidayMins,
+      totalOvertimePay: Math.round(totalOvertimePay),
+      grossSalary: Math.round(grossSalary),
+      totalAllowances: Math.round(totalAllowances),
+      totalBonus: Math.round(totalBonus),
+      socialInsuranceEmployee: Math.round(socialIns),
+      healthInsuranceEmployee: Math.round(healthIns),
+      unemploymentInsuranceEmployee: Math.round(unemploymentIns),
+      taxableIncome: Math.round(taxableIncome),
+      personalIncomeTax: Math.round(personalIncomeTax),
+      totalDeductions: Math.round(totalDeductions),
+      netSalary: Math.max(0, netSalary),
+      dailyRate: Math.round(dailyRate),
+      hourlyRate: Math.round(hourlyRate),
+      status: "DRAFT",
+      generatedAt: new Date(),
+    },
+    allItems,
+  );
 
   // 14. Đánh dấu adjustments đã áp dụng
   if (adjustments.length > 0) {
     await prisma.payrollAdjustment.updateMany({
       where: { id: { in: adjustments.map((a) => a.id) } },
-      data: { status: 'APPLIED' },
+      data: { status: "APPLIED" },
     });
   }
 }
@@ -742,12 +869,12 @@ function _toDateOnly(date) {
 
 async function _assertPeriodExists(id) {
   const p = await repo.findPeriodById(id);
-  if (!p) throw AppError.notFound('Không tìm thấy kỳ lương.');
+  if (!p) throw AppError.notFound("Không tìm thấy kỳ lương.");
   return p;
 }
 
 function _isHrOrAdmin(user) {
-  return user.roles.some((r) => ['ADMIN', 'HR'].includes(r));
+  return user.roles.some((r) => ["ADMIN", "HR"].includes(r));
 }
 
 function _page(filters, total) {
@@ -755,25 +882,49 @@ function _page(filters, total) {
 }
 
 function _clean(obj) {
-  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined),
+  );
 }
 
 module.exports = {
   // Period
-  listPeriods, getPeriodById, createPeriod, updatePeriod,
-  calculatePeriod, approvePeriod, markPeriodPaid, cancelPeriod, deletePeriod,
+  listPeriods,
+  getPeriodById,
+  createPeriod,
+  updatePeriod,
+  calculatePeriod,
+  approvePeriod,
+  markPeriodPaid,
+  cancelPeriod,
+  deletePeriod,
   // Compensation
-  listCompensations, getCompensationById, getActiveCompensation,
-  getCompensationHistory, createCompensation, updateCompensation,
+  listCompensations,
+  getCompensationById,
+  getActiveCompensation,
+  getCompensationHistory,
+  createCompensation,
+  updateCompensation,
   // SalaryComponent
-  listSalaryComponents, getSalaryComponentOptions, getSalaryComponentById,
-  createSalaryComponent, updateSalaryComponent,
+  listSalaryComponents,
+  getSalaryComponentOptions,
+  getSalaryComponentById,
+  createSalaryComponent,
+  updateSalaryComponent,
   // UserSalaryComponent
-  getUserSalaryComponents, assignSalaryComponent, removeUserSalaryComponent,
+  getUserSalaryComponents,
+  assignSalaryComponent,
+  removeUserSalaryComponent,
   // Adjustment
-  listAdjustments, getAdjustmentById, createAdjustment,
-  approveAdjustment, rejectAdjustment,
+  listAdjustments,
+  getAdjustmentById,
+  createAdjustment,
+  approveAdjustment,
+  rejectAdjustment,
   // Record
-  listRecords, getRecordById, getMyPayslip,
-  updateRecordNotes, markRecordPaid,
+  listRecords,
+  getRecordById,
+  getMyPayslip,
+  updateRecordNotes,
+  markRecordPaid,
 };

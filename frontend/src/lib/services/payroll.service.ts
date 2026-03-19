@@ -172,7 +172,8 @@ export interface ApiPayrollRecord {
   dailyRate: number | null;
   hourlyRate: number | null;
   status: RecordStatus;
-  items: ApiRecordItem[];
+  /** items chỉ có khi fetch single record (getRecordById). listRecords trả về summary không có items. */
+  items?: ApiRecordItem[];
   generatedAt: string | null;
   approvedAt: string | null;
   paidAt: string | null;
@@ -251,8 +252,17 @@ export async function updatePeriod(
   return api.patch<ApiPayrollPeriod>(`/payroll/periods/${id}`, payload);
 }
 
-export async function calculatePeriod(id: string): Promise<ApiPayrollPeriod> {
-  return api.post<ApiPayrollPeriod>(`/payroll/periods/${id}/calculate`);
+export interface CalculatePeriodResult {
+  period: ApiPayrollPeriod;
+  calculatedCount: number;
+  totalUsers: number;
+  errors: { userId: string; fullName: string; error: string }[];
+}
+
+export async function calculatePeriod(
+  id: string,
+): Promise<CalculatePeriodResult> {
+  return api.post<CalculatePeriodResult>(`/payroll/periods/${id}/calculate`);
 }
 
 export async function approvePeriod(
@@ -373,6 +383,8 @@ export async function assignSalaryComponent(payload: {
   userId: string;
   salaryComponentId: string;
   amount: number;
+  /** true = % lương cơ bản (vd: 8.0 = 8%), false = số tiền cố định */
+  isPercentage?: boolean;
   effectiveFrom: string;
   effectiveTo?: string | null;
   notes?: string | null;

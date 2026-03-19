@@ -460,8 +460,8 @@ export function EmployeesPage() {
     if (!USE_API) return;
     attendanceService
       .getShiftOptions()
-      .then((res) =>
-        setShiftOptions(res.filter((s: ApiWorkShift) => s.isActive)),
+      .then(
+        (res) => setShiftOptions(res), // backend đã query isActive=true rồi
       )
       .catch(() => {});
   }, []);

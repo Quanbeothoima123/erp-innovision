@@ -1186,18 +1186,20 @@ async function main() {
     uSales2,
     uMkt,
   ];
+  // Tạo balances với usedDays=0, pendingDays=0 — sẽ tính lại sau khi tạo leaveRequests
   const leaveBalanceData = [];
   for (const u of activeUsersForLeave) {
-    // 2025
+    // 2025: entitledDays đúng, remainingDays sẽ được recalculate bên dưới
     leaveBalanceData.push({
       userId: u.id,
       leaveTypeId: ltAnnual.id,
       year: 2025,
       entitledDays: 12,
       carriedDays: 0,
-      usedDays: 6,
+      adjustedDays: 0,
+      usedDays: 0,
       pendingDays: 0,
-      remainingDays: 6,
+      remainingDays: 12,
     });
     leaveBalanceData.push({
       userId: u.id,
@@ -1205,20 +1207,22 @@ async function main() {
       year: 2025,
       entitledDays: 30,
       carriedDays: 0,
-      usedDays: 2,
+      adjustedDays: 0,
+      usedDays: 0,
       pendingDays: 0,
-      remainingDays: 28,
+      remainingDays: 30,
     });
-    // 2026
+    // 2026: carriedDays=2 cho ltAnnual (chuyển từ 2025 còn dư)
     leaveBalanceData.push({
       userId: u.id,
       leaveTypeId: ltAnnual.id,
       year: 2026,
       entitledDays: 12,
       carriedDays: 2,
-      usedDays: 1,
+      adjustedDays: 0,
+      usedDays: 0,
       pendingDays: 0,
-      remainingDays: 13,
+      remainingDays: 14,
     });
     leaveBalanceData.push({
       userId: u.id,
@@ -1226,6 +1230,7 @@ async function main() {
       year: 2026,
       entitledDays: 30,
       carriedDays: 0,
+      adjustedDays: 0,
       usedDays: 0,
       pendingDays: 0,
       remainingDays: 30,
@@ -1736,6 +1741,32 @@ async function main() {
       scId: scAllowTrans.id,
       amount: 500000,
     })),
+    // BHXH, BHYT, BHTN, Thuế TNCN — isPercentage=true (% lương cơ bản)
+    ...activeUsersForLeave.map((u) => ({
+      userId: u.id,
+      scId: scSI.id,
+      amount: 8.0,
+      isPercentage: true,
+    })),
+    ...activeUsersForLeave.map((u) => ({
+      userId: u.id,
+      scId: scHI.id,
+      amount: 1.5,
+      isPercentage: true,
+    })),
+    ...activeUsersForLeave.map((u) => ({
+      userId: u.id,
+      scId: scUI.id,
+      amount: 1.0,
+      isPercentage: true,
+    })),
+    // Thuế TNCN — đặt 10% mặc định, HR có thể điều chỉnh từng người
+    ...activeUsersForLeave.map((u) => ({
+      userId: u.id,
+      scId: scPIT.id,
+      amount: 10.0,
+      isPercentage: true,
+    })),
   ];
 
   for (const item of usc) {
@@ -1744,6 +1775,7 @@ async function main() {
         userId: item.userId,
         salaryComponentId: item.scId,
         amount: item.amount,
+        isPercentage: item.isPercentage ?? false,
         effectiveFrom: new Date("2024-01-01"),
         isActive: true,
       },
@@ -2584,37 +2616,79 @@ async function main() {
   console.log("📋 Tạo AttendanceRecords (12 tháng 2025-2026)...");
 
   const attendanceUsers = [
-    uCTO, uSrDev1, uDev1, uDev2, uHRStaff, uAcc, uSales1, uSalMgr, uMkt, uBA,
+    uCTO,
+    uSrDev1,
+    uDev1,
+    uDev2,
+    uHRStaff,
+    uAcc,
+    uSales1,
+    uSalMgr,
+    uMkt,
+    uBA,
   ];
 
   // Lịch ngày làm việc mỗi tháng (T2-T6, bỏ lễ lớn)
   const monthWorkDays = {
-    "2025-04": [1,2,3,4,7,8,9,10,11,14,15,16,17,18,22,23,24,25,28,29,30],
-    "2025-05": [2,5,6,7,8,9,12,13,14,15,16,19,20,21,22,23,26,27,28,29,30],
-    "2025-06": [2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27,30],
-    "2025-07": [1,2,3,4,7,8,9,10,11,14,15,16,17,18,21,22,23,24,25,28,29,30,31],
-    "2025-08": [1,4,5,6,7,8,11,12,13,14,15,18,19,20,21,22,25,26,27,28,29],
-    "2025-09": [1,3,4,5,8,9,10,11,12,15,16,17,18,19,22,23,24,25,26,29,30],
-    "2025-10": [1,2,3,6,7,8,9,10,13,14,15,16,17,20,21,22,23,24,27,28,29,30,31],
-    "2025-11": [3,4,5,6,7,10,11,12,13,14,17,18,19,20,21,24,25,26,27,28],
-    "2025-12": [1,2,3,4,5,8,9,10,11,12,15,16,17,18,19,22,23,24,26,29,30,31],
-    "2026-01": [2,5,6,7,8,9,12,13,14,15,16,19,20,21,22,23,26,27,28,29,30],
-    "2026-02": [2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27],
-    "2026-03": [2,3,4,5,6,9,10,11,12,13,16,17,18,19,20,23,24,25,26,27],
+    "2025-04": [
+      1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 22, 23, 24, 25, 28, 29,
+      30,
+    ],
+    "2025-05": [
+      2, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 26, 27, 28, 29,
+      30,
+    ],
+    "2025-06": [
+      2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27,
+      30,
+    ],
+    "2025-07": [
+      1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 28,
+      29, 30, 31,
+    ],
+    "2025-08": [
+      1, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 18, 19, 20, 21, 22, 25, 26, 27, 28,
+      29,
+    ],
+    "2025-09": [
+      1, 3, 4, 5, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 29,
+      30,
+    ],
+    "2025-10": [
+      1, 2, 3, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 27, 28,
+      29, 30, 31,
+    ],
+    "2025-11": [
+      3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 17, 18, 19, 20, 21, 24, 25, 26, 27, 28,
+    ],
+    "2025-12": [
+      1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24, 26, 29,
+      30, 31,
+    ],
+    "2026-01": [
+      2, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 26, 27, 28, 29,
+      30,
+    ],
+    "2026-02": [
+      2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27,
+    ],
+    "2026-03": [
+      2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27,
+    ],
   };
 
   // Biến thể hành vi theo nhân viên (muộn, về sớm, vắng)
   const userBehavior = {
-    [uCTO.id]:     { lateChance: 0.03, absentChance: 0.01, earlyChance: 0.02 },
-    [uSrDev1.id]:  { lateChance: 0.05, absentChance: 0.01, earlyChance: 0.02 },
-    [uDev1.id]:    { lateChance: 0.08, absentChance: 0.02, earlyChance: 0.03 },
-    [uDev2.id]:    { lateChance: 0.12, absentChance: 0.03, earlyChance: 0.04 },
-    [uHRStaff.id]: { lateChance: 0.10, absentChance: 0.02, earlyChance: 0.03 },
-    [uAcc.id]:     { lateChance: 0.04, absentChance: 0.01, earlyChance: 0.02 },
-    [uSales1.id]:  { lateChance: 0.06, absentChance: 0.03, earlyChance: 0.05 },
-    [uSalMgr.id]:  { lateChance: 0.04, absentChance: 0.01, earlyChance: 0.02 },
-    [uMkt.id]:     { lateChance: 0.07, absentChance: 0.02, earlyChance: 0.04 },
-    [uBA.id]:      { lateChance: 0.05, absentChance: 0.01, earlyChance: 0.02 },
+    [uCTO.id]: { lateChance: 0.03, absentChance: 0.01, earlyChance: 0.02 },
+    [uSrDev1.id]: { lateChance: 0.05, absentChance: 0.01, earlyChance: 0.02 },
+    [uDev1.id]: { lateChance: 0.08, absentChance: 0.02, earlyChance: 0.03 },
+    [uDev2.id]: { lateChance: 0.12, absentChance: 0.03, earlyChance: 0.04 },
+    [uHRStaff.id]: { lateChance: 0.1, absentChance: 0.02, earlyChance: 0.03 },
+    [uAcc.id]: { lateChance: 0.04, absentChance: 0.01, earlyChance: 0.02 },
+    [uSales1.id]: { lateChance: 0.06, absentChance: 0.03, earlyChance: 0.05 },
+    [uSalMgr.id]: { lateChance: 0.04, absentChance: 0.01, earlyChance: 0.02 },
+    [uMkt.id]: { lateChance: 0.07, absentChance: 0.02, earlyChance: 0.04 },
+    [uBA.id]: { lateChance: 0.05, absentChance: 0.01, earlyChance: 0.02 },
   };
 
   // Pseudo-random dựa trên seed cố định để kết quả ổn định
@@ -2627,39 +2701,61 @@ async function main() {
   for (const [monthKey, days] of Object.entries(monthWorkDays)) {
     const [yr, mo] = monthKey.split("-").map(Number);
     for (const u of attendanceUsers) {
-      const beh = userBehavior[u.id] || { lateChance: 0.05, absentChance: 0.02, earlyChance: 0.03 };
+      const beh = userBehavior[u.id] || {
+        lateChance: 0.05,
+        absentChance: 0.02,
+        earlyChance: 0.03,
+      };
       for (const day of days) {
         const r1 = seededRand(u.id, mo, day);
         const r2 = seededRand(u.id, mo + 1, day);
         const r3 = seededRand(u.id, mo + 2, day);
         const dayStr = String(day).padStart(2, "0");
-        const workDate = new Date(`${yr}-${String(mo).padStart(2,"0")}-${dayStr}`);
+        const workDate = new Date(
+          `${yr}-${String(mo).padStart(2, "0")}-${dayStr}`,
+        );
 
         let status = "PRESENT";
-        let lateMinutes = 0, earlyLeaveMinutes = 0, totalWorkMinutes = 480;
+        let lateMinutes = 0,
+          earlyLeaveMinutes = 0,
+          totalWorkMinutes = 480;
         let checkInAt, checkOutAt;
 
         if (r1 < beh.absentChance) {
           status = "ABSENT";
-          checkInAt = null; checkOutAt = null; totalWorkMinutes = 0;
+          checkInAt = null;
+          checkOutAt = null;
+          totalWorkMinutes = 0;
         } else if (r1 < beh.absentChance + beh.lateChance) {
           // Đi muộn 10–45 phút
           lateMinutes = 10 + Math.floor(r2 * 35);
-          const ci = new Date(`${yr}-${String(mo).padStart(2,"0")}-${dayStr}T08:${String(lateMinutes).padStart(2,"0")}:00`);
+          const ci = new Date(
+            `${yr}-${String(mo).padStart(2, "0")}-${dayStr}T08:${String(lateMinutes).padStart(2, "0")}:00`,
+          );
           checkInAt = ci;
-          checkOutAt = new Date(`${yr}-${String(mo).padStart(2,"0")}-${dayStr}T17:30:00`);
+          checkOutAt = new Date(
+            `${yr}-${String(mo).padStart(2, "0")}-${dayStr}T17:30:00`,
+          );
           totalWorkMinutes = 480 - lateMinutes;
         } else if (r3 < beh.earlyChance) {
           // Về sớm 15–30 phút
           earlyLeaveMinutes = 15 + Math.floor(r2 * 15);
-          checkInAt = new Date(`${yr}-${String(mo).padStart(2,"0")}-${dayStr}T08:00:00`);
+          checkInAt = new Date(
+            `${yr}-${String(mo).padStart(2, "0")}-${dayStr}T08:00:00`,
+          );
           const coHour = 17 - Math.floor(earlyLeaveMinutes / 60);
           const coMin = (30 - (earlyLeaveMinutes % 60) + 60) % 60;
-          checkOutAt = new Date(`${yr}-${String(mo).padStart(2,"0")}-${dayStr}T${String(coHour).padStart(2,"0")}:${String(coMin).padStart(2,"0")}:00`);
+          checkOutAt = new Date(
+            `${yr}-${String(mo).padStart(2, "0")}-${dayStr}T${String(coHour).padStart(2, "0")}:${String(coMin).padStart(2, "0")}:00`,
+          );
           totalWorkMinutes = 480 - earlyLeaveMinutes;
         } else {
-          checkInAt = new Date(`${yr}-${String(mo).padStart(2,"0")}-${dayStr}T08:02:00`);
-          checkOutAt = new Date(`${yr}-${String(mo).padStart(2,"0")}-${dayStr}T17:32:00`);
+          checkInAt = new Date(
+            `${yr}-${String(mo).padStart(2, "0")}-${dayStr}T08:02:00`,
+          );
+          checkOutAt = new Date(
+            `${yr}-${String(mo).padStart(2, "0")}-${dayStr}T17:32:00`,
+          );
         }
 
         await prisma.attendanceRecord.create({
@@ -2687,27 +2783,227 @@ async function main() {
 
   const leaveRequestsData = [
     // 2025
-    { userId: uDev1.id,    ltId: ltAnnual.id,   start: "2025-04-14", end: "2025-04-16", days: 3, reason: "Về quê nghỉ lễ 30/4",          status: "APPROVED", submitted: "2025-04-07", approved: "2025-04-08" },
-    { userId: uMkt.id,     ltId: ltSick.id,     start: "2025-05-06", end: "2025-05-07", days: 2, reason: "Sốt virut, có chỉ định bác sĩ", status: "APPROVED", submitted: "2025-05-06", approved: "2025-05-06" },
-    { userId: uHRStaff.id, ltId: ltAnnual.id,   start: "2025-06-02", end: "2025-06-04", days: 3, reason: "Du lịch nghỉ hè gia đình",       status: "APPROVED", submitted: "2025-05-26", approved: "2025-05-28" },
-    { userId: uSales1.id,  ltId: ltPersonal.id, start: "2025-07-10", end: "2025-07-10", days: 1, reason: "Việc cá nhân khẩn",              status: "APPROVED", submitted: "2025-07-09", approved: "2025-07-09" },
-    { userId: uDev2.id,    ltId: ltSick.id,     start: "2025-07-21", end: "2025-07-22", days: 2, reason: "Đau dạ dày, nghỉ điều trị",      status: "APPROVED", submitted: "2025-07-21", approved: "2025-07-21" },
-    { userId: uAcc.id,     ltId: ltAnnual.id,   start: "2025-08-04", end: "2025-08-06", days: 3, reason: "Đám cưới người thân",            status: "APPROVED", submitted: "2025-07-28", approved: "2025-07-30" },
-    { userId: uBA.id,      ltId: ltAnnual.id,   start: "2025-08-25", end: "2025-08-27", days: 3, reason: "Nghỉ dưỡng sức sau dự án",       status: "APPROVED", submitted: "2025-08-18", approved: "2025-08-19" },
-    { userId: uSrDev1.id,  ltId: ltAnnual.id,   start: "2025-09-01", end: "2025-09-03", days: 3, reason: "Về quê nhân dịp Quốc Khánh",    status: "APPROVED", submitted: "2025-08-25", approved: "2025-08-26" },
-    { userId: uMkt.id,     ltId: ltAnnual.id,   start: "2025-10-06", end: "2025-10-08", days: 3, reason: "Nghỉ phép năm",                  status: "APPROVED", submitted: "2025-09-29", approved: "2025-10-01" },
-    { userId: uDev1.id,    ltId: ltPersonal.id, start: "2025-10-20", end: "2025-10-20", days: 1, reason: "Giải quyết thủ tục hành chính",  status: "APPROVED", submitted: "2025-10-18", approved: "2025-10-19" },
-    { userId: uHRStaff.id, ltId: ltSick.id,     start: "2025-11-03", end: "2025-11-04", days: 2, reason: "Cảm cúm mùa đông",              status: "APPROVED", submitted: "2025-11-03", approved: "2025-11-03" },
-    { userId: uSales1.id,  ltId: ltAnnual.id,   start: "2025-11-17", end: "2025-11-19", days: 3, reason: "Nghỉ phép cuối năm",             status: "APPROVED", submitted: "2025-11-10", approved: "2025-11-12" },
-    { userId: uDev2.id,    ltId: ltAnnual.id,   start: "2025-12-22", end: "2025-12-24", days: 3, reason: "Nghỉ Giáng sinh về quê",         status: "APPROVED", submitted: "2025-12-15", approved: "2025-12-16" },
-    { userId: uAcc.id,     ltId: ltAnnual.id,   start: "2025-12-29", end: "2025-12-31", days: 3, reason: "Nghỉ cuối năm dương lịch",       status: "APPROVED", submitted: "2025-12-22", approved: "2025-12-23" },
+    {
+      userId: uDev1.id,
+      ltId: ltAnnual.id,
+      start: "2025-04-14",
+      end: "2025-04-16",
+      days: 3,
+      reason: "Về quê nghỉ lễ 30/4",
+      status: "APPROVED",
+      submitted: "2025-04-07",
+      approved: "2025-04-08",
+    },
+    {
+      userId: uMkt.id,
+      ltId: ltSick.id,
+      start: "2025-05-06",
+      end: "2025-05-07",
+      days: 2,
+      reason: "Sốt virut, có chỉ định bác sĩ",
+      status: "APPROVED",
+      submitted: "2025-05-06",
+      approved: "2025-05-06",
+    },
+    {
+      userId: uHRStaff.id,
+      ltId: ltAnnual.id,
+      start: "2025-06-02",
+      end: "2025-06-04",
+      days: 3,
+      reason: "Du lịch nghỉ hè gia đình",
+      status: "APPROVED",
+      submitted: "2025-05-26",
+      approved: "2025-05-28",
+    },
+    {
+      userId: uSales1.id,
+      ltId: ltPersonal.id,
+      start: "2025-07-10",
+      end: "2025-07-10",
+      days: 1,
+      reason: "Việc cá nhân khẩn",
+      status: "APPROVED",
+      submitted: "2025-07-09",
+      approved: "2025-07-09",
+    },
+    {
+      userId: uDev2.id,
+      ltId: ltSick.id,
+      start: "2025-07-21",
+      end: "2025-07-22",
+      days: 2,
+      reason: "Đau dạ dày, nghỉ điều trị",
+      status: "APPROVED",
+      submitted: "2025-07-21",
+      approved: "2025-07-21",
+    },
+    {
+      userId: uAcc.id,
+      ltId: ltAnnual.id,
+      start: "2025-08-04",
+      end: "2025-08-06",
+      days: 3,
+      reason: "Đám cưới người thân",
+      status: "APPROVED",
+      submitted: "2025-07-28",
+      approved: "2025-07-30",
+    },
+    {
+      userId: uBA.id,
+      ltId: ltAnnual.id,
+      start: "2025-08-25",
+      end: "2025-08-27",
+      days: 3,
+      reason: "Nghỉ dưỡng sức sau dự án",
+      status: "APPROVED",
+      submitted: "2025-08-18",
+      approved: "2025-08-19",
+    },
+    {
+      userId: uSrDev1.id,
+      ltId: ltAnnual.id,
+      start: "2025-09-01",
+      end: "2025-09-03",
+      days: 3,
+      reason: "Về quê nhân dịp Quốc Khánh",
+      status: "APPROVED",
+      submitted: "2025-08-25",
+      approved: "2025-08-26",
+    },
+    {
+      userId: uMkt.id,
+      ltId: ltAnnual.id,
+      start: "2025-10-06",
+      end: "2025-10-08",
+      days: 3,
+      reason: "Nghỉ phép năm",
+      status: "APPROVED",
+      submitted: "2025-09-29",
+      approved: "2025-10-01",
+    },
+    {
+      userId: uDev1.id,
+      ltId: ltPersonal.id,
+      start: "2025-10-20",
+      end: "2025-10-20",
+      days: 1,
+      reason: "Giải quyết thủ tục hành chính",
+      status: "APPROVED",
+      submitted: "2025-10-18",
+      approved: "2025-10-19",
+    },
+    {
+      userId: uHRStaff.id,
+      ltId: ltSick.id,
+      start: "2025-11-03",
+      end: "2025-11-04",
+      days: 2,
+      reason: "Cảm cúm mùa đông",
+      status: "APPROVED",
+      submitted: "2025-11-03",
+      approved: "2025-11-03",
+    },
+    {
+      userId: uSales1.id,
+      ltId: ltAnnual.id,
+      start: "2025-11-17",
+      end: "2025-11-19",
+      days: 3,
+      reason: "Nghỉ phép cuối năm",
+      status: "APPROVED",
+      submitted: "2025-11-10",
+      approved: "2025-11-12",
+    },
+    {
+      userId: uDev2.id,
+      ltId: ltAnnual.id,
+      start: "2025-12-22",
+      end: "2025-12-24",
+      days: 3,
+      reason: "Nghỉ Giáng sinh về quê",
+      status: "APPROVED",
+      submitted: "2025-12-15",
+      approved: "2025-12-16",
+    },
+    {
+      userId: uAcc.id,
+      ltId: ltAnnual.id,
+      start: "2025-12-29",
+      end: "2025-12-31",
+      days: 3,
+      reason: "Nghỉ cuối năm dương lịch",
+      status: "APPROVED",
+      submitted: "2025-12-22",
+      approved: "2025-12-23",
+    },
     // 2026
-    { userId: uSrDev1.id,  ltId: ltAnnual.id,   start: "2026-01-27", end: "2026-01-31", days: 5, reason: "Nghỉ Tết Nguyên Đán",           status: "APPROVED", submitted: "2026-01-10", approved: "2026-01-12" },
-    { userId: uDev1.id,    ltId: ltAnnual.id,   start: "2026-01-27", end: "2026-01-30", days: 4, reason: "Nghỉ Tết về quê",               status: "APPROVED", submitted: "2026-01-10", approved: "2026-01-12" },
-    { userId: uMkt.id,     ltId: ltSick.id,     start: "2026-02-09", end: "2026-02-10", days: 2, reason: "Đau họng, có đơn thuốc",        status: "APPROVED", submitted: "2026-02-09", approved: "2026-02-09" },
-    { userId: uBA.id,      ltId: ltPersonal.id, start: "2026-02-16", end: "2026-02-16", days: 1, reason: "Khám sức khoẻ định kỳ",         status: "APPROVED", submitted: "2026-02-14", approved: "2026-02-15" },
-    { userId: uDev1.id,    ltId: ltAnnual.id,   start: "2026-03-16", end: "2026-03-18", days: 3, reason: "Về quê thăm bố mẹ",             status: "APPROVED", submitted: "2026-03-10", approved: "2026-03-11" },
-    { userId: uMkt.id,     ltId: ltSick.id,     start: "2026-03-12", end: "2026-03-13", days: 2, reason: "Sốt cao, có đơn bác sĩ",        status: "PENDING",  submitted: "2026-03-12", approved: null },
+    {
+      userId: uSrDev1.id,
+      ltId: ltAnnual.id,
+      start: "2026-01-27",
+      end: "2026-01-31",
+      days: 5,
+      reason: "Nghỉ Tết Nguyên Đán",
+      status: "APPROVED",
+      submitted: "2026-01-10",
+      approved: "2026-01-12",
+    },
+    {
+      userId: uDev1.id,
+      ltId: ltAnnual.id,
+      start: "2026-01-27",
+      end: "2026-01-30",
+      days: 4,
+      reason: "Nghỉ Tết về quê",
+      status: "APPROVED",
+      submitted: "2026-01-10",
+      approved: "2026-01-12",
+    },
+    {
+      userId: uMkt.id,
+      ltId: ltSick.id,
+      start: "2026-02-09",
+      end: "2026-02-10",
+      days: 2,
+      reason: "Đau họng, có đơn thuốc",
+      status: "APPROVED",
+      submitted: "2026-02-09",
+      approved: "2026-02-09",
+    },
+    {
+      userId: uBA.id,
+      ltId: ltPersonal.id,
+      start: "2026-02-16",
+      end: "2026-02-16",
+      days: 1,
+      reason: "Khám sức khoẻ định kỳ",
+      status: "APPROVED",
+      submitted: "2026-02-14",
+      approved: "2026-02-15",
+    },
+    {
+      userId: uDev1.id,
+      ltId: ltAnnual.id,
+      start: "2026-03-16",
+      end: "2026-03-18",
+      days: 3,
+      reason: "Về quê thăm bố mẹ",
+      status: "APPROVED",
+      submitted: "2026-03-10",
+      approved: "2026-03-11",
+    },
+    {
+      userId: uMkt.id,
+      ltId: ltSick.id,
+      start: "2026-03-12",
+      end: "2026-03-13",
+      days: 2,
+      reason: "Sốt cao, có đơn bác sĩ",
+      status: "PENDING",
+      submitted: "2026-03-12",
+      approved: null,
+    },
   ];
 
   let lrCount = 0;
@@ -2728,48 +3024,416 @@ async function main() {
     });
     const approvals = [];
     if (lr.status === "APPROVED") {
-      approvals.push({ leaveRequestId: req.id, approverUserId: uHRMgr.id, stepType: "MANAGER", stepOrder: 1, status: "APPROVED", comment: "Đồng ý", actionAt: new Date(lr.approved) });
-      approvals.push({ leaveRequestId: req.id, approverUserId: uHRMgr.id, stepType: "HR", stepOrder: 2, status: "APPROVED", comment: "Duyệt", actionAt: new Date(lr.approved) });
+      approvals.push({
+        leaveRequestId: req.id,
+        approverUserId: uHRMgr.id,
+        stepType: "MANAGER",
+        stepOrder: 1,
+        status: "APPROVED",
+        comment: "Đồng ý",
+        actionAt: new Date(lr.approved),
+      });
+      approvals.push({
+        leaveRequestId: req.id,
+        approverUserId: uHRMgr.id,
+        stepType: "HR",
+        stepOrder: 2,
+        status: "APPROVED",
+        comment: "Duyệt",
+        actionAt: new Date(lr.approved),
+      });
     } else {
-      approvals.push({ leaveRequestId: req.id, approverUserId: uHRMgr.id, stepType: "MANAGER", stepOrder: 1, status: "PENDING" });
-      approvals.push({ leaveRequestId: req.id, approverUserId: uHRMgr.id, stepType: "HR", stepOrder: 2, status: "PENDING" });
+      approvals.push({
+        leaveRequestId: req.id,
+        approverUserId: uHRMgr.id,
+        stepType: "MANAGER",
+        stepOrder: 1,
+        status: "PENDING",
+      });
+      approvals.push({
+        leaveRequestId: req.id,
+        approverUserId: uHRMgr.id,
+        stepType: "HR",
+        stepOrder: 2,
+        status: "PENDING",
+      });
     }
     await prisma.leaveRequestApproval.createMany({ data: approvals });
     lrCount++;
   }
   console.log(`   → Đã tạo ${lrCount} leave requests\n`);
 
+  // ── RECALCULATE LEAVE BALANCES từ dữ liệu thực ─────────────────────────────
+  // Sau khi tạo tất cả leaveRequests, tính lại usedDays + pendingDays + remainingDays
+  // để balance luôn nhất quán với trạng thái đơn thực tế
+  console.log("🔄 Recalculate LeaveBalances từ leaveRequests thực...");
+
+  // Lấy tất cả leaveRequests vừa tạo
+  const allRequests = await prisma.leaveRequest.findMany({
+    where: { status: { in: ["APPROVED", "PENDING"] } },
+    select: {
+      userId: true,
+      leaveTypeId: true,
+      totalDays: true,
+      status: true,
+      startDate: true,
+    },
+  });
+
+  // Group theo userId + leaveTypeId + year
+  const balanceUpdates = new Map();
+  for (const req of allRequests) {
+    const year = new Date(req.startDate).getFullYear();
+    const key = `${req.userId}__${req.leaveTypeId}__${year}`;
+    if (!balanceUpdates.has(key)) {
+      balanceUpdates.set(key, {
+        userId: req.userId,
+        leaveTypeId: req.leaveTypeId,
+        year,
+        usedDays: 0,
+        pendingDays: 0,
+      });
+    }
+    const entry = balanceUpdates.get(key);
+    if (req.status === "APPROVED") entry.usedDays += Number(req.totalDays);
+    if (req.status === "PENDING") entry.pendingDays += Number(req.totalDays);
+  }
+
+  // Update từng balance record
+  let updatedCount = 0;
+  for (const {
+    userId,
+    leaveTypeId,
+    year,
+    usedDays,
+    pendingDays,
+  } of balanceUpdates.values()) {
+    const bal = await prisma.leaveBalance.findUnique({
+      where: { userId_leaveTypeId_year: { userId, leaveTypeId, year } },
+    });
+    if (!bal) continue; // skip nếu chưa có balance (loại phép khác)
+
+    const entitled = Number(bal.entitledDays);
+    const carried = Number(bal.carriedDays);
+    const adjusted = Number(bal.adjustedDays);
+    const remaining = entitled + carried + adjusted - usedDays - pendingDays;
+
+    await prisma.leaveBalance.update({
+      where: { userId_leaveTypeId_year: { userId, leaveTypeId, year } },
+      data: { usedDays, pendingDays, remainingDays: remaining },
+    });
+    updatedCount++;
+  }
+  console.log(
+    `   → Đã cập nhật ${updatedCount} balance records (usedDays + pendingDays + remainingDays)\n`,
+  );
+
   // ── 29. OVERTIME REQUESTS (12 tháng) ─────────────────────────────────────
   console.log("⏰ Tạo OvertimeRequests...");
 
   const otData = [
     // 2025
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2025-04-05", s: "18:00", e: "21:00", mins: 180, isWknd: true,  isHol: false, reason: "Hoàn thiện module HR Phase 2.1",          status: "APPROVED" },
-    { userId: uSrDev1.id,  approver: uCTO.id,    date: "2025-04-06", s: "18:00", e: "22:00", mins: 240, isWknd: true,  isHol: false, reason: "Review code và deploy staging",             status: "APPROVED" },
-    { userId: uDev2.id,    approver: uCTO.id,    date: "2025-05-13", s: "18:30", e: "21:30", mins: 180, isWknd: false, isHol: false, reason: "Fix critical bug payment gateway",           status: "APPROVED" },
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2025-05-18", s: "18:00", e: "20:30", mins: 150, isWknd: false, isHol: false, reason: "Urgent hotfix production",                  status: "APPROVED" },
-    { userId: uBA.id,      approver: uCTO.id,    date: "2025-06-07", s: "18:00", e: "20:00", mins: 120, isWknd: true,  isHol: false, reason: "Chuẩn bị tài liệu demo khách hàng",         status: "APPROVED" },
-    { userId: uSrDev1.id,  approver: uCTO.id,    date: "2025-06-21", s: "18:00", e: "22:30", mins: 270, isWknd: true,  isHol: false, reason: "Sprint deadline FTech ERP Phase 2.3",       status: "APPROVED" },
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2025-07-05", s: "18:00", e: "21:00", mins: 180, isWknd: true,  isHol: false, reason: "Deploy phiên bản mới cho FTech",            status: "APPROVED" },
-    { userId: uSales1.id,  approver: uSalMgr.id, date: "2025-07-14", s: "18:00", e: "20:00", mins: 120, isWknd: false, isHol: false, reason: "Chuẩn bị hợp đồng gấp cho khách hàng mới", status: "APPROVED" },
-    { userId: uDev2.id,    approver: uCTO.id,    date: "2025-08-02", s: "18:30", e: "22:00", mins: 210, isWknd: true,  isHol: false, reason: "Migrate database server mới",               status: "APPROVED" },
-    { userId: uSrDev1.id,  approver: uCTO.id,    date: "2025-08-16", s: "18:00", e: "21:00", mins: 180, isWknd: true,  isHol: false, reason: "Security audit và patch lỗ hổng bảo mật",  status: "APPROVED" },
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2025-09-06", s: "18:00", e: "21:30", mins: 210, isWknd: true,  isHol: false, reason: "Chuẩn bị release v2.5.0",                  status: "APPROVED" },
-    { userId: uBA.id,      approver: uCTO.id,    date: "2025-09-22", s: "18:00", e: "20:00", mins: 120, isWknd: false, isHol: false, reason: "Tài liệu nghiệm thu dự án",                status: "APPROVED" },
-    { userId: uDev2.id,    approver: uCTO.id,    date: "2025-10-04", s: "18:00", e: "22:00", mins: 240, isWknd: true,  isHol: false, reason: "Load testing hệ thống trước go-live",       status: "APPROVED" },
-    { userId: uSrDev1.id,  approver: uCTO.id,    date: "2025-10-11", s: "18:00", e: "21:00", mins: 180, isWknd: true,  isHol: false, reason: "Code review sprint Q4",                    status: "APPROVED" },
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2025-11-03", s: "18:30", e: "21:30", mins: 180, isWknd: false, isHol: false, reason: "Fix bug báo cáo cuối năm",                 status: "APPROVED" },
-    { userId: uAcc.id,     approver: uCFO.id,    date: "2025-11-10", s: "18:00", e: "20:00", mins: 120, isWknd: false, isHol: false, reason: "Chốt báo cáo tài chính Q3",                status: "APPROVED" },
-    { userId: uSrDev1.id,  approver: uCTO.id,    date: "2025-12-06", s: "18:00", e: "22:00", mins: 240, isWknd: true,  isHol: false, reason: "Sprint chạy nước rút cuối năm",            status: "APPROVED" },
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2025-12-13", s: "18:00", e: "21:00", mins: 180, isWknd: true,  isHol: false, reason: "Release bản cập nhật cuối năm",            status: "APPROVED" },
-    { userId: uAcc.id,     approver: uCFO.id,    date: "2025-12-29", s: "18:00", e: "20:30", mins: 150, isWknd: false, isHol: false, reason: "Quyết toán thuế năm 2025",                 status: "APPROVED" },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2025-04-05",
+      s: "18:00",
+      e: "21:00",
+      mins: 180,
+      isWknd: true,
+      isHol: false,
+      reason: "Hoàn thiện module HR Phase 2.1",
+      status: "APPROVED",
+    },
+    {
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      date: "2025-04-06",
+      s: "18:00",
+      e: "22:00",
+      mins: 240,
+      isWknd: true,
+      isHol: false,
+      reason: "Review code và deploy staging",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev2.id,
+      approver: uCTO.id,
+      date: "2025-05-13",
+      s: "18:30",
+      e: "21:30",
+      mins: 180,
+      isWknd: false,
+      isHol: false,
+      reason: "Fix critical bug payment gateway",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2025-05-18",
+      s: "18:00",
+      e: "20:30",
+      mins: 150,
+      isWknd: false,
+      isHol: false,
+      reason: "Urgent hotfix production",
+      status: "APPROVED",
+    },
+    {
+      userId: uBA.id,
+      approver: uCTO.id,
+      date: "2025-06-07",
+      s: "18:00",
+      e: "20:00",
+      mins: 120,
+      isWknd: true,
+      isHol: false,
+      reason: "Chuẩn bị tài liệu demo khách hàng",
+      status: "APPROVED",
+    },
+    {
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      date: "2025-06-21",
+      s: "18:00",
+      e: "22:30",
+      mins: 270,
+      isWknd: true,
+      isHol: false,
+      reason: "Sprint deadline FTech ERP Phase 2.3",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2025-07-05",
+      s: "18:00",
+      e: "21:00",
+      mins: 180,
+      isWknd: true,
+      isHol: false,
+      reason: "Deploy phiên bản mới cho FTech",
+      status: "APPROVED",
+    },
+    {
+      userId: uSales1.id,
+      approver: uSalMgr.id,
+      date: "2025-07-14",
+      s: "18:00",
+      e: "20:00",
+      mins: 120,
+      isWknd: false,
+      isHol: false,
+      reason: "Chuẩn bị hợp đồng gấp cho khách hàng mới",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev2.id,
+      approver: uCTO.id,
+      date: "2025-08-02",
+      s: "18:30",
+      e: "22:00",
+      mins: 210,
+      isWknd: true,
+      isHol: false,
+      reason: "Migrate database server mới",
+      status: "APPROVED",
+    },
+    {
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      date: "2025-08-16",
+      s: "18:00",
+      e: "21:00",
+      mins: 180,
+      isWknd: true,
+      isHol: false,
+      reason: "Security audit và patch lỗ hổng bảo mật",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2025-09-06",
+      s: "18:00",
+      e: "21:30",
+      mins: 210,
+      isWknd: true,
+      isHol: false,
+      reason: "Chuẩn bị release v2.5.0",
+      status: "APPROVED",
+    },
+    {
+      userId: uBA.id,
+      approver: uCTO.id,
+      date: "2025-09-22",
+      s: "18:00",
+      e: "20:00",
+      mins: 120,
+      isWknd: false,
+      isHol: false,
+      reason: "Tài liệu nghiệm thu dự án",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev2.id,
+      approver: uCTO.id,
+      date: "2025-10-04",
+      s: "18:00",
+      e: "22:00",
+      mins: 240,
+      isWknd: true,
+      isHol: false,
+      reason: "Load testing hệ thống trước go-live",
+      status: "APPROVED",
+    },
+    {
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      date: "2025-10-11",
+      s: "18:00",
+      e: "21:00",
+      mins: 180,
+      isWknd: true,
+      isHol: false,
+      reason: "Code review sprint Q4",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2025-11-03",
+      s: "18:30",
+      e: "21:30",
+      mins: 180,
+      isWknd: false,
+      isHol: false,
+      reason: "Fix bug báo cáo cuối năm",
+      status: "APPROVED",
+    },
+    {
+      userId: uAcc.id,
+      approver: uCFO.id,
+      date: "2025-11-10",
+      s: "18:00",
+      e: "20:00",
+      mins: 120,
+      isWknd: false,
+      isHol: false,
+      reason: "Chốt báo cáo tài chính Q3",
+      status: "APPROVED",
+    },
+    {
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      date: "2025-12-06",
+      s: "18:00",
+      e: "22:00",
+      mins: 240,
+      isWknd: true,
+      isHol: false,
+      reason: "Sprint chạy nước rút cuối năm",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2025-12-13",
+      s: "18:00",
+      e: "21:00",
+      mins: 180,
+      isWknd: true,
+      isHol: false,
+      reason: "Release bản cập nhật cuối năm",
+      status: "APPROVED",
+    },
+    {
+      userId: uAcc.id,
+      approver: uCFO.id,
+      date: "2025-12-29",
+      s: "18:00",
+      e: "20:30",
+      mins: 150,
+      isWknd: false,
+      isHol: false,
+      reason: "Quyết toán thuế năm 2025",
+      status: "APPROVED",
+    },
     // 2026
-    { userId: uSrDev1.id,  approver: uCTO.id,    date: "2026-01-10", s: "18:00", e: "22:00", mins: 240, isWknd: true,  isHol: false, reason: "Hoàn thiện Phase 2.4 trước Tết",           status: "APPROVED" },
-    { userId: uDev2.id,    approver: uCTO.id,    date: "2026-01-17", s: "18:30", e: "22:00", mins: 210, isWknd: true,  isHol: false, reason: "UAT với khách hàng FTech",                 status: "APPROVED" },
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2026-02-09", s: "18:00", e: "21:30", mins: 210, isWknd: false, isHol: false, reason: "Go-live hệ thống sau Tết",                 status: "APPROVED" },
-    { userId: uAcc.id,     approver: uCFO.id,    date: "2026-02-23", s: "18:00", e: "20:00", mins: 120, isWknd: false, isHol: false, reason: "Chốt quyết toán lương Tết",                status: "APPROVED" },
-    { userId: uDev1.id,    approver: uCTO.id,    date: "2026-03-07", s: "18:00", e: "21:00", mins: 180, isWknd: true,  isHol: false, reason: "Fix bug urgent FTech ERP trước demo",      status: "APPROVED" },
-    { userId: uSrDev1.id,  approver: uCTO.id,    date: "2026-03-14", s: "18:00", e: "21:30", mins: 210, isWknd: true,  isHol: false, reason: "Chuẩn bị release v3.0",                    status: "PENDING"  },
+    {
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      date: "2026-01-10",
+      s: "18:00",
+      e: "22:00",
+      mins: 240,
+      isWknd: true,
+      isHol: false,
+      reason: "Hoàn thiện Phase 2.4 trước Tết",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev2.id,
+      approver: uCTO.id,
+      date: "2026-01-17",
+      s: "18:30",
+      e: "22:00",
+      mins: 210,
+      isWknd: true,
+      isHol: false,
+      reason: "UAT với khách hàng FTech",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2026-02-09",
+      s: "18:00",
+      e: "21:30",
+      mins: 210,
+      isWknd: false,
+      isHol: false,
+      reason: "Go-live hệ thống sau Tết",
+      status: "APPROVED",
+    },
+    {
+      userId: uAcc.id,
+      approver: uCFO.id,
+      date: "2026-02-23",
+      s: "18:00",
+      e: "20:00",
+      mins: 120,
+      isWknd: false,
+      isHol: false,
+      reason: "Chốt quyết toán lương Tết",
+      status: "APPROVED",
+    },
+    {
+      userId: uDev1.id,
+      approver: uCTO.id,
+      date: "2026-03-07",
+      s: "18:00",
+      e: "21:00",
+      mins: 180,
+      isWknd: true,
+      isHol: false,
+      reason: "Fix bug urgent FTech ERP trước demo",
+      status: "APPROVED",
+    },
+    {
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      date: "2026-03-14",
+      s: "18:00",
+      e: "21:30",
+      mins: 210,
+      isWknd: true,
+      isHol: false,
+      reason: "Chuẩn bị release v3.0",
+      status: "PENDING",
+    },
   ];
 
   for (const ot of otData) {
@@ -2787,7 +3451,8 @@ async function main() {
         reason: ot.reason,
         status: ot.status,
         submittedAt: new Date(ot.date + "T17:00:00"),
-        actionAt: ot.status === "APPROVED" ? new Date(ot.date + "T17:30:00") : null,
+        actionAt:
+          ot.status === "APPROVED" ? new Date(ot.date + "T17:30:00") : null,
         comment: ot.status === "APPROVED" ? "Đồng ý làm thêm giờ" : null,
       },
     });
@@ -2799,21 +3464,93 @@ async function main() {
 
   // Tạo thêm 7 kỳ lương còn thiếu
   const extraPeriods = [
-    { code: "2025-03", month: 3, year: 2025, status: "PAID", paidAt: new Date("2025-04-10"), wdays: 21 },
-    { code: "2025-04", month: 4, year: 2025, status: "PAID", paidAt: new Date("2025-05-10"), wdays: 22 },
-    { code: "2025-05", month: 5, year: 2025, status: "PAID", paidAt: new Date("2025-06-10"), wdays: 21 },
-    { code: "2025-06", month: 6, year: 2025, status: "PAID", paidAt: new Date("2025-07-10"), wdays: 21 },
-    { code: "2025-07", month: 7, year: 2025, status: "PAID", paidAt: new Date("2025-08-10"), wdays: 23 },
-    { code: "2025-08", month: 8, year: 2025, status: "PAID", paidAt: new Date("2025-09-10"), wdays: 21 },
-    { code: "2025-09", month: 9, year: 2025, status: "PAID", paidAt: new Date("2025-10-10"), wdays: 22 },
-    { code: "2025-10", month: 10, year: 2025, status: "PAID", paidAt: new Date("2025-11-10"), wdays: 23 },
-    { code: "2025-11", month: 11, year: 2025, status: "PAID", paidAt: new Date("2025-12-10"), wdays: 20 },
-    { code: "2025-12", month: 12, year: 2025, status: "PAID", paidAt: new Date("2026-01-10"), wdays: 22 },
+    {
+      code: "2025-03",
+      month: 3,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-04-10"),
+      wdays: 21,
+    },
+    {
+      code: "2025-04",
+      month: 4,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-05-10"),
+      wdays: 22,
+    },
+    {
+      code: "2025-05",
+      month: 5,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-06-10"),
+      wdays: 21,
+    },
+    {
+      code: "2025-06",
+      month: 6,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-07-10"),
+      wdays: 21,
+    },
+    {
+      code: "2025-07",
+      month: 7,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-08-10"),
+      wdays: 23,
+    },
+    {
+      code: "2025-08",
+      month: 8,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-09-10"),
+      wdays: 21,
+    },
+    {
+      code: "2025-09",
+      month: 9,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-10-10"),
+      wdays: 22,
+    },
+    {
+      code: "2025-10",
+      month: 10,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-11-10"),
+      wdays: 23,
+    },
+    {
+      code: "2025-11",
+      month: 11,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2025-12-10"),
+      wdays: 20,
+    },
+    {
+      code: "2025-12",
+      month: 12,
+      year: 2025,
+      status: "PAID",
+      paidAt: new Date("2026-01-10"),
+      wdays: 22,
+    },
   ];
 
   const extraPeriodObjs = {};
   for (const ep of extraPeriods) {
-    const startDate = new Date(`${ep.year}-${String(ep.month).padStart(2,"0")}-01`);
+    const startDate = new Date(
+      `${ep.year}-${String(ep.month).padStart(2, "0")}-01`,
+    );
     const endDate = new Date(ep.year, ep.month, 0); // last day
     const payDate = ep.paidAt;
     const pp = await prisma.payrollPeriod.create({
@@ -2838,20 +3575,118 @@ async function main() {
 
   // Dữ liệu nhân viên mở rộng cho payroll
   const fullPayrollUsers = [
-    { user: uCEO,     base: 80000000, allowPos: 10000000, allowPhone: 1000000, allowLunch: 730000, allowTrans: 500000 },
-    { user: uCTO,     base: 65000000, allowPos: 8000000,  allowPhone: 500000,  allowLunch: 730000, allowTrans: 500000 },
-    { user: uCFO,     base: 60000000, allowPos: 8000000,  allowPhone: 500000,  allowLunch: 730000, allowTrans: 500000 },
-    { user: uHRMgr,   base: 30000000, allowPos: 4000000,  allowPhone: 300000,  allowLunch: 730000, allowTrans: 500000 },
-    { user: uSalMgr,  base: 28000000, allowPos: 3000000,  allowPhone: 300000,  allowLunch: 730000, allowTrans: 500000 },
-    { user: uMktMgr,  base: 28000000, allowPos: 3000000,  allowPhone: 300000,  allowLunch: 730000, allowTrans: 500000 },
-    { user: uSrDev1,  base: 40000000, allowPos: 3000000,  allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
-    { user: uDev1,    base: 25000000, allowPos: 0,         allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
-    { user: uDev2,    base: 18000000, allowPos: 0,         allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
-    { user: uHRStaff, base: 15000000, allowPos: 0,         allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
-    { user: uAcc,     base: 20000000, allowPos: 0,         allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
-    { user: uSales1,  base: 18000000, allowPos: 0,         allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
-    { user: uMkt,     base: 16000000, allowPos: 0,         allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
-    { user: uBA,      base: 22000000, allowPos: 0,         allowPhone: 0,       allowLunch: 730000, allowTrans: 500000 },
+    {
+      user: uCEO,
+      base: 80000000,
+      allowPos: 10000000,
+      allowPhone: 1000000,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uCTO,
+      base: 65000000,
+      allowPos: 8000000,
+      allowPhone: 500000,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uCFO,
+      base: 60000000,
+      allowPos: 8000000,
+      allowPhone: 500000,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uHRMgr,
+      base: 30000000,
+      allowPos: 4000000,
+      allowPhone: 300000,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uSalMgr,
+      base: 28000000,
+      allowPos: 3000000,
+      allowPhone: 300000,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uMktMgr,
+      base: 28000000,
+      allowPos: 3000000,
+      allowPhone: 300000,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uSrDev1,
+      base: 40000000,
+      allowPos: 3000000,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uDev1,
+      base: 25000000,
+      allowPos: 0,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uDev2,
+      base: 18000000,
+      allowPos: 0,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uHRStaff,
+      base: 15000000,
+      allowPos: 0,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uAcc,
+      base: 20000000,
+      allowPos: 0,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uSales1,
+      base: 18000000,
+      allowPos: 0,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uMkt,
+      base: 16000000,
+      allowPos: 0,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
+    {
+      user: uBA,
+      base: 22000000,
+      allowPos: 0,
+      allowPhone: 0,
+      allowLunch: 730000,
+      allowTrans: 500000,
+    },
   ];
 
   // Tạo records cho 2025-01 (kỳ đã có period nhưng chưa có records)
@@ -2869,7 +3704,8 @@ async function main() {
     const isBonusMonth = mo === 12;
     // Tháng Tết (1) lương đầy đủ
     for (const pd of fullPayrollUsers) {
-      const totalAllowances = pd.allowPos + pd.allowPhone + pd.allowLunch + pd.allowTrans;
+      const totalAllowances =
+        pd.allowPos + pd.allowPhone + pd.allowLunch + pd.allowTrans;
       // Tăng lương nhẹ qua các năm
       const salaryMultiplier = yr === 2026 ? 1.1 : 1.0;
       const base = Math.round(pd.base * salaryMultiplier);
@@ -2880,7 +3716,9 @@ async function main() {
       const ui = Math.round(base * 0.01);
       const totalDeductions = si + hi + ui;
       const netSalary = grossSalary - totalDeductions;
-      const paidAt = period.paidAt || new Date(`${yr}-${String(mo+1).padStart(2,"0")}-10`);
+      const paidAt =
+        period.paidAt ||
+        new Date(`${yr}-${String(mo + 1).padStart(2, "0")}-10`);
 
       await prisma.payrollRecord.create({
         data: {
@@ -2909,41 +3747,268 @@ async function main() {
       totalPRCreated++;
     }
   }
-  console.log(`   → Đã tạo thêm ${totalPRCreated} payroll records (10 kỳ × ${fullPayrollUsers.length} users)\n`);
+  console.log(
+    `   → Đã tạo thêm ${totalPRCreated} payroll records (10 kỳ × ${fullPayrollUsers.length} users)\n`,
+  );
 
   // ── 29b. PROJECT EXPENSES (nhiều danh mục, nhiều dự án) ──────────────────
   console.log("💸 Tạo ProjectExpenses...");
   const projectExpensesData = [
     // proj1 - FTech ERP
-    { projectId: proj1.id, userId: uDev1.id,   approver: uCTO.id,    cat: "SOFTWARE",    title: "License IntelliJ IDEA năm 2025",          amount: 8000000,   date: "2025-02-01", status: "APPROVED" },
-    { projectId: proj1.id, userId: uSrDev1.id,  approver: uCTO.id,    cat: "HARDWARE",    title: "RAM nâng cấp workstation team dev",        amount: 12000000,  date: "2025-03-10", status: "APPROVED" },
-    { projectId: proj1.id, userId: uBA.id,      approver: uCTO.id,    cat: "TRAVEL",      title: "Vé máy bay họp khách hàng tại HCM",        amount: 5500000,   date: "2025-04-15", status: "APPROVED" },
-    { projectId: proj1.id, userId: uDev1.id,    approver: uCTO.id,    cat: "TRAINING",    title: "Khóa học AWS Cloud Practitioner",           amount: 6000000,   date: "2025-05-20", status: "APPROVED" },
-    { projectId: proj1.id, userId: uSrDev1.id,  approver: uCTO.id,    cat: "SOFTWARE",    title: "Figma Professional Plan (6 tháng)",        amount: 4500000,   date: "2025-06-01", status: "APPROVED" },
-    { projectId: proj1.id, userId: uBA.id,      approver: uCTO.id,    cat: "OTHER",       title: "Văn phòng phẩm và in ấn tài liệu dự án",   amount: 1200000,   date: "2025-07-05", status: "APPROVED" },
-    { projectId: proj1.id, userId: uDev2.id,    approver: uCTO.id,    cat: "TRAVEL",      title: "Chi phí đi lại on-site tại FTech HN",      amount: 3000000,   date: "2025-08-20", status: "APPROVED" },
-    { projectId: proj1.id, userId: uSrDev1.id,  approver: uCTO.id,    cat: "SUBCONTRACT", title: "Thuê QA Tester freelance sprint Q3",        amount: 25000000,  date: "2025-09-01", status: "APPROVED" },
-    { projectId: proj1.id, userId: uDev1.id,    approver: uCTO.id,    cat: "SOFTWARE",    title: "AWS EC2 + RDS phí hosting Q4 2025",         amount: 18000000,  date: "2025-10-01", status: "APPROVED" },
-    { projectId: proj1.id, userId: uBA.id,      approver: uCTO.id,    cat: "TRAINING",    title: "Workshop Agile Scrum nội bộ",              amount: 8000000,   date: "2025-11-10", status: "APPROVED" },
-    { projectId: proj1.id, userId: uDev2.id,    approver: uCTO.id,    cat: "HARDWARE",    title: "Mua thêm 2 màn hình cho team",             amount: 9000000,   date: "2025-12-05", status: "APPROVED" },
+    {
+      projectId: proj1.id,
+      userId: uDev1.id,
+      approver: uCTO.id,
+      cat: "SOFTWARE",
+      title: "License IntelliJ IDEA năm 2025",
+      amount: 8000000,
+      date: "2025-02-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      cat: "HARDWARE",
+      title: "RAM nâng cấp workstation team dev",
+      amount: 12000000,
+      date: "2025-03-10",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uBA.id,
+      approver: uCTO.id,
+      cat: "TRAVEL",
+      title: "Vé máy bay họp khách hàng tại HCM",
+      amount: 5500000,
+      date: "2025-04-15",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uDev1.id,
+      approver: uCTO.id,
+      cat: "TRAINING",
+      title: "Khóa học AWS Cloud Practitioner",
+      amount: 6000000,
+      date: "2025-05-20",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      cat: "SOFTWARE",
+      title: "Figma Professional Plan (6 tháng)",
+      amount: 4500000,
+      date: "2025-06-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uBA.id,
+      approver: uCTO.id,
+      cat: "OTHER",
+      title: "Văn phòng phẩm và in ấn tài liệu dự án",
+      amount: 1200000,
+      date: "2025-07-05",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uDev2.id,
+      approver: uCTO.id,
+      cat: "TRAVEL",
+      title: "Chi phí đi lại on-site tại FTech HN",
+      amount: 3000000,
+      date: "2025-08-20",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      cat: "SUBCONTRACT",
+      title: "Thuê QA Tester freelance sprint Q3",
+      amount: 25000000,
+      date: "2025-09-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uDev1.id,
+      approver: uCTO.id,
+      cat: "SOFTWARE",
+      title: "AWS EC2 + RDS phí hosting Q4 2025",
+      amount: 18000000,
+      date: "2025-10-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uBA.id,
+      approver: uCTO.id,
+      cat: "TRAINING",
+      title: "Workshop Agile Scrum nội bộ",
+      amount: 8000000,
+      date: "2025-11-10",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uDev2.id,
+      approver: uCTO.id,
+      cat: "HARDWARE",
+      title: "Mua thêm 2 màn hình cho team",
+      amount: 9000000,
+      date: "2025-12-05",
+      status: "APPROVED",
+    },
     // proj2 - Sở TTTT Portal
-    { projectId: proj2.id, userId: uDev1.id,    approver: uCTO.id,    cat: "SOFTWARE",    title: "License Enterprise SSL Certificate",       amount: 3500000,   date: "2025-03-01", status: "APPROVED" },
-    { projectId: proj2.id, userId: uBA.id,      approver: uCTO.id,    cat: "TRAVEL",      title: "Di chuyển họp nghiệm thu tại Sở TTTT",    amount: 2500000,   date: "2025-05-10", status: "APPROVED" },
-    { projectId: proj2.id, userId: uSrDev1.id,  approver: uCTO.id,    cat: "SUBCONTRACT", title: "Thuê chuyên gia bảo mật kiểm tra hệ thống",amount: 30000000,  date: "2025-07-15", status: "APPROVED" },
-    { projectId: proj2.id, userId: uDev1.id,    approver: uCTO.id,    cat: "OTHER",       title: "Phí công chứng hồ sơ nghiệm thu",         amount: 800000,    date: "2025-09-20", status: "APPROVED" },
+    {
+      projectId: proj2.id,
+      userId: uDev1.id,
+      approver: uCTO.id,
+      cat: "SOFTWARE",
+      title: "License Enterprise SSL Certificate",
+      amount: 3500000,
+      date: "2025-03-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj2.id,
+      userId: uBA.id,
+      approver: uCTO.id,
+      cat: "TRAVEL",
+      title: "Di chuyển họp nghiệm thu tại Sở TTTT",
+      amount: 2500000,
+      date: "2025-05-10",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj2.id,
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      cat: "SUBCONTRACT",
+      title: "Thuê chuyên gia bảo mật kiểm tra hệ thống",
+      amount: 30000000,
+      date: "2025-07-15",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj2.id,
+      userId: uDev1.id,
+      approver: uCTO.id,
+      cat: "OTHER",
+      title: "Phí công chứng hồ sơ nghiệm thu",
+      amount: 800000,
+      date: "2025-09-20",
+      status: "APPROVED",
+    },
     // proj3 - HN SmartCity
-    { projectId: proj3.id, userId: uSrDev1.id,  approver: uCTO.id,    cat: "SOFTWARE",    title: "Phần mềm thiết kế UI/UX chuyên nghiệp",   amount: 15000000,  date: "2025-04-01", status: "APPROVED" },
-    { projectId: proj3.id, userId: uMkt.id,     approver: uMktMgr.id, cat: "TRAINING",    title: "Đào tạo UX Research cho team",             amount: 5000000,   date: "2025-06-15", status: "APPROVED" },
-    { projectId: proj3.id, userId: uBA.id,      approver: uCTO.id,    cat: "TRAVEL",      title: "Khảo sát thực địa các điểm lắp đặt",      amount: 7000000,   date: "2025-08-10", status: "APPROVED" },
-    { projectId: proj3.id, userId: uDev2.id,    approver: uCTO.id,    cat: "HARDWARE",    title: "Mua IoT sensor prototype",                 amount: 22000000,  date: "2025-10-20", status: "APPROVED" },
+    {
+      projectId: proj3.id,
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      cat: "SOFTWARE",
+      title: "Phần mềm thiết kế UI/UX chuyên nghiệp",
+      amount: 15000000,
+      date: "2025-04-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj3.id,
+      userId: uMkt.id,
+      approver: uMktMgr.id,
+      cat: "TRAINING",
+      title: "Đào tạo UX Research cho team",
+      amount: 5000000,
+      date: "2025-06-15",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj3.id,
+      userId: uBA.id,
+      approver: uCTO.id,
+      cat: "TRAVEL",
+      title: "Khảo sát thực địa các điểm lắp đặt",
+      amount: 7000000,
+      date: "2025-08-10",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj3.id,
+      userId: uDev2.id,
+      approver: uCTO.id,
+      cat: "HARDWARE",
+      title: "Mua IoT sensor prototype",
+      amount: 22000000,
+      date: "2025-10-20",
+      status: "APPROVED",
+    },
     // proj4 - Nội bộ
-    { projectId: proj4.id, userId: uHRStaff.id, approver: uHRMgr.id,  cat: "TRAINING",    title: "Phần mềm đào tạo LMS nội bộ",             amount: 12000000,  date: "2025-05-01", status: "APPROVED" },
-    { projectId: proj4.id, userId: uAcc.id,     approver: uCFO.id,    cat: "SOFTWARE",    title: "License phần mềm kế toán MISA",            amount: 9000000,   date: "2025-07-01", status: "APPROVED" },
-    { projectId: proj4.id, userId: uHRMgr.id,   approver: uCEO.id,    cat: "OTHER",       title: "Chi phí team building Q3/2025",            amount: 15000000,  date: "2025-08-30", status: "APPROVED" },
+    {
+      projectId: proj4.id,
+      userId: uHRStaff.id,
+      approver: uHRMgr.id,
+      cat: "TRAINING",
+      title: "Phần mềm đào tạo LMS nội bộ",
+      amount: 12000000,
+      date: "2025-05-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj4.id,
+      userId: uAcc.id,
+      approver: uCFO.id,
+      cat: "SOFTWARE",
+      title: "License phần mềm kế toán MISA",
+      amount: 9000000,
+      date: "2025-07-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj4.id,
+      userId: uHRMgr.id,
+      approver: uCEO.id,
+      cat: "OTHER",
+      title: "Chi phí team building Q3/2025",
+      amount: 15000000,
+      date: "2025-08-30",
+      status: "APPROVED",
+    },
     // 2026
-    { projectId: proj1.id, userId: uSrDev1.id,  approver: uCTO.id,    cat: "SOFTWARE",    title: "AWS EC2 hosting Q1 2026",                  amount: 20000000,  date: "2026-01-05", status: "APPROVED" },
-    { projectId: proj1.id, userId: uDev1.id,    approver: uCTO.id,    cat: "SUBCONTRACT", title: "Thuê thêm dev outsource Sprint Jan",       amount: 35000000,  date: "2026-02-01", status: "APPROVED" },
-    { projectId: proj3.id, userId: uDev2.id,    approver: uCTO.id,    cat: "HARDWARE",    title: "Mua thêm server cho SmartCity phase 2",    amount: 45000000,  date: "2026-02-15", status: "PENDING"  },
+    {
+      projectId: proj1.id,
+      userId: uSrDev1.id,
+      approver: uCTO.id,
+      cat: "SOFTWARE",
+      title: "AWS EC2 hosting Q1 2026",
+      amount: 20000000,
+      date: "2026-01-05",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj1.id,
+      userId: uDev1.id,
+      approver: uCTO.id,
+      cat: "SUBCONTRACT",
+      title: "Thuê thêm dev outsource Sprint Jan",
+      amount: 35000000,
+      date: "2026-02-01",
+      status: "APPROVED",
+    },
+    {
+      projectId: proj3.id,
+      userId: uDev2.id,
+      approver: uCTO.id,
+      cat: "HARDWARE",
+      title: "Mua thêm server cho SmartCity phase 2",
+      amount: 45000000,
+      date: "2026-02-15",
+      status: "PENDING",
+    },
   ];
 
   await prisma.projectExpense.createMany({
@@ -2968,23 +4033,163 @@ async function main() {
 
   const invoicesData = [
     // FTech ERP (contract1, proj1, client1) — 8 hoá đơn theo tiến độ
-    { code: "INV-2025-001", clientId: client1.id, contractId: contract1.id, projectId: proj1.id, status: "PAID",         issued: "2025-01-31", due: "2025-02-28", sub: 600000000, notes: "Thanh toán tiến độ Q1/2025 - Phase 2.3 HR Module" },
-    { code: "INV-2025-002", clientId: client1.id, contractId: contract1.id, projectId: proj1.id, status: "PAID",         issued: "2025-03-31", due: "2025-04-30", sub: 700000000, notes: "Thanh toán tiến độ Q1/2025 - Phase 2.4 Payroll Module" },
-    { code: "INV-2025-003", clientId: client1.id, contractId: contract1.id, projectId: proj1.id, status: "PAID",         issued: "2025-06-30", due: "2025-07-31", sub: 800000000, notes: "Thanh toán tiến độ Q2/2025 - Phase 2.5 Finance Module" },
-    { code: "INV-2025-004", clientId: client1.id, contractId: contract1.id, projectId: proj1.id, status: "PAID",         issued: "2025-09-30", due: "2025-10-31", sub: 750000000, notes: "Thanh toán tiến độ Q3/2025 - Phase 2.6 Reports & UAT" },
-    { code: "INV-2025-005", clientId: client1.id, contractId: contract1.id, projectId: proj1.id, status: "PAID",         issued: "2025-12-15", due: "2026-01-15", sub: 900000000, notes: "Thanh toán nghiệm thu Phase 2 - Go-live thành công" },
-    { code: "INV-2026-001", clientId: client1.id, contractId: contract1.id, projectId: proj1.id, status: "PARTIALLY_PAID", issued: "2026-02-28", due: "2026-03-31", sub: 500000000, notes: "Thanh toán Phase 3 - Khởi động triển khai" },
+    {
+      code: "INV-2025-001",
+      clientId: client1.id,
+      contractId: contract1.id,
+      projectId: proj1.id,
+      status: "PAID",
+      issued: "2025-01-31",
+      due: "2025-02-28",
+      sub: 600000000,
+      notes: "Thanh toán tiến độ Q1/2025 - Phase 2.3 HR Module",
+    },
+    {
+      code: "INV-2025-002",
+      clientId: client1.id,
+      contractId: contract1.id,
+      projectId: proj1.id,
+      status: "PAID",
+      issued: "2025-03-31",
+      due: "2025-04-30",
+      sub: 700000000,
+      notes: "Thanh toán tiến độ Q1/2025 - Phase 2.4 Payroll Module",
+    },
+    {
+      code: "INV-2025-003",
+      clientId: client1.id,
+      contractId: contract1.id,
+      projectId: proj1.id,
+      status: "PAID",
+      issued: "2025-06-30",
+      due: "2025-07-31",
+      sub: 800000000,
+      notes: "Thanh toán tiến độ Q2/2025 - Phase 2.5 Finance Module",
+    },
+    {
+      code: "INV-2025-004",
+      clientId: client1.id,
+      contractId: contract1.id,
+      projectId: proj1.id,
+      status: "PAID",
+      issued: "2025-09-30",
+      due: "2025-10-31",
+      sub: 750000000,
+      notes: "Thanh toán tiến độ Q3/2025 - Phase 2.6 Reports & UAT",
+    },
+    {
+      code: "INV-2025-005",
+      clientId: client1.id,
+      contractId: contract1.id,
+      projectId: proj1.id,
+      status: "PAID",
+      issued: "2025-12-15",
+      due: "2026-01-15",
+      sub: 900000000,
+      notes: "Thanh toán nghiệm thu Phase 2 - Go-live thành công",
+    },
+    {
+      code: "INV-2026-001",
+      clientId: client1.id,
+      contractId: contract1.id,
+      projectId: proj1.id,
+      status: "PARTIALLY_PAID",
+      issued: "2026-02-28",
+      due: "2026-03-31",
+      sub: 500000000,
+      notes: "Thanh toán Phase 3 - Khởi động triển khai",
+    },
     // HN SmartCity (contract3, proj3, client3) — 3 hoá đơn
-    { code: "INV-2025-006", clientId: client3.id, contractId: contract3.id, projectId: proj3.id, status: "PAID",         issued: "2025-04-30", due: "2025-05-31", sub: 350000000, notes: "Nghiên cứu khả thi và lên kế hoạch tổng thể" },
-    { code: "INV-2025-007", clientId: client3.id, contractId: contract3.id, projectId: proj3.id, status: "PAID",         issued: "2025-07-31", due: "2025-08-31", sub: 400000000, notes: "Hoàn thành thiết kế UI/UX và prototype" },
-    { code: "INV-2025-008", clientId: client3.id, contractId: contract3.id, projectId: proj3.id, status: "OVERDUE",      issued: "2025-10-31", due: "2025-11-30", sub: 500000000, notes: "Hoàn thành phát triển backend core API" },
+    {
+      code: "INV-2025-006",
+      clientId: client3.id,
+      contractId: contract3.id,
+      projectId: proj3.id,
+      status: "PAID",
+      issued: "2025-04-30",
+      due: "2025-05-31",
+      sub: 350000000,
+      notes: "Nghiên cứu khả thi và lên kế hoạch tổng thể",
+    },
+    {
+      code: "INV-2025-007",
+      clientId: client3.id,
+      contractId: contract3.id,
+      projectId: proj3.id,
+      status: "PAID",
+      issued: "2025-07-31",
+      due: "2025-08-31",
+      sub: 400000000,
+      notes: "Hoàn thành thiết kế UI/UX và prototype",
+    },
+    {
+      code: "INV-2025-008",
+      clientId: client3.id,
+      contractId: contract3.id,
+      projectId: proj3.id,
+      status: "OVERDUE",
+      issued: "2025-10-31",
+      due: "2025-11-30",
+      sub: 500000000,
+      notes: "Hoàn thành phát triển backend core API",
+    },
     // client2 (contract2) — tự tạo contract2 reference
-    { code: "INV-2025-009", clientId: client2.id, contractId: contract2.id, projectId: proj2.id, status: "PAID",         issued: "2025-02-28", due: "2025-03-31", sub: 250000000, notes: "Khởi động dự án Sở TTTT - Setup môi trường" },
-    { code: "INV-2025-010", clientId: client2.id, contractId: contract2.id, projectId: proj2.id, status: "PAID",         issued: "2025-05-31", due: "2025-06-30", sub: 300000000, notes: "Hoàn thành module quản lý văn bản" },
-    { code: "INV-2025-011", clientId: client2.id, contractId: contract2.id, projectId: proj2.id, status: "PAID",         issued: "2025-08-31", due: "2025-09-30", sub: 280000000, notes: "Hoàn thành module tích hợp chữ ký số" },
-    { code: "INV-2025-012", clientId: client2.id, contractId: contract2.id, projectId: proj2.id, status: "SENT",         issued: "2025-11-30", due: "2025-12-31", sub: 320000000, notes: "Nghiệm thu toàn bộ dự án Sở TTTT" },
+    {
+      code: "INV-2025-009",
+      clientId: client2.id,
+      contractId: contract2.id,
+      projectId: proj2.id,
+      status: "PAID",
+      issued: "2025-02-28",
+      due: "2025-03-31",
+      sub: 250000000,
+      notes: "Khởi động dự án Sở TTTT - Setup môi trường",
+    },
+    {
+      code: "INV-2025-010",
+      clientId: client2.id,
+      contractId: contract2.id,
+      projectId: proj2.id,
+      status: "PAID",
+      issued: "2025-05-31",
+      due: "2025-06-30",
+      sub: 300000000,
+      notes: "Hoàn thành module quản lý văn bản",
+    },
+    {
+      code: "INV-2025-011",
+      clientId: client2.id,
+      contractId: contract2.id,
+      projectId: proj2.id,
+      status: "PAID",
+      issued: "2025-08-31",
+      due: "2025-09-30",
+      sub: 280000000,
+      notes: "Hoàn thành module tích hợp chữ ký số",
+    },
+    {
+      code: "INV-2025-012",
+      clientId: client2.id,
+      contractId: contract2.id,
+      projectId: proj2.id,
+      status: "SENT",
+      issued: "2025-11-30",
+      due: "2025-12-31",
+      sub: 320000000,
+      notes: "Nghiệm thu toàn bộ dự án Sở TTTT",
+    },
     // client4
-    { code: "INV-2026-002", clientId: client4.id, contractId: null,         projectId: null,      status: "DRAFT",        issued: "2026-03-01", due: "2026-03-31", sub: 150000000, notes: "Tư vấn chuyển đổi số giai đoạn 1" },
+    {
+      code: "INV-2026-002",
+      clientId: client4.id,
+      contractId: null,
+      projectId: null,
+      status: "DRAFT",
+      issued: "2026-03-01",
+      due: "2026-03-31",
+      sub: 150000000,
+      notes: "Tư vấn chuyển đổi số giai đoạn 1",
+    },
   ];
 
   const invObjs = [];
@@ -2992,9 +4197,15 @@ async function main() {
     const d = invoicesData[i];
     const taxAmount = Math.round(d.sub * 0.1);
     const totalAmount = d.sub + taxAmount;
-    let paidAmount = 0, outstandingAmount = totalAmount;
-    if (d.status === "PAID") { paidAmount = totalAmount; outstandingAmount = 0; }
-    else if (d.status === "PARTIALLY_PAID") { paidAmount = Math.round(totalAmount * 0.5); outstandingAmount = totalAmount - paidAmount; }
+    let paidAmount = 0,
+      outstandingAmount = totalAmount;
+    if (d.status === "PAID") {
+      paidAmount = totalAmount;
+      outstandingAmount = 0;
+    } else if (d.status === "PARTIALLY_PAID") {
+      paidAmount = Math.round(totalAmount * 0.5);
+      outstandingAmount = totalAmount - paidAmount;
+    }
 
     const inv = await prisma.invoice.create({
       data: {
@@ -3012,7 +4223,9 @@ async function main() {
         outstandingAmount,
         currency: "VND",
         createdByUserId: uAcc.id,
-        sentAt: ["SENT","PAID","PARTIALLY_PAID","OVERDUE"].includes(d.status) ? new Date(d.issued) : null,
+        sentAt: ["SENT", "PAID", "PARTIALLY_PAID", "OVERDUE"].includes(d.status)
+          ? new Date(d.issued)
+          : null,
         notes: d.notes,
       },
     });
@@ -3036,16 +4249,33 @@ async function main() {
 
   // ── 31. CLIENT PAYMENTS (theo từng invoice đã PAID) ───────────────────────
   console.log("💳 Tạo ClientPayments...");
-  const paymentMethods = ["BANK_TRANSFER", "BANK_TRANSFER", "BANK_TRANSFER", "ONLINE", "CHECK"];
-  const bankNames = ["Vietcombank", "BIDV", "Techcombank", "MB Bank", "VietinBank"];
-  const paidInvoices = invObjs.filter(o => ["PAID","PARTIALLY_PAID"].includes(o.data.status));
+  const paymentMethods = [
+    "BANK_TRANSFER",
+    "BANK_TRANSFER",
+    "BANK_TRANSFER",
+    "ONLINE",
+    "CHECK",
+  ];
+  const bankNames = [
+    "Vietcombank",
+    "BIDV",
+    "Techcombank",
+    "MB Bank",
+    "VietinBank",
+  ];
+  const paidInvoices = invObjs.filter((o) =>
+    ["PAID", "PARTIALLY_PAID"].includes(o.data.status),
+  );
 
   const paymentsToCreate = [];
   for (let i = 0; i < paidInvoices.length; i++) {
     const { inv, data } = paidInvoices[i];
     const taxAmount = Math.round(data.sub * 0.1);
     const totalAmount = data.sub + taxAmount;
-    const paidAmt = data.status === "PARTIALLY_PAID" ? Math.round(totalAmount * 0.5) : totalAmount;
+    const paidAmt =
+      data.status === "PARTIALLY_PAID"
+        ? Math.round(totalAmount * 0.5)
+        : totalAmount;
     const issueDate = new Date(data.issued);
     const payDate = new Date(issueDate.getTime() + 20 * 86400000);
 
@@ -3053,13 +4283,13 @@ async function main() {
       clientId: data.clientId,
       contractId: data.contractId || undefined,
       invoiceId: inv.id,
-      paymentCode: `PMT-${String(i + 1).padStart(3,"0")}-${data.code.replace("INV-","")}`,
+      paymentCode: `PMT-${String(i + 1).padStart(3, "0")}-${data.code.replace("INV-", "")}`,
       amount: paidAmt,
       currency: "VND",
       amountInVnd: paidAmt,
       paymentDate: payDate,
       paymentMethod: paymentMethods[i % paymentMethods.length],
-      referenceNumber: `REF${payDate.getFullYear()}${String(payDate.getMonth()+1).padStart(2,"0")}${String(i+1).padStart(4,"0")}`,
+      referenceNumber: `REF${payDate.getFullYear()}${String(payDate.getMonth() + 1).padStart(2, "0")}${String(i + 1).padStart(4, "0")}`,
       status: "COMPLETED",
       receivedBankName: bankNames[i % bankNames.length],
       receivedAccountNumber: `101${String(9000000 + i * 123456)}`,

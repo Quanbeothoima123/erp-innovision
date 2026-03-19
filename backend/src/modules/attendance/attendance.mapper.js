@@ -32,6 +32,7 @@ function toShiftOptionDto(shift) {
     startTime: shift.startTime,
     endTime: shift.endTime,
     workMinutes: shift.workMinutes,
+    isActive: shift.isActive ?? true, // FIX: cần cho frontend filter
   };
 }
 

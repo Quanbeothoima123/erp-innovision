@@ -26,6 +26,7 @@ export interface ApiLeaveType {
 }
 
 export interface ApiLeaveBalance {
+  id?: string;
   userId: string;
   leaveTypeId: string;
   year: number;
@@ -35,19 +36,25 @@ export interface ApiLeaveBalance {
   usedDays: number;
   pendingDays: number;
   remainingDays: number;
+  notes?: string | null;
   leaveType?: ApiLeaveType;
-  user?: { id: string; fullName: string; userCode: string };
+  user?: {
+    id: string;
+    fullName: string;
+    userCode: string;
+    avatarUrl?: string | null;
+    department?: { id: string; name: string };
+  };
 }
 
 export interface ApiLeaveRequestApproval {
   id: string;
-  leaveRequestId: string;
   stepType: ApprovalStepType;
-  approverId: string;
+  stepOrder: number;
   status: ApprovalStatus;
-  note: string | null;
-  actedAt: string | null;
-  approver?: { id: string; fullName: string };
+  comment: string | null; // backend trả "comment" (không phải "note")
+  actionAt: string | null; // backend trả "actionAt" (không phải "actedAt")
+  approver?: { id: string; fullName: string; avatarUrl?: string | null };
 }
 
 export interface ApiLeaveRequest {
@@ -69,7 +76,10 @@ export interface ApiLeaveRequest {
     id: string;
     fullName: string;
     userCode: string;
-    departmentId: string;
+    avatarUrl?: string | null;
+    department?: { id: string; name: string };
+    jobTitle?: { name: string };
+    manager?: { id: string; fullName: string };
   };
   leaveType?: ApiLeaveType;
   approvals?: ApiLeaveRequestApproval[];
@@ -90,7 +100,14 @@ export interface ListLeaveRequestsParams {
 
 export interface PaginatedLeaveRequests {
   items: ApiLeaveRequest[];
-  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 export interface ListBalancesParams {
@@ -103,7 +120,14 @@ export interface ListBalancesParams {
 
 export interface PaginatedBalances {
   items: ApiLeaveBalance[];
-  pagination: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 // ─── Leave Types ─────────────────────────────────────────────
@@ -111,7 +135,15 @@ export interface PaginatedBalances {
 export async function listLeaveTypes(params?: {
   search?: string;
   isActive?: boolean;
-}): Promise<{ items: ApiLeaveType[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+}): Promise<{
+  items: ApiLeaveType[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}> {
   return api.get("/leave/types", { params: params as Record<string, string> });
 }
 
@@ -177,7 +209,7 @@ export async function adjustBalance(
   userId: string,
   leaveTypeId: string,
   year: number,
-  payload: { adjustedDays: number; reason?: string },
+  payload: { adjustedDays: number; notes: string }, // backend validation requires notes
 ): Promise<ApiLeaveBalance> {
   return api.patch<ApiLeaveBalance>(
     `/leave/balances/${userId}/${leaveTypeId}/${year}/adjust`,
@@ -232,10 +264,13 @@ export async function rejectRequest(
   note?: string,
 ): Promise<ApiLeaveRequest> {
   // Backend expects: { rejectionReason: string (min 5 chars) }
-  const rejectionReason = (note && note.trim().length >= 5)
-    ? note.trim()
-    : (note?.trim() || "Không được duyệt bởi HR/Quản lý");
-  return api.post<ApiLeaveRequest>(`/leave/requests/${id}/reject`, { rejectionReason });
+  const rejectionReason =
+    note && note.trim().length >= 5
+      ? note.trim()
+      : note?.trim() || "Không được duyệt bởi HR/Quản lý";
+  return api.post<ApiLeaveRequest>(`/leave/requests/${id}/reject`, {
+    rejectionReason,
+  });
 }
 
 // ─── Pending Approvals ────────────────────────────────────────

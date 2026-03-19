@@ -674,6 +674,9 @@ model UserSalaryComponent {
   userId            String          @map("user_id") @db.VarChar(30)
   salaryComponentId String          @map("salary_component_id") @db.VarChar(30)
   amount            Decimal         @db.Decimal(18, 2)
+  /// Nếu true: amount là % của lương cơ bản (vd: 8.0 = 8%)
+  /// Nếu false: amount là số tiền cố định (vd: 500000)
+  isPercentage      Boolean         @default(false) @map("is_percentage")
   effectiveFrom     DateTime        @map("effective_from") @db.Date
   effectiveTo       DateTime?       @map("effective_to") @db.Date
   isActive          Boolean         @default(true) @map("is_active")

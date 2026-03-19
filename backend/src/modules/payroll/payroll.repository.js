@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const { prisma } = require('../../config/db');
+const { prisma } = require("../../config/db");
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  PAYROLL PERIOD                                          ║
@@ -11,7 +11,13 @@ const PERIOD_INCLUDE = {
   _count: { select: { payrollRecords: true, payrollAdjustments: true } },
 };
 
-async function findManyPeriods({ status, year, sortOrder = 'desc', page = 1, limit = 20 }) {
+async function findManyPeriods({
+  status,
+  year,
+  sortOrder = "desc",
+  page = 1,
+  limit = 20,
+}) {
   const skip = (page - 1) * limit;
   const where = {
     ...(status && { status }),
@@ -38,7 +44,9 @@ async function findPeriodById(id) {
 }
 
 async function findPeriodByMonthYear(month, year) {
-  return prisma.payrollPeriod.findUnique({ where: { month_year: { month, year } } });
+  return prisma.payrollPeriod.findUnique({
+    where: { month_year: { month, year } },
+  });
 }
 
 async function createPeriod(data) {
@@ -46,7 +54,11 @@ async function createPeriod(data) {
 }
 
 async function updatePeriod(id, data) {
-  return prisma.payrollPeriod.update({ where: { id }, data, include: PERIOD_INCLUDE });
+  return prisma.payrollPeriod.update({
+    where: { id },
+    data,
+    include: PERIOD_INCLUDE,
+  });
 }
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -56,14 +68,22 @@ async function updatePeriod(id, data) {
 const COMPENSATION_INCLUDE = {
   user: {
     select: {
-      id: true, fullName: true, userCode: true, avatarUrl: true,
+      id: true,
+      fullName: true,
+      userCode: true,
+      avatarUrl: true,
       department: { select: { id: true, name: true } },
       jobTitle: { select: { name: true } },
     },
   },
 };
 
-async function findManyCompensations({ userId, isActive, page = 1, limit = 20 }) {
+async function findManyCompensations({
+  userId,
+  isActive,
+  page = 1,
+  limit = 20,
+}) {
   const skip = (page - 1) * limit;
   const where = {
     ...(userId && { userId }),
@@ -74,7 +94,7 @@ async function findManyCompensations({ userId, isActive, page = 1, limit = 20 })
     prisma.userCompensation.findMany({
       where,
       include: COMPENSATION_INCLUDE,
-      orderBy: [{ userId: 'asc' }, { effectiveFrom: 'desc' }],
+      orderBy: [{ userId: "asc" }, { effectiveFrom: "desc" }],
       skip,
       take: limit,
     }),
@@ -83,13 +103,16 @@ async function findManyCompensations({ userId, isActive, page = 1, limit = 20 })
 }
 
 async function findCompensationById(id) {
-  return prisma.userCompensation.findUnique({ where: { id }, include: COMPENSATION_INCLUDE });
+  return prisma.userCompensation.findUnique({
+    where: { id },
+    include: COMPENSATION_INCLUDE,
+  });
 }
 
 async function findActiveCompensation(userId) {
   return prisma.userCompensation.findFirst({
     where: { userId, isActive: true },
-    orderBy: { effectiveFrom: 'desc' },
+    orderBy: { effectiveFrom: "desc" },
     include: COMPENSATION_INCLUDE,
   });
 }
@@ -97,23 +120,35 @@ async function findActiveCompensation(userId) {
 async function findCompensationHistory(userId) {
   return prisma.userCompensation.findMany({
     where: { userId },
-    orderBy: { effectiveFrom: 'desc' },
+    orderBy: { effectiveFrom: "desc" },
   });
 }
 
 async function createCompensation(data) {
-  return prisma.userCompensation.create({ data, include: COMPENSATION_INCLUDE });
+  return prisma.userCompensation.create({
+    data,
+    include: COMPENSATION_INCLUDE,
+  });
 }
 
 async function updateCompensation(id, data) {
-  return prisma.userCompensation.update({ where: { id }, data, include: COMPENSATION_INCLUDE });
+  return prisma.userCompensation.update({
+    where: { id },
+    data,
+    include: COMPENSATION_INCLUDE,
+  });
 }
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  SALARY COMPONENT                                        ║
 // ╚══════════════════════════════════════════════════════════╝
 
-async function findManySalaryComponents({ componentType, isActive, page = 1, limit = 20 }) {
+async function findManySalaryComponents({
+  componentType,
+  isActive,
+  page = 1,
+  limit = 20,
+}) {
   const skip = (page - 1) * limit;
   const where = {
     ...(componentType && { componentType }),
@@ -123,7 +158,7 @@ async function findManySalaryComponents({ componentType, isActive, page = 1, lim
     prisma.salaryComponent.count({ where }),
     prisma.salaryComponent.findMany({
       where,
-      orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
+      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
       skip,
       take: limit,
     }),
@@ -142,7 +177,7 @@ async function findSalaryComponentByCode(code) {
 async function findAllActiveSalaryComponents() {
   return prisma.salaryComponent.findMany({
     where: { isActive: true },
-    orderBy: [{ componentType: 'asc' }, { displayOrder: 'asc' }],
+    orderBy: [{ componentType: "asc" }, { displayOrder: "asc" }],
   });
 }
 
@@ -160,7 +195,7 @@ async function findUserSalaryComponents(userId) {
   return prisma.userSalaryComponent.findMany({
     where: { userId, isActive: true },
     include: { salaryComponent: true },
-    orderBy: { salaryComponent: { displayOrder: 'asc' } },
+    orderBy: { salaryComponent: { displayOrder: "asc" } },
   });
 }
 
@@ -168,6 +203,7 @@ async function findUserSalaryComponents(userId) {
  * Lấy thành phần lương active tại 1 ngày cụ thể (dùng khi tính lương)
  */
 async function findUserSalaryComponentsAtDate(userId, date) {
+  // isPercentage được thêm vào schema để hỗ trợ % lương cơ bản
   return prisma.userSalaryComponent.findMany({
     where: {
       userId,
@@ -180,6 +216,7 @@ async function findUserSalaryComponentsAtDate(userId, date) {
 }
 
 async function assignSalaryComponent(data) {
+  // data nên bao gồm: userId, salaryComponentId, amount, isPercentage, effectiveFrom, ...
   return prisma.userSalaryComponent.create({
     data,
     include: { salaryComponent: true },
@@ -200,18 +237,27 @@ async function deactivateUserSalaryComponent(id) {
 const ADJUSTMENT_INCLUDE = {
   user: {
     select: {
-      id: true, fullName: true, userCode: true,
+      id: true,
+      fullName: true,
+      userCode: true,
       department: { select: { id: true, name: true } },
     },
   },
-  payrollPeriod: { select: { id: true, periodCode: true, month: true, year: true } },
+  payrollPeriod: {
+    select: { id: true, periodCode: true, month: true, year: true },
+  },
   createdBy: { select: { id: true, fullName: true } },
   approvedBy: { select: { id: true, fullName: true } },
 };
 
 async function findManyAdjustments({
-  userId, payrollPeriodId, adjustmentType, status,
-  sortOrder = 'desc', page = 1, limit = 20,
+  userId,
+  payrollPeriodId,
+  adjustmentType,
+  status,
+  sortOrder = "desc",
+  page = 1,
+  limit = 20,
 }) {
   const skip = (page - 1) * limit;
   const where = {
@@ -234,7 +280,10 @@ async function findManyAdjustments({
 }
 
 async function findAdjustmentById(id) {
-  return prisma.payrollAdjustment.findUnique({ where: { id }, include: ADJUSTMENT_INCLUDE });
+  return prisma.payrollAdjustment.findUnique({
+    where: { id },
+    include: ADJUSTMENT_INCLUDE,
+  });
 }
 
 /**
@@ -242,7 +291,7 @@ async function findAdjustmentById(id) {
  */
 async function findApprovedAdjustmentsForPeriod(userId, payrollPeriodId) {
   return prisma.payrollAdjustment.findMany({
-    where: { userId, payrollPeriodId, status: 'APPROVED' },
+    where: { userId, payrollPeriodId, status: "APPROVED" },
   });
 }
 
@@ -251,7 +300,11 @@ async function createAdjustment(data) {
 }
 
 async function updateAdjustment(id, data) {
-  return prisma.payrollAdjustment.update({ where: { id }, data, include: ADJUSTMENT_INCLUDE });
+  return prisma.payrollAdjustment.update({
+    where: { id },
+    data,
+    include: ADJUSTMENT_INCLUDE,
+  });
 }
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -261,21 +314,40 @@ async function updateAdjustment(id, data) {
 const RECORD_INCLUDE = {
   user: {
     select: {
-      id: true, fullName: true, userCode: true, avatarUrl: true,
+      id: true,
+      fullName: true,
+      userCode: true,
+      avatarUrl: true,
       department: { select: { id: true, name: true } },
       jobTitle: { select: { name: true } },
     },
   },
   payrollPeriod: {
-    select: { id: true, periodCode: true, month: true, year: true, payDate: true, status: true },
+    select: {
+      id: true,
+      periodCode: true,
+      month: true,
+      year: true,
+      payDate: true,
+      status: true,
+    },
   },
   items: {
-    include: { salaryComponent: { select: { id: true, code: true, name: true } } },
-    orderBy: { itemType: 'asc' },
+    include: {
+      salaryComponent: { select: { id: true, code: true, name: true } },
+    },
+    orderBy: { itemType: "asc" },
   },
 };
 
-async function findManyRecords({ payrollPeriodId, userId, departmentId, status, page = 1, limit = 20 }) {
+async function findManyRecords({
+  payrollPeriodId,
+  userId,
+  departmentId,
+  status,
+  page = 1,
+  limit = 20,
+}) {
   const skip = (page - 1) * limit;
   const where = {
     ...(payrollPeriodId && { payrollPeriodId }),
@@ -288,7 +360,7 @@ async function findManyRecords({ payrollPeriodId, userId, departmentId, status, 
     prisma.payrollRecord.findMany({
       where,
       include: RECORD_INCLUDE,
-      orderBy: { user: { fullName: 'asc' } },
+      orderBy: { user: { fullName: "asc" } },
       skip,
       take: limit,
     }),
@@ -297,7 +369,10 @@ async function findManyRecords({ payrollPeriodId, userId, departmentId, status, 
 }
 
 async function findRecordById(id) {
-  return prisma.payrollRecord.findUnique({ where: { id }, include: RECORD_INCLUDE });
+  return prisma.payrollRecord.findUnique({
+    where: { id },
+    include: RECORD_INCLUDE,
+  });
 }
 
 async function findRecordByPeriodAndUser(payrollPeriodId, userId) {
@@ -317,19 +392,28 @@ async function upsertPayrollRecord(payrollPeriodId, userId, data, items) {
     });
 
     // Xóa items cũ → insert items mới
-    await tx.payrollRecordItem.deleteMany({ where: { payrollRecordId: record.id } });
+    await tx.payrollRecordItem.deleteMany({
+      where: { payrollRecordId: record.id },
+    });
     if (items.length > 0) {
       await tx.payrollRecordItem.createMany({
         data: items.map((item) => ({ ...item, payrollRecordId: record.id })),
       });
     }
 
-    return tx.payrollRecord.findUnique({ where: { id: record.id }, include: RECORD_INCLUDE });
+    return tx.payrollRecord.findUnique({
+      where: { id: record.id },
+      include: RECORD_INCLUDE,
+    });
   });
 }
 
 async function updatePayrollRecord(id, data) {
-  return prisma.payrollRecord.update({ where: { id }, data, include: RECORD_INCLUDE });
+  return prisma.payrollRecord.update({
+    where: { id },
+    data,
+    include: RECORD_INCLUDE,
+  });
 }
 
 // ── Insurance & Tax policies ──────────────────────────────────
@@ -337,14 +421,14 @@ async function updatePayrollRecord(id, data) {
 async function findActiveInsurancePolicies() {
   return prisma.insurancePolicy.findMany({
     where: { isActive: true },
-    orderBy: { policyType: 'asc' },
+    orderBy: { policyType: "asc" },
   });
 }
 
 async function findActiveTaxPolicy(year) {
   return prisma.taxPolicy.findFirst({
     where: { year, isActive: true },
-    include: { brackets: { orderBy: { bracketOrder: 'asc' } } },
+    include: { brackets: { orderBy: { bracketOrder: "asc" } } },
   });
 }
 
@@ -383,7 +467,7 @@ async function getApprovedOTSummary(userId, startDate, endDate) {
   return prisma.overtimeRequest.findMany({
     where: {
       userId,
-      status: 'APPROVED',
+      status: "APPROVED",
       workDate: { gte: startDate, lte: endDate },
     },
     select: {
@@ -399,20 +483,15 @@ async function getApprovedOTSummary(userId, startDate, endDate) {
  * Ngày nghỉ phép đã được duyệt (final) trong kỳ — tính paidLeaveDays / unpaidLeaveDays
  */
 async function getApprovedLeaveSummary(userId, startDate, endDate) {
+  // FIX: không dùng include và select cùng lúc — Prisma throw lỗi
   return prisma.leaveRequest.findMany({
     where: {
       userId,
-      status: 'APPROVED',
+      status: "APPROVED",
       startDate: { lte: endDate },
       endDate: { gte: startDate },
     },
     include: { leaveType: { select: { isPaid: true } } },
-    select: {
-      totalDays: true,
-      startDate: true,
-      endDate: true,
-      leaveType: true,
-    },
   });
 }
 
@@ -422,8 +501,8 @@ async function getApprovedLeaveSummary(userId, startDate, endDate) {
 async function findActiveUsersForPayroll() {
   return prisma.user.findMany({
     where: {
-      accountStatus: 'ACTIVE',
-      employmentStatus: { in: ['ACTIVE', 'PROBATION', 'ON_LEAVE'] },
+      accountStatus: "ACTIVE",
+      employmentStatus: { in: ["ACTIVE", "PROBATION", "ON_LEAVE"] },
     },
     select: { id: true, fullName: true, userCode: true },
   });
@@ -431,25 +510,47 @@ async function findActiveUsersForPayroll() {
 
 module.exports = {
   // Period
-  findManyPeriods, findPeriodById, findPeriodByMonthYear,
-  createPeriod, updatePeriod,
+  findManyPeriods,
+  findPeriodById,
+  findPeriodByMonthYear,
+  createPeriod,
+  updatePeriod,
   // Compensation
-  findManyCompensations, findCompensationById, findActiveCompensation,
-  findCompensationHistory, createCompensation, updateCompensation,
+  findManyCompensations,
+  findCompensationById,
+  findActiveCompensation,
+  findCompensationHistory,
+  createCompensation,
+  updateCompensation,
   // SalaryComponent
-  findManySalaryComponents, findSalaryComponentById, findSalaryComponentByCode,
-  findAllActiveSalaryComponents, createSalaryComponent, updateSalaryComponent,
+  findManySalaryComponents,
+  findSalaryComponentById,
+  findSalaryComponentByCode,
+  findAllActiveSalaryComponents,
+  createSalaryComponent,
+  updateSalaryComponent,
   // UserSalaryComponent
-  findUserSalaryComponents, findUserSalaryComponentsAtDate,
-  assignSalaryComponent, deactivateUserSalaryComponent,
+  findUserSalaryComponents,
+  findUserSalaryComponentsAtDate,
+  assignSalaryComponent,
+  deactivateUserSalaryComponent,
   // Adjustment
-  findManyAdjustments, findAdjustmentById, findApprovedAdjustmentsForPeriod,
-  createAdjustment, updateAdjustment,
+  findManyAdjustments,
+  findAdjustmentById,
+  findApprovedAdjustmentsForPeriod,
+  createAdjustment,
+  updateAdjustment,
   // Record
-  findManyRecords, findRecordById, findRecordByPeriodAndUser,
-  upsertPayrollRecord, updatePayrollRecord,
+  findManyRecords,
+  findRecordById,
+  findRecordByPeriodAndUser,
+  upsertPayrollRecord,
+  updatePayrollRecord,
   // Calculation data
-  findActiveInsurancePolicies, findActiveTaxPolicy,
-  getAttendanceSummary, getApprovedOTSummary,
-  getApprovedLeaveSummary, findActiveUsersForPayroll,
+  findActiveInsurancePolicies,
+  findActiveTaxPolicy,
+  getAttendanceSummary,
+  getApprovedOTSummary,
+  getApprovedLeaveSummary,
+  findActiveUsersForPayroll,
 };

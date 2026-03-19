@@ -573,7 +573,7 @@ export function EmployeeDetailPage() {
     if (USE_API && availableShifts.length === 0) {
       try {
         const opts = await attendanceService.getShiftOptions();
-        setAvailableShifts(opts.filter((s: ApiShift) => s.isActive));
+        setAvailableShifts(opts); // backend đã query isActive=true rồi
       } catch {
         /* ignore */
       }
@@ -596,10 +596,12 @@ export function EmployeeDetailPage() {
         });
         await fetchWorkShifts();
       }
-      toast.success("Da gan ca lam viec cho nhan vien");
+      toast.success("Đã gắn ca làm việc cho nhân viên");
       setShowAssignShift(false);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Gan ca that bai");
+      toast.error(
+        err instanceof ApiError ? err.message : "Gán ca làm việc thất bại",
+      );
     } finally {
       setAssigningSavng(false);
     }
@@ -2197,8 +2199,16 @@ function SalaryComponentsTab({
                           : "Khấu trừ"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-green-600">
-                      {fmtVND(c.amount)}
+                    <td className="px-4 py-3 text-right">
+                      {(c as Record<string, unknown>).isPercentage ? (
+                        <span className="text-blue-600 dark:text-blue-400 font-medium">
+                          {c.amount}%
+                        </span>
+                      ) : (
+                        <span className="text-green-600 font-medium">
+                          {fmtVND(c.amount)}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
                       {fmtDate(c.effectiveFrom)}
@@ -2279,6 +2289,7 @@ function AssignComponentDialog({
     null,
   );
   const [amount, setAmount] = useState("");
+  const [isPercentage, setIsPercentage] = useState(false);
   const [effectiveFrom, setEffectiveFrom] = useState(
     new Date().toISOString().split("T")[0],
   );
@@ -2392,20 +2403,49 @@ function AssignComponentDialog({
               </div>
             )}
           </div>
+          {/* isPercentage toggle + amount */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
-              Số tiền (VND) *
+            <label className="block text-[12px] text-muted-foreground mb-1.5">
+              Kiểu giá trị *
             </label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="VD: 730000"
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
-            />
-            {amount && (
+            <div className="flex rounded-lg border border-border overflow-hidden mb-2">
+              <button
+                type="button"
+                onClick={() => setIsPercentage(false)}
+                className={`flex-1 py-2 text-[12px] transition-colors ${!isPercentage ? "bg-blue-600 text-white" : "bg-card text-muted-foreground hover:bg-accent"}`}
+              >
+                Số tiền cố định (đ)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPercentage(true)}
+                className={`flex-1 py-2 text-[12px] transition-colors ${isPercentage ? "bg-blue-600 text-white" : "bg-card text-muted-foreground hover:bg-accent"}`}
+              >
+                % lương cơ bản
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={
+                  isPercentage ? "VD: 8 (= 8% lương CB)" : "VD: 500000"
+                }
+                className="w-full px-3 py-2 pr-12 rounded-lg border border-border bg-input-background text-[13px]"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground pointer-events-none">
+                {isPercentage ? "%" : "đ"}
+              </span>
+            </div>
+            {amount && !isPercentage && (
               <div className="text-[10px] text-muted-foreground mt-0.5">
                 {fmtVND(parseFloat(amount) || 0)}
+              </div>
+            )}
+            {amount && isPercentage && (
+              <div className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">
+                = {parseFloat(amount) || 0}% của lương cơ bản nhân viên
               </div>
             )}
           </div>
@@ -2473,6 +2513,7 @@ function AssignComponentDialog({
                 userId,
                 salaryComponentId: selectedComp.id,
                 amount: amt,
+                isPercentage,
                 effectiveFrom,
                 effectiveTo: effectiveTo || null,
                 notes: notes || null,

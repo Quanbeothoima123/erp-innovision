@@ -848,7 +848,7 @@ export function ShiftsPage() {
         setShiftMembers(members);
       }
     } catch {
-      toast.error("Khong tai duoc danh sach nhan vien");
+      toast.error("Không tải được danh sách nhân viên");
     } finally {
       setMembersLoading(false);
     }
