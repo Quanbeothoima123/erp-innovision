@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // ================================================================
 // EMPLOYEES PAGE — Module 2
 // API-integrated: usersService + departmentsService + jobTitlesService
@@ -33,7 +34,6 @@ import { ApiError } from "../../lib/apiClient";
 import * as attendanceService from "../../lib/services/attendance.service";
 import type { ApiWorkShift } from "../../lib/services/attendance.service";
 import * as payrollService from "../../lib/services/payroll.service";
-import type { ApiSalaryComponent } from "../../lib/services/payroll.service";
 
 // ── Mock fallback ──────────────────────────────────────────────
 import {
@@ -288,14 +288,15 @@ export function EmployeesPage() {
   const [createStep, setCreateStep] = useState(1);
   // Step 3 extras: shift + salary
   const [shiftOptions, setShiftOptions] = useState<ApiWorkShift[]>([]);
-  const [salaryComponentOptions, setSalaryComponentOptions] = useState<
-    ApiSalaryComponent[]
-  >([]);
+
   const [createExtras, setCreateExtras] = useState({
+    // Ca làm việc
     shiftId: "",
     shiftEffectiveFrom: new Date().toISOString().slice(0, 10),
+    // Cấu hình lương cơ bản (UserCompensation — đúng nghiệp vụ)
     baseSalary: "",
-    salaryComponentId: "",
+    salaryType: "MONTHLY" as "MONTHLY" | "DAILY" | "HOURLY",
+    changeReason: "Lương ban đầu khi tạo nhân viên",
   });
   const [createForm, setCreateForm] = useState(emptyCreateForm);
 
@@ -454,6 +455,17 @@ export function EmployeesPage() {
     fetchUsers();
   }, [fetchUsers]);
 
+  // Pre-load shift options on mount so step 2 dropdown is ready
+  useEffect(() => {
+    if (!USE_API) return;
+    attendanceService
+      .getShiftOptions()
+      .then((res) =>
+        setShiftOptions(res.filter((s: ApiWorkShift) => s.isActive)),
+      )
+      .catch(() => {});
+  }, []);
+
   const handleCreate = async () => {
     if (
       !createForm.fullName ||
@@ -492,21 +504,31 @@ export function EmployeesPage() {
           }
         }
 
-        // Gán lương ban đầu nếu đã điền
-        if (
-          createExtras.salaryComponentId &&
-          createExtras.baseSalary &&
-          newUser?.id
-        ) {
+        // Tạo cấu hình lương cơ bản (UserCompensation) nếu đã nhập
+        if (createExtras.baseSalary && newUser?.id) {
           try {
-            await payrollService.assignSalaryComponent({
+            await payrollService.createCompensation({
               userId: newUser.id,
-              salaryComponentId: createExtras.salaryComponentId,
-              amount: Number(createExtras.baseSalary),
+              salaryType: createExtras.salaryType,
+              baseSalary: Number(createExtras.baseSalary),
+              probationSalary: null,
+              standardWorkingDays: 26,
+              standardWorkingHours: 8,
+              currency: "VND",
+              payFrequency: "MONTHLY",
+              payDayOfMonth: null,
+              probationEndDate: null,
+              changeReason:
+                createExtras.changeReason || "Luong ban dau khi tao nhan vien",
+              overtimeRateWeekday: 1.5,
+              overtimeRateWeekend: 2.0,
+              overtimeRateHoliday: 3.0,
               effectiveFrom: createForm.hireDate,
+              effectiveTo: null,
+              notes: null,
             });
           } catch {
-            /* không block nếu gán lương lỗi */
+            /* không block nếu tạo lương lỗi */
           }
         }
       }
@@ -520,7 +542,8 @@ export function EmployeesPage() {
         shiftId: "",
         shiftEffectiveFrom: new Date().toISOString().slice(0, 10),
         baseSalary: "",
-        salaryComponentId: "",
+        salaryType: "MONTHLY",
+        changeReason: "Lương ban đầu khi tạo nhân viên",
       });
       fetchUsers();
     } catch (err) {
@@ -960,7 +983,8 @@ export function EmployeesPage() {
                 shiftId: "",
                 shiftEffectiveFrom: new Date().toISOString().slice(0, 10),
                 baseSalary: "",
-                salaryComponentId: "",
+                salaryType: "MONTHLY",
+                changeReason: "Lương ban đầu khi tạo nhân viên",
               });
             }}
           />
@@ -1107,23 +1131,6 @@ export function EmployeesPage() {
                         toast.error("Vui lòng điền đầy đủ các trường bắt buộc");
                         return;
                       }
-                      // Load shift + salary options for step 2
-                      if (USE_API && shiftOptions.length === 0) {
-                        attendanceService
-                          .getShiftOptions()
-                          .then((res) =>
-                            setShiftOptions(
-                              res.filter((s: ApiWorkShift) => s.isActive),
-                            ),
-                          )
-                          .catch(() => {});
-                      }
-                      if (USE_API && salaryComponentOptions.length === 0) {
-                        payrollService
-                          .getSalaryComponentOptions()
-                          .then((res) => setSalaryComponentOptions(res))
-                          .catch(() => {});
-                      }
                       setCreateStep(2);
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition"
@@ -1192,40 +1199,38 @@ export function EmployeesPage() {
 
                   <div className="border-t border-border" />
 
-                  {/* Lương ban đầu */}
+                  {/* Cấu hình lương cơ bản — UserCompensation */}
                   <div>
                     <div className="text-[13px] font-medium mb-3 flex items-center gap-2">
-                      💰 Lương ban đầu
+                      💰 Lương cơ bản ban đầu
                       <span className="text-[11px] text-muted-foreground font-normal">
-                        (tuỳ chọn)
+                        (tuỳ chọn — có thể cấu hình sau)
                       </span>
                     </div>
                     <div className="space-y-3">
-                      <div>
-                        <label className="text-[12px] text-muted-foreground block mb-1">
-                          Thành phần lương
-                        </label>
-                        <select
-                          value={createExtras.salaryComponentId}
-                          onChange={(e) =>
-                            setCreateExtras((p) => ({
-                              ...p,
-                              salaryComponentId: e.target.value,
-                            }))
-                          }
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">-- Bỏ qua, cấu hình sau --</option>
-                          {salaryComponentOptions
-                            .filter((c) => c.isActive)
-                            .map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name} ({c.componentType})
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                      {createExtras.salaryComponentId && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[12px] text-muted-foreground block mb-1">
+                            Loại lương
+                          </label>
+                          <select
+                            value={createExtras.salaryType}
+                            onChange={(e) =>
+                              setCreateExtras((p) => ({
+                                ...p,
+                                salaryType: e.target.value as
+                                  | "MONTHLY"
+                                  | "DAILY"
+                                  | "HOURLY",
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="MONTHLY">Theo tháng</option>
+                            <option value="DAILY">Theo ngày</option>
+                            <option value="HOURLY">Theo giờ</option>
+                          </select>
+                        </div>
                         <div>
                           <label className="text-[12px] text-muted-foreground block mb-1">
                             Mức lương (VNĐ)
@@ -1239,10 +1244,35 @@ export function EmployeesPage() {
                                 baseSalary: e.target.value,
                               }))
                             }
-                            placeholder="VD: 10000000"
+                            placeholder="VD: 15000000"
                             className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
+                      </div>
+                      {createExtras.baseSalary && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-[12px] text-blue-700 dark:text-blue-300">
+                          ✓ Sẽ tạo cấu hình lương:{" "}
+                          <strong>
+                            {Number(createExtras.baseSalary).toLocaleString(
+                              "vi-VN",
+                            )}{" "}
+                            đ/
+                            {createExtras.salaryType === "MONTHLY"
+                              ? "tháng"
+                              : createExtras.salaryType === "DAILY"
+                                ? "ngày"
+                                : "giờ"}
+                          </strong>
+                          <br />
+                          Hiệu lực từ ngày vào làm · Hệ số OT mặc định (×1.5 /
+                          ×2 / ×3)
+                        </div>
+                      )}
+                      {!createExtras.baseSalary && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Để trống nếu muốn cấu hình lương sau tại{" "}
+                          <strong>Cấu hình lương NV</strong>.
+                        </p>
                       )}
                     </div>
                   </div>
@@ -1306,11 +1336,10 @@ export function EmployeesPage() {
                             : "Bỏ qua",
                         ],
                         [
-                          "Lương",
-                          createExtras.salaryComponentId &&
+                          "Lương cơ bản",
                           createExtras.baseSalary
-                            ? `${Number(createExtras.baseSalary).toLocaleString("vi-VN")} đ`
-                            : "Bỏ qua",
+                            ? `${Number(createExtras.baseSalary).toLocaleString("vi-VN")} đ/${createExtras.salaryType === "MONTHLY" ? "tháng" : createExtras.salaryType === "DAILY" ? "ngày" : "giờ"}`
+                            : "Bỏ qua (cấu hình sau)",
                         ],
                       ] as [string, string][]
                     ).map(([k, v]) => (

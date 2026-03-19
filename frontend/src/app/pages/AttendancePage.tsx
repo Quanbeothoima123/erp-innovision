@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // ================================================================
 // ATTENDANCE PAGE — Module 4 (API-integrated + type-fixed)
 // Fixes:
@@ -186,8 +187,8 @@ export function MyAttendancePage() {
         const [reqsRes, recsRes, statsRes] = await Promise.all([
           attendanceService.listRequests({ userId: uid, limit: 50 }),
           attendanceService.getMyAttendance({
-            fromDate: `${calYear}-${pad(calMonth + 1)}-01`,
-            toDate: `${calYear}-${pad(calMonth + 1)}-31`,
+            startDate: `${calYear}-${pad(calMonth + 1)}-01`,
+            endDate: `${calYear}-${pad(calMonth + 1)}-31`,
             limit: 100,
           }),
           attendanceService.getMyMonthlyStats(calYear, calMonth + 1),
@@ -235,16 +236,16 @@ export function MyAttendancePage() {
         });
         await fetchMyData();
       } else {
-        const newReq = {
+        const newReq: ApiAttendanceRequest = {
           id: `ar-${Date.now()}`,
           userId: uid,
-          type,
+          requestType: type,
+          requestedAt: now.toISOString(),
+          workDate: now.toISOString().split("T")[0],
+          note: note || null,
           status: "PENDING" as const,
-          requestedTime: now.toISOString(),
-          reason: note || null,
           reviewedAt: null,
-          reviewNote: null,
-          reviewedBy: null,
+          rejectReason: null,
           createdAt: now.toISOString(),
         };
         setMyReqs((prev) => [...prev, newReq]);
@@ -415,9 +416,9 @@ export function MyAttendancePage() {
                         {rType === "CHECK_IN" ? "Check-in" : "Check-out"} —{" "}
                         {fmtTime(rTime)}
                       </div>
-                      {r.reason && (
+                      {r.note && (
                         <div className="text-[11px] text-muted-foreground">
-                          {r.reason}
+                          {r.note}
                         </div>
                       )}
                     </div>
@@ -537,7 +538,7 @@ export function MyAttendancePage() {
                       </div>
                       <div className="text-[12px]">{fmtTime(rTime)}</div>
                       <div className="text-[12px] text-muted-foreground">
-                        {r.reason || "—"}
+                        {r.note || "—"}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
                         {rTime
@@ -785,16 +786,33 @@ export function ShiftsPage() {
     try {
       if (USE_API) {
         if (editShift) {
-          const u = await attendanceService.updateShift(editShift.id, form);
+          const u = await attendanceService.updateShift(editShift.id, {
+            ...form,
+            shiftType:
+              form.shiftType as import("../../lib/services/attendance.service").ShiftType,
+          });
           setShifts((prev) => prev.map((s) => (s.id === editShift.id ? u : s)));
         } else {
-          const c = await attendanceService.createShift(form);
+          const c = await attendanceService.createShift({
+            ...form,
+            shiftType:
+              form.shiftType as import("../../lib/services/attendance.service").ShiftType,
+          });
           setShifts((prev) => [...prev, c]);
         }
       } else {
         if (editShift) {
           setShifts((prev) =>
-            prev.map((s) => (s.id === editShift.id ? { ...s, ...form } : s)),
+            prev.map((s) =>
+              s.id === editShift.id
+                ? {
+                    ...s,
+                    ...form,
+                    shiftType:
+                      form.shiftType as import("../../lib/services/attendance.service").ShiftType,
+                  }
+                : s,
+            ),
           );
         } else {
           setShifts((prev) => [
@@ -802,6 +820,8 @@ export function ShiftsPage() {
             {
               id: `ws-${Date.now()}`,
               ...form,
+              shiftType:
+                form.shiftType as import("../../lib/services/attendance.service").ShiftType,
               description: form.description || null,
             },
           ]);
@@ -1285,7 +1305,7 @@ export function HolidaysPage() {
         setHolidays(res.items);
       } else {
         setHolidays(
-          (mockHolidays as Holiday[]).filter(
+          (mockHolidays as unknown as Holiday[]).filter(
             (h) => new Date(h.date).getFullYear() === year,
           ),
         );

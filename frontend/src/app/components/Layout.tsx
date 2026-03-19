@@ -206,7 +206,7 @@ export function Layout() {
           path: "/leave/requests",
         });
         items.push({
-          label: "Payslip của tôi",
+          label: "Bảng lương của tôi",
           icon: <DollarSign size={18} />,
           path: "/payroll",
         });
