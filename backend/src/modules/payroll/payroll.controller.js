@@ -118,6 +118,17 @@ async function cancelPeriod(req, res, next) {
   } catch (err) { next(err); }
 }
 
+/**
+ * DELETE /api/payroll/periods/:id
+ * Xóa kỳ lương (chỉ khi CANCELLED) — cho phép tạo lại cùng tháng/năm
+ */
+async function deletePeriod(req, res, next) {
+  try {
+    await service.deletePeriod(req.params.id);
+    return successResponse(res, null, 'Đã xóa kỳ lương thành công');
+  } catch (err) { next(err); }
+}
+
 // ╔══════════════════════════════════════════════════════════╗
 // ║  USER COMPENSATION (Cấu hình lương)                     ║
 // ╚══════════════════════════════════════════════════════════╝
@@ -446,7 +457,7 @@ async function markRecordPaid(req, res, next) {
 module.exports = {
   // Period
   listPeriods, getPeriodById, createPeriod, updatePeriod,
-  calculatePeriod, approvePeriod, markPeriodPaid, cancelPeriod,
+  calculatePeriod, approvePeriod, markPeriodPaid, cancelPeriod, deletePeriod,
   // Compensation
   listCompensations, getCompensationById, getActiveCompensation,
   getCompensationHistory, getMyCompensation,

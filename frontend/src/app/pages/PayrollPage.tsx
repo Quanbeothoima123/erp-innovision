@@ -27,6 +27,7 @@ import {
   Info,
   RefreshCw,
   Ban,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -191,11 +192,22 @@ function HRPayrollView() {
   const handleCalculate = async (id: string) => {
     try {
       toast.info("Đang tính lương...");
-      await payrollService.calculatePeriod(id);
-      toast.success("Tính lương hoàn tất");
-      fetchPeriods();
-      // Refresh selected period if open
-      setSelectedPeriod((prev) => (prev?.id === id ? null : prev));
+      const result = await payrollService.calculatePeriod(id);
+      // calculatePeriod returns { period, calculatedCount, totalUsers, errors }
+      // api wraps in data, so result may be period directly or wrapped
+      toast.success(
+        `Tính lương hoàn tất — ${(result as Record<string, number>).calculatedCount ?? 0} nhân viên`,
+      );
+      await fetchPeriods();
+      // Cập nhật selectedPeriod với dữ liệu mới nhất từ server
+      if (id) {
+        try {
+          const updated = await payrollService.getPeriodById(id);
+          setSelectedPeriod(updated);
+        } catch {
+          setSelectedPeriod(null);
+        }
+      }
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Lỗi tính lương");
     }
@@ -203,9 +215,11 @@ function HRPayrollView() {
 
   const handleApprove = async (id: string) => {
     try {
-      await payrollService.approvePeriod(id);
+      const updated = await payrollService.approvePeriod(id);
       toast.success("Đã duyệt kỳ lương");
-      fetchPeriods();
+      await fetchPeriods();
+      // Cập nhật dialog với trạng thái mới (APPROVED)
+      setSelectedPeriod(updated);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Không thể duyệt");
     }
@@ -213,9 +227,11 @@ function HRPayrollView() {
 
   const handleMarkPaid = async (id: string) => {
     try {
-      await payrollService.markPeriodPaid(id);
+      const updated = await payrollService.markPeriodPaid(id);
       toast.success("Đã đánh dấu chi trả thành công");
-      fetchPeriods();
+      await fetchPeriods();
+      // Cập nhật dialog với trạng thái mới (PAID) → nút sẽ biến mất đúng
+      setSelectedPeriod(updated);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Không thể cập nhật");
     }
@@ -227,11 +243,31 @@ function HRPayrollView() {
       return;
     }
     try {
-      await payrollService.cancelPeriod(id);
-      toast.success("Đã huỷ kỳ lương");
-      fetchPeriods();
+      const updated = await payrollService.cancelPeriod(id);
+      toast.success("Đã huỷ kỳ lương — có thể xóa để tạo lại");
+      await fetchPeriods();
+      // Cập nhật dialog sang trạng thái CANCELLED
+      setSelectedPeriod(updated);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Không thể huỷ");
+    }
+  };
+
+  const handleDeletePeriod = async (id: string) => {
+    if (!isAdmin) return;
+    if (
+      !window.confirm(
+        "Xóa hẳn kỳ lương này? Bạn có thể tạo lại cùng tháng/năm sau khi xóa.",
+      )
+    )
+      return;
+    try {
+      await payrollService.deletePeriod(id);
+      toast.success("Đã xóa kỳ lương");
+      setSelectedPeriod(null);
+      await fetchPeriods();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Không thể xóa");
     }
   };
 
@@ -377,6 +413,7 @@ function HRPayrollView() {
           onApprove={handleApprove}
           onMarkPaid={handleMarkPaid}
           onCancel={handleCancel}
+          onDelete={handleDeletePeriod}
         />
       )}
 
@@ -589,6 +626,7 @@ function PeriodDetailModal({
   onApprove,
   onMarkPaid,
   onCancel,
+  onDelete,
 }: {
   period: ApiPayrollPeriod;
   onClose: () => void;
@@ -596,6 +634,7 @@ function PeriodDetailModal({
   onApprove: (id: string) => void;
   onMarkPaid: (id: string) => void;
   onCancel: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const { can } = useAuth();
   const isAdmin = can("ADMIN");
@@ -692,7 +731,8 @@ function PeriodDetailModal({
     setCalculating(true);
     await onCalculate(period.id);
     setCalculating(false);
-    onClose();
+    // Không đóng dialog — onCalculate sẽ setSelectedPeriod(updated) để re-render
+    // với dữ liệu mới (status CALCULATING + danh sách nhân viên)
   };
 
   return (
@@ -962,11 +1002,28 @@ function PeriodDetailModal({
             </table>
           </div>
         ) : (
-          <div className="p-8 text-center text-muted-foreground text-[13px]">
-            <Calculator size={40} className="mx-auto mb-2 opacity-30" />
-            <div>
-              Chưa có dữ liệu — nhấn "Tính lương" để bắt đầu tính cho kỳ này
+          <div className="p-8 text-center text-muted-foreground text-[13px] space-y-3">
+            <Calculator size={40} className="mx-auto opacity-30" />
+            <div className="font-medium text-foreground">
+              {period.status === "CANCELLED"
+                ? "Kỳ lương đã bị huỷ"
+                : 'Chưa có dữ liệu — nhấn "Tính lương" để bắt đầu tính cho kỳ này'}
             </div>
+            {period.status !== "CANCELLED" && (
+              <div className="max-w-sm mx-auto text-[12px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-700 dark:text-amber-400 text-left space-y-1">
+                <div className="font-medium">
+                  ⚠️ Nhân viên không xuất hiện nếu:
+                </div>
+                <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                  <li>
+                    Chưa có cấu hình lương (vào{" "}
+                    <strong>Cấu hình lương NV</strong> để tạo)
+                  </li>
+                  <li>Tài khoản không ở trạng thái ACTIVE</li>
+                  <li>Trạng thái hợp đồng là TERMINATED</li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -980,16 +1037,26 @@ function PeriodDetailModal({
               </span>
             )}
           </div>
-          <div className="flex gap-2">
-            {isAdmin &&
-              ["DRAFT", "CALCULATING", "APPROVED"].includes(period.status) && (
-                <button
-                  onClick={() => onCancel(period.id)}
-                  className="px-3 py-2 border border-red-300 text-red-600 rounded-lg text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
-                >
-                  <Ban size={14} /> Huỷ kỳ
-                </button>
-              )}
+          <div className="flex gap-2 flex-wrap">
+            {/* Nút XOÁ: chỉ hiện khi CANCELLED — cho phép tạo lại cùng tháng/năm */}
+            {isAdmin && period.status === "CANCELLED" && (
+              <button
+                onClick={() => onDelete(period.id)}
+                className="px-3 py-2 border border-red-400 text-red-600 rounded-lg text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
+              >
+                <Trash2 size={14} /> Xóa kỳ
+              </button>
+            )}
+            {/* Nút HUỶ: DRAFT, CALCULATING (không cho hủy APPROVED/PAID) */}
+            {isAdmin && ["DRAFT", "CALCULATING"].includes(period.status) && (
+              <button
+                onClick={() => onCancel(period.id)}
+                className="px-3 py-2 border border-orange-300 text-orange-600 rounded-lg text-[13px] hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center gap-1"
+              >
+                <Ban size={14} /> Huỷ kỳ
+              </button>
+            )}
+            {/* Nút TÍNH LƯƠNG: chỉ ở DRAFT */}
             {period.status === "DRAFT" && (
               <button
                 onClick={handleCalculateClick}
@@ -1004,6 +1071,22 @@ function PeriodDetailModal({
                 Tính lương
               </button>
             )}
+            {/* Nút TÍNH LẠI: ở CALCULATING (nếu muốn tính lại) */}
+            {period.status === "CALCULATING" && (
+              <button
+                onClick={handleCalculateClick}
+                disabled={calculating}
+                className="px-3 py-2 border border-blue-300 text-blue-600 rounded-lg text-[13px] hover:bg-blue-50 flex items-center gap-1 disabled:opacity-50"
+              >
+                {calculating ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Calculator size={13} />
+                )}{" "}
+                Tính lại
+              </button>
+            )}
+            {/* Nút DUYỆT: ở CALCULATING */}
             {period.status === "CALCULATING" && (
               <button
                 onClick={() => onApprove(period.id)}
@@ -1012,6 +1095,7 @@ function PeriodDetailModal({
                 <Check size={14} /> Duyệt kỳ lương
               </button>
             )}
+            {/* Nút ĐÁNH DẤU CHI TRẢ: ở APPROVED */}
             {period.status === "APPROVED" && (
               <button
                 onClick={() => onMarkPaid(period.id)}

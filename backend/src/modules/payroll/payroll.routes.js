@@ -64,6 +64,7 @@ router.post(
   ctrl.markPeriodPaid,
 );
 router.post('/periods/:id/cancel', authorize(ROLES.ADMIN), ctrl.cancelPeriod);
+router.delete('/periods/:id', authorize(ROLES.ADMIN), ctrl.deletePeriod);
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  CẤU HÌNH LƯƠNG (UserCompensation)                       ║

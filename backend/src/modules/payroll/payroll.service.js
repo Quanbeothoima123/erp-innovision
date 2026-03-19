@@ -153,6 +153,23 @@ async function cancelPeriod(id) {
   return repo.updatePeriod(id, { status: 'CANCELLED' });
 }
 
+/**
+ * Xóa hẳn kỳ lương — CHỈ được xóa khi status = CANCELLED.
+ * Cho phép tạo lại kỳ lương cùng tháng/năm sau khi đã hủy.
+ */
+async function deletePeriod(id) {
+  const period = await _assertPeriodExists(id);
+  if (period.status !== 'CANCELLED') {
+    throw AppError.badRequest(
+      'Chỉ có thể xóa kỳ lương đã hủy (CANCELLED). Vui lòng hủy kỳ lương trước.',
+    );
+  }
+  // Xóa records và adjustments liên quan trước
+  await prisma.payrollRecord.deleteMany({ where: { payrollPeriodId: id } });
+  await prisma.payrollAdjustment.deleteMany({ where: { payrollPeriodId: id } });
+  return prisma.payrollPeriod.delete({ where: { id } });
+}
+
 // ╔══════════════════════════════════════════════════════════╗
 // ║  USER COMPENSATION                                       ║
 // ╚══════════════════════════════════════════════════════════╝
@@ -744,7 +761,7 @@ function _clean(obj) {
 module.exports = {
   // Period
   listPeriods, getPeriodById, createPeriod, updatePeriod,
-  calculatePeriod, approvePeriod, markPeriodPaid, cancelPeriod,
+  calculatePeriod, approvePeriod, markPeriodPaid, cancelPeriod, deletePeriod,
   // Compensation
   listCompensations, getCompensationById, getActiveCompensation,
   getCompensationHistory, createCompensation, updateCompensation,

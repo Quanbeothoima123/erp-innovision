@@ -278,6 +278,11 @@ export async function cancelPeriod(id: string): Promise<ApiPayrollPeriod> {
   return api.post<ApiPayrollPeriod>(`/payroll/periods/${id}/cancel`);
 }
 
+// Xóa hẳn kỳ lương (chỉ khi CANCELLED) để có thể tạo lại cùng tháng/năm
+export async function deletePeriod(id: string): Promise<void> {
+  return api.delete(`/payroll/periods/${id}`);
+}
+
 // ─── Compensations ─────────────────────────────────────────────
 
 export async function listCompensations(params?: {
