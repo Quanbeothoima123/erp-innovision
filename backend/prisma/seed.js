@@ -1998,326 +1998,112 @@ async function main() {
   console.log("🗂️  Tạo Projects...");
   const proj1 = await prisma.project.create({
     data: {
-      projectCode: "PRJ-2023-001",
-      projectName: "FTech ERP Phase 2",
-      description:
-        "Phát triển module HR, Payroll, CRM tích hợp cho FTech Vietnam",
-      projectManagerUserId: uCTO.id,
-      clientId: client1.id,
-      contractId: contract1.id,
+      id: "cmmvj1t1l00042bk7cfnmj2bk",
+      projectCode: "DA-001",
+      projectName: "Val Gourmet",
       status: "ACTIVE",
-      priority: "HIGH",
-      healthStatus: "ON_TRACK",
-      progressPercent: 65,
-      startDate: new Date("2023-06-01"),
-      endDate: new Date("2025-12-31"),
-      budgetAmount: 2500000000,
-      spentAmount: 1450000000,
-      currency: "VND",
-      contractValue: 2500000000,
-      invoicedAmount: 1800000000,
-      receivedAmount: 1800000000,
     },
   });
-
   const proj2 = await prisma.project.create({
     data: {
-      projectCode: "PRJ-2022-003",
-      projectName: "GreenMart POS & Inventory",
-      description: "Hệ thống quản lý điểm bán và kho hàng cho chuỗi GreenMart",
-      projectManagerUserId: uSrDev1.id,
-      clientId: client2.id,
-      contractId: contract2.id,
-      status: "COMPLETED",
-      priority: "HIGH",
-      healthStatus: "ON_TRACK",
-      progressPercent: 100,
-      startDate: new Date("2022-01-15"),
-      endDate: new Date("2023-06-30"),
-      actualEndDate: new Date("2023-06-25"),
-      budgetAmount: 1200000000,
-      spentAmount: 1150000000,
-      currency: "VND",
-      contractValue: 1200000000,
-      invoicedAmount: 1200000000,
-      receivedAmount: 1200000000,
+      id: "cmmvj3n1900052bk7zi931gff",
+      projectCode: "DA-002",
+      projectName: "VTI_BAT",
+      status: "PLANNING",
     },
   });
-
   const proj3 = await prisma.project.create({
     data: {
-      projectCode: "PRJ-2024-007",
-      projectName: "Cổng TTĐT Sở TTTT Hà Nội",
-      description: "Cổng thông tin điện tử và dịch vụ công trực tuyến",
-      projectManagerUserId: uDev1.id,
-      clientId: client3.id,
-      contractId: contract3.id,
+      id: "cmmvj4t1100062bk736pmm7xl",
+      projectCode: "DA-003",
+      projectName: "VTI_Emeralda",
       status: "ACTIVE",
-      priority: "MEDIUM",
-      healthStatus: "AT_RISK",
-      progressPercent: 45,
-      startDate: new Date("2024-03-01"),
-      endDate: new Date("2025-09-30"),
-      budgetAmount: 800000000,
-      spentAmount: 320000000,
-      currency: "VND",
-      contractValue: 800000000,
-      invoicedAmount: 400000000,
-      receivedAmount: 400000000,
     },
   });
-
   const proj4 = await prisma.project.create({
     data: {
-      projectCode: "PRJ-2025-INT",
-      projectName: "Innovision ERP Internal",
-      description:
-        "Hệ thống ERP nội bộ của Innovision - quản lý HR, lương, dự án",
-      projectManagerUserId: uCTO.id,
-      status: "ACTIVE",
-      priority: "URGENT",
-      healthStatus: "ON_TRACK",
-      progressPercent: 80,
-      startDate: new Date("2025-01-01"),
-      endDate: new Date("2026-06-30"),
-      budgetAmount: 500000000,
-      spentAmount: 380000000,
-      currency: "VND",
+      id: "cmmvj5hde00072bk73ur9obkp",
+      projectCode: "DA-004",
+      projectName: "VTI_PIM",
+      status: "PLANNING",
     },
   });
-  console.log("   → Đã tạo 4 projects\n");
-
-  // ── 22. PROJECT ASSIGNMENTS ───────────────────────────────────────────────
-  console.log("👷 Tạo ProjectAssignments...");
-  await prisma.userProjectAssignment.createMany({
-    data: [
-      // FTech ERP Phase 2
-      {
-        userId: uCTO.id,
-        projectId: proj1.id,
-        roleInProject: "Project Manager",
-        allocationPercent: 30,
-        joinedAt: new Date("2023-06-01"),
-        status: "ACTIVE",
-        isBillable: false,
-      },
-      {
-        userId: uSrDev1.id,
-        projectId: proj1.id,
-        roleInProject: "Tech Lead",
-        allocationPercent: 80,
-        joinedAt: new Date("2023-06-01"),
-        status: "ACTIVE",
-        isBillable: true,
-        hourlyRate: 350000,
-      },
-      {
-        userId: uDev1.id,
-        projectId: proj1.id,
-        roleInProject: "Backend Developer",
-        allocationPercent: 100,
-        joinedAt: new Date("2023-06-15"),
-        status: "ACTIVE",
-        isBillable: true,
-        hourlyRate: 250000,
-      },
-      {
-        userId: uDev2.id,
-        projectId: proj1.id,
-        roleInProject: "Frontend Developer",
-        allocationPercent: 80,
-        joinedAt: new Date("2023-07-01"),
-        status: "ACTIVE",
-        isBillable: true,
-        hourlyRate: 230000,
-      },
-      {
-        userId: uBA.id,
-        projectId: proj1.id,
-        roleInProject: "Business Analyst",
-        allocationPercent: 50,
-        joinedAt: new Date("2025-10-15"),
-        status: "ACTIVE",
-        isBillable: true,
-        hourlyRate: 200000,
-      },
-      // GreenMart (completed)
-      {
-        userId: uSrDev1.id,
-        projectId: proj2.id,
-        roleInProject: "Project Manager",
-        allocationPercent: 100,
-        joinedAt: new Date("2022-01-15"),
-        leftAt: new Date("2023-06-25"),
-        status: "ENDED",
-        isBillable: true,
-        hourlyRate: 300000,
-      },
-      {
-        userId: uDev1.id,
-        projectId: proj2.id,
-        roleInProject: "Full-stack Dev",
-        allocationPercent: 100,
-        joinedAt: new Date("2022-01-15"),
-        leftAt: new Date("2023-06-25"),
-        status: "ENDED",
-        isBillable: true,
-        hourlyRate: 230000,
-      },
-      // Cổng TTĐT
-      {
-        userId: uDev1.id,
-        projectId: proj3.id,
-        roleInProject: "Project Manager",
-        allocationPercent: 30,
-        joinedAt: new Date("2024-03-01"),
-        status: "ACTIVE",
-        isBillable: false,
-      },
-      {
-        userId: uDev2.id,
-        projectId: proj3.id,
-        roleInProject: "Developer",
-        allocationPercent: 50,
-        joinedAt: new Date("2024-03-15"),
-        status: "ACTIVE",
-        isBillable: true,
-        hourlyRate: 220000,
-      },
-      {
-        userId: uDevOps.id,
-        projectId: proj3.id,
-        roleInProject: "DevOps Engineer",
-        allocationPercent: 30,
-        joinedAt: new Date("2024-03-01"),
-        status: "ACTIVE",
-        isBillable: true,
-        hourlyRate: 270000,
-      },
-      // Internal ERP
-      {
-        userId: uCTO.id,
-        projectId: proj4.id,
-        roleInProject: "Project Sponsor",
-        allocationPercent: 20,
-        joinedAt: new Date("2025-01-01"),
-        status: "ACTIVE",
-        isBillable: false,
-      },
-      {
-        userId: uSrDev1.id,
-        projectId: proj4.id,
-        roleInProject: "Tech Lead",
-        allocationPercent: 20,
-        joinedAt: new Date("2025-01-01"),
-        status: "ACTIVE",
-        isBillable: false,
-      },
-      {
-        userId: uDevOps.id,
-        projectId: proj4.id,
-        roleInProject: "DevOps",
-        allocationPercent: 40,
-        joinedAt: new Date("2025-01-01"),
-        status: "ACTIVE",
-        isBillable: false,
-      },
-    ],
+  const proj5 = await prisma.project.create({
+    data: {
+      id: "cmmvj77uu00082bk7y9rhcmt3",
+      projectCode: "DA-005",
+      projectName: "VTI_PrettyVina",
+      status: "PLANNING",
+    },
   });
-  console.log("   → Đã tạo 13 project assignments\n");
-
-  // ── 23. PROJECT MILESTONES ────────────────────────────────────────────────
-  console.log("🎯 Tạo ProjectMilestones...");
-  await prisma.projectMilestone.createMany({
-    data: [
-      // FTech ERP
-      {
-        projectId: proj1.id,
-        name: "Phase 2.1 - Phân tích yêu cầu",
-        ownerUserId: uSrDev1.id,
-        dueDate: new Date("2023-08-31"),
-        status: "DONE",
-        completedAt: new Date("2023-08-25"),
-      },
-      {
-        projectId: proj1.id,
-        name: "Phase 2.2 - Design & Architecture",
-        ownerUserId: uCTO.id,
-        dueDate: new Date("2023-11-30"),
-        status: "DONE",
-        completedAt: new Date("2023-11-28"),
-      },
-      {
-        projectId: proj1.id,
-        name: "Phase 2.3 - Phát triển Module HR",
-        ownerUserId: uSrDev1.id,
-        dueDate: new Date("2024-06-30"),
-        status: "DONE",
-        completedAt: new Date("2024-06-20"),
-      },
-      {
-        projectId: proj1.id,
-        name: "Phase 2.4 - Phát triển Payroll",
-        ownerUserId: uDev1.id,
-        dueDate: new Date("2024-12-31"),
-        status: "DONE",
-        completedAt: new Date("2024-12-28"),
-      },
-      {
-        projectId: proj1.id,
-        name: "Phase 2.5 - CRM & Reporting",
-        ownerUserId: uSrDev1.id,
-        dueDate: new Date("2025-09-30"),
-        status: "IN_PROGRESS",
-      },
-      {
-        projectId: proj1.id,
-        name: "Phase 2.6 - UAT & Go-live",
-        ownerUserId: uCTO.id,
-        dueDate: new Date("2025-12-31"),
-        status: "PENDING",
-      },
-      // Cổng TTĐT
-      {
-        projectId: proj3.id,
-        name: "Kickoff & Phân tích nghiệp vụ",
-        ownerUserId: uDev1.id,
-        dueDate: new Date("2024-05-31"),
-        status: "DONE",
-        completedAt: new Date("2024-05-30"),
-      },
-      {
-        projectId: proj3.id,
-        name: "Thiết kế UI/UX",
-        ownerUserId: uDev2.id,
-        dueDate: new Date("2024-08-31"),
-        status: "DONE",
-        completedAt: new Date("2024-09-05"),
-      },
-      {
-        projectId: proj3.id,
-        name: "Phát triển Backend & APIs",
-        ownerUserId: uDev1.id,
-        dueDate: new Date("2025-03-31"),
-        status: "IN_PROGRESS",
-      },
-      {
-        projectId: proj3.id,
-        name: "Deploy & Testing",
-        ownerUserId: uDevOps.id,
-        dueDate: new Date("2025-07-31"),
-        status: "PENDING",
-      },
-      {
-        projectId: proj3.id,
-        name: "Nghiệm thu bàn giao",
-        ownerUserId: uDev1.id,
-        dueDate: new Date("2025-09-30"),
-        status: "PENDING",
-      },
-    ],
+  const proj6 = await prisma.project.create({
+    data: {
+      id: "cmmvj829g00092bk7orfefreg",
+      projectCode: "DA-006",
+      projectName: "VTI_ALUKO",
+      status: "PLANNING",
+    },
   });
-  console.log("   → Đã tạo 11 milestones\n");
+  const proj7 = await prisma.project.create({
+    data: {
+      id: "cmmvj8t12000a2bk7ne01q6ct",
+      projectCode: "DA-007",
+      projectName: "VTI_AMKOR",
+      status: "PLANNING",
+    },
+  });
+  const proj8 = await prisma.project.create({
+    data: {
+      id: "cmmvjaegs000b2bk747oqmdz0",
+      projectCode: "DA-008",
+      projectName: "HTC_AI Hành Vi",
+      status: "PLANNING",
+    },
+  });
+  const proj9 = await prisma.project.create({
+    data: {
+      id: "cmmvjbjzu000c2bk7yijfumog",
+      projectCode: "DA-009",
+      projectName: "INNOTECH_AI_TTTM",
+      status: "PLANNING",
+    },
+  });
+  const proj10 = await prisma.project.create({
+    data: {
+      id: "cmmvjccu0000d2bk7qh6ffngy",
+      projectCode: "DA-010",
+      projectName: "POW_DocIntel",
+      status: "PLANNING",
+    },
+  });
+  const proj11 = await prisma.project.create({
+    data: {
+      id: "cmmvje9go000e2bk72kge3dpy",
+      projectCode: "DA-011",
+      projectName: "HVAN_NetWatch",
+      status: "PLANNING",
+    },
+  });
+  const proj12 = await prisma.project.create({
+    data: {
+      id: "cmmvjf2r1000f2bk7cqt03w1c",
+      projectCode: "DA-012",
+      projectName: "BGD_Sentinel",
+      status: "PLANNING",
+    },
+  });
+  const proj13 = await prisma.project.create({
+    data: {
+      id: "cmmvjfu51000g2bk7jqtd89kh",
+      projectCode: "DA-013",
+      projectName: "VTI_Greenre",
+      status: "PLANNING",
+    },
+  });
+  console.log("   → Đã tạo 13 projects\n");
+
+  // ── 22. PROJECT ASSIGNMENTS — bỏ qua (dự án rỗng) ────────────────────────
+  // ── 23. PROJECT MILESTONES — bỏ qua (dự án rỗng) ─────────────────────────
 
   // ── 24. PAYROLL PERIOD ────────────────────────────────────────────────────
   console.log("📅 Tạo PayrollPeriods...");
@@ -3751,282 +3537,7 @@ async function main() {
     `   → Đã tạo thêm ${totalPRCreated} payroll records (10 kỳ × ${fullPayrollUsers.length} users)\n`,
   );
 
-  // ── 29b. PROJECT EXPENSES (nhiều danh mục, nhiều dự án) ──────────────────
-  console.log("💸 Tạo ProjectExpenses...");
-  const projectExpensesData = [
-    // proj1 - FTech ERP
-    {
-      projectId: proj1.id,
-      userId: uDev1.id,
-      approver: uCTO.id,
-      cat: "SOFTWARE",
-      title: "License IntelliJ IDEA năm 2025",
-      amount: 8000000,
-      date: "2025-02-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uSrDev1.id,
-      approver: uCTO.id,
-      cat: "HARDWARE",
-      title: "RAM nâng cấp workstation team dev",
-      amount: 12000000,
-      date: "2025-03-10",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uBA.id,
-      approver: uCTO.id,
-      cat: "TRAVEL",
-      title: "Vé máy bay họp khách hàng tại HCM",
-      amount: 5500000,
-      date: "2025-04-15",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uDev1.id,
-      approver: uCTO.id,
-      cat: "TRAINING",
-      title: "Khóa học AWS Cloud Practitioner",
-      amount: 6000000,
-      date: "2025-05-20",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uSrDev1.id,
-      approver: uCTO.id,
-      cat: "SOFTWARE",
-      title: "Figma Professional Plan (6 tháng)",
-      amount: 4500000,
-      date: "2025-06-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uBA.id,
-      approver: uCTO.id,
-      cat: "OTHER",
-      title: "Văn phòng phẩm và in ấn tài liệu dự án",
-      amount: 1200000,
-      date: "2025-07-05",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uDev2.id,
-      approver: uCTO.id,
-      cat: "TRAVEL",
-      title: "Chi phí đi lại on-site tại FTech HN",
-      amount: 3000000,
-      date: "2025-08-20",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uSrDev1.id,
-      approver: uCTO.id,
-      cat: "SUBCONTRACT",
-      title: "Thuê QA Tester freelance sprint Q3",
-      amount: 25000000,
-      date: "2025-09-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uDev1.id,
-      approver: uCTO.id,
-      cat: "SOFTWARE",
-      title: "AWS EC2 + RDS phí hosting Q4 2025",
-      amount: 18000000,
-      date: "2025-10-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uBA.id,
-      approver: uCTO.id,
-      cat: "TRAINING",
-      title: "Workshop Agile Scrum nội bộ",
-      amount: 8000000,
-      date: "2025-11-10",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uDev2.id,
-      approver: uCTO.id,
-      cat: "HARDWARE",
-      title: "Mua thêm 2 màn hình cho team",
-      amount: 9000000,
-      date: "2025-12-05",
-      status: "APPROVED",
-    },
-    // proj2 - Sở TTTT Portal
-    {
-      projectId: proj2.id,
-      userId: uDev1.id,
-      approver: uCTO.id,
-      cat: "SOFTWARE",
-      title: "License Enterprise SSL Certificate",
-      amount: 3500000,
-      date: "2025-03-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj2.id,
-      userId: uBA.id,
-      approver: uCTO.id,
-      cat: "TRAVEL",
-      title: "Di chuyển họp nghiệm thu tại Sở TTTT",
-      amount: 2500000,
-      date: "2025-05-10",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj2.id,
-      userId: uSrDev1.id,
-      approver: uCTO.id,
-      cat: "SUBCONTRACT",
-      title: "Thuê chuyên gia bảo mật kiểm tra hệ thống",
-      amount: 30000000,
-      date: "2025-07-15",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj2.id,
-      userId: uDev1.id,
-      approver: uCTO.id,
-      cat: "OTHER",
-      title: "Phí công chứng hồ sơ nghiệm thu",
-      amount: 800000,
-      date: "2025-09-20",
-      status: "APPROVED",
-    },
-    // proj3 - HN SmartCity
-    {
-      projectId: proj3.id,
-      userId: uSrDev1.id,
-      approver: uCTO.id,
-      cat: "SOFTWARE",
-      title: "Phần mềm thiết kế UI/UX chuyên nghiệp",
-      amount: 15000000,
-      date: "2025-04-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj3.id,
-      userId: uMkt.id,
-      approver: uMktMgr.id,
-      cat: "TRAINING",
-      title: "Đào tạo UX Research cho team",
-      amount: 5000000,
-      date: "2025-06-15",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj3.id,
-      userId: uBA.id,
-      approver: uCTO.id,
-      cat: "TRAVEL",
-      title: "Khảo sát thực địa các điểm lắp đặt",
-      amount: 7000000,
-      date: "2025-08-10",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj3.id,
-      userId: uDev2.id,
-      approver: uCTO.id,
-      cat: "HARDWARE",
-      title: "Mua IoT sensor prototype",
-      amount: 22000000,
-      date: "2025-10-20",
-      status: "APPROVED",
-    },
-    // proj4 - Nội bộ
-    {
-      projectId: proj4.id,
-      userId: uHRStaff.id,
-      approver: uHRMgr.id,
-      cat: "TRAINING",
-      title: "Phần mềm đào tạo LMS nội bộ",
-      amount: 12000000,
-      date: "2025-05-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj4.id,
-      userId: uAcc.id,
-      approver: uCFO.id,
-      cat: "SOFTWARE",
-      title: "License phần mềm kế toán MISA",
-      amount: 9000000,
-      date: "2025-07-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj4.id,
-      userId: uHRMgr.id,
-      approver: uCEO.id,
-      cat: "OTHER",
-      title: "Chi phí team building Q3/2025",
-      amount: 15000000,
-      date: "2025-08-30",
-      status: "APPROVED",
-    },
-    // 2026
-    {
-      projectId: proj1.id,
-      userId: uSrDev1.id,
-      approver: uCTO.id,
-      cat: "SOFTWARE",
-      title: "AWS EC2 hosting Q1 2026",
-      amount: 20000000,
-      date: "2026-01-05",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj1.id,
-      userId: uDev1.id,
-      approver: uCTO.id,
-      cat: "SUBCONTRACT",
-      title: "Thuê thêm dev outsource Sprint Jan",
-      amount: 35000000,
-      date: "2026-02-01",
-      status: "APPROVED",
-    },
-    {
-      projectId: proj3.id,
-      userId: uDev2.id,
-      approver: uCTO.id,
-      cat: "HARDWARE",
-      title: "Mua thêm server cho SmartCity phase 2",
-      amount: 45000000,
-      date: "2026-02-15",
-      status: "PENDING",
-    },
-  ];
-
-  await prisma.projectExpense.createMany({
-    data: projectExpensesData.map((e) => ({
-      projectId: e.projectId,
-      submittedByUserId: e.userId,
-      approvedByUserId: e.status === "APPROVED" ? e.approver : null,
-      category: e.cat,
-      title: e.title,
-      amount: e.amount,
-      currency: "VND",
-      expenseDate: new Date(e.date),
-      status: e.status,
-      submittedAt: new Date(e.date),
-      approvedAt: e.status === "APPROVED" ? new Date(e.date) : null,
-    })),
-  });
-  console.log(`   → Đã tạo ${projectExpensesData.length} project expenses\n`);
+  // ── 29b. PROJECT EXPENSES — bỏ qua (dự án rỗng) ──────────────────────────
 
   // ── 30. INVOICES (đầy đủ theo tháng) ────────────────────────────────────
   console.log("🧾 Tạo Invoices...");
@@ -4037,7 +3548,6 @@ async function main() {
       code: "INV-2025-001",
       clientId: client1.id,
       contractId: contract1.id,
-      projectId: proj1.id,
       status: "PAID",
       issued: "2025-01-31",
       due: "2025-02-28",
@@ -4048,7 +3558,6 @@ async function main() {
       code: "INV-2025-002",
       clientId: client1.id,
       contractId: contract1.id,
-      projectId: proj1.id,
       status: "PAID",
       issued: "2025-03-31",
       due: "2025-04-30",
@@ -4059,7 +3568,6 @@ async function main() {
       code: "INV-2025-003",
       clientId: client1.id,
       contractId: contract1.id,
-      projectId: proj1.id,
       status: "PAID",
       issued: "2025-06-30",
       due: "2025-07-31",
@@ -4070,7 +3578,6 @@ async function main() {
       code: "INV-2025-004",
       clientId: client1.id,
       contractId: contract1.id,
-      projectId: proj1.id,
       status: "PAID",
       issued: "2025-09-30",
       due: "2025-10-31",
@@ -4081,7 +3588,6 @@ async function main() {
       code: "INV-2025-005",
       clientId: client1.id,
       contractId: contract1.id,
-      projectId: proj1.id,
       status: "PAID",
       issued: "2025-12-15",
       due: "2026-01-15",
@@ -4092,7 +3598,6 @@ async function main() {
       code: "INV-2026-001",
       clientId: client1.id,
       contractId: contract1.id,
-      projectId: proj1.id,
       status: "PARTIALLY_PAID",
       issued: "2026-02-28",
       due: "2026-03-31",
@@ -4104,7 +3609,6 @@ async function main() {
       code: "INV-2025-006",
       clientId: client3.id,
       contractId: contract3.id,
-      projectId: proj3.id,
       status: "PAID",
       issued: "2025-04-30",
       due: "2025-05-31",
@@ -4115,7 +3619,6 @@ async function main() {
       code: "INV-2025-007",
       clientId: client3.id,
       contractId: contract3.id,
-      projectId: proj3.id,
       status: "PAID",
       issued: "2025-07-31",
       due: "2025-08-31",
@@ -4126,7 +3629,6 @@ async function main() {
       code: "INV-2025-008",
       clientId: client3.id,
       contractId: contract3.id,
-      projectId: proj3.id,
       status: "OVERDUE",
       issued: "2025-10-31",
       due: "2025-11-30",
@@ -4138,7 +3640,6 @@ async function main() {
       code: "INV-2025-009",
       clientId: client2.id,
       contractId: contract2.id,
-      projectId: proj2.id,
       status: "PAID",
       issued: "2025-02-28",
       due: "2025-03-31",
@@ -4149,7 +3650,6 @@ async function main() {
       code: "INV-2025-010",
       clientId: client2.id,
       contractId: contract2.id,
-      projectId: proj2.id,
       status: "PAID",
       issued: "2025-05-31",
       due: "2025-06-30",
@@ -4160,7 +3660,6 @@ async function main() {
       code: "INV-2025-011",
       clientId: client2.id,
       contractId: contract2.id,
-      projectId: proj2.id,
       status: "PAID",
       issued: "2025-08-31",
       due: "2025-09-30",
@@ -4171,7 +3670,6 @@ async function main() {
       code: "INV-2025-012",
       clientId: client2.id,
       contractId: contract2.id,
-      projectId: proj2.id,
       status: "SENT",
       issued: "2025-11-30",
       due: "2025-12-31",
@@ -4525,7 +4023,7 @@ async function main() {
   console.log(`   • 11 Salary Components`);
   console.log(`   • 4 Clients + 6 Contacts`);
   console.log(`   • 3 Contracts`);
-  console.log(`   • 4 Projects + 11 Milestones`);
+  console.log(`   • 13 Projects (rỗng, không có expense/milestone/assignment)`);
   console.log(`   • 15 Payroll Periods (2025-01 → 2026-03, 14 users/kỳ)`);
   console.log(`   • 15 Notifications`);
   console.log(`   • 22 System Configs\n`);
