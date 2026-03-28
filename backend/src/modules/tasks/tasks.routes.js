@@ -6,13 +6,16 @@
 //    → service._canManageTask() kiểm tra sau khi authenticate()
 //    → Routes không dùng authorize() cứng để cho phép direct manager qua
 //
-const express     = require('express');
-const ctrl        = require('./tasks.controller');
-const v           = require('./tasks.validation');
-const { authenticate, authorize } = require('../../middlewares/auth.middleware');
-const { auditAction }             = require('../../middlewares/audit.middleware');
-const { validate }                = require('../../middlewares/validate.middleware');
-const { ROLES }                   = require('../../config/constants');
+const express = require("express");
+const ctrl = require("./tasks.controller");
+const v = require("./tasks.validation");
+const {
+  authenticate,
+  authorize,
+} = require("../../middlewares/auth.middleware");
+const { auditAction } = require("../../middlewares/audit.middleware");
+const { validate } = require("../../middlewares/validate.middleware");
+const { ROLES } = require("../../config/constants");
 
 const router = express.Router();
 
@@ -25,11 +28,11 @@ router.use(authenticate);
 
 // GET /api/tasks/stats
 // Mọi user đều thấy stats trong phạm vi quyền của mình
-router.get('/stats', ctrl.getTaskStats);
+router.get("/stats", ctrl.getTaskStats);
 
 // GET /api/tasks/my
 // Nhân viên dùng route này để xem task của bản thân
-router.get('/my', validate(v.listTasksSchema), ctrl.getMyTasks);
+router.get("/my", validate(v.listTasksSchema), ctrl.getMyTasks);
 
 // ─────────────────────────────────────────────────────────────
 // Task CRUD
@@ -37,35 +40,35 @@ router.get('/my', validate(v.listTasksSchema), ctrl.getMyTasks);
 
 // GET /api/tasks
 // ADMIN/HR thấy tất cả; Manager/direct-manager thấy nhóm; Employee thấy task mình
-router.get('/', validate(v.listTasksSchema), ctrl.listTasks);
+router.get("/", validate(v.listTasksSchema), ctrl.listTasks);
 
 // POST /api/tasks
 // Không dùng authorize() cứng — service._canManageTask() sẽ kiểm tra:
 //   1. Có role ADMIN hoặc MANAGER, HOẶC
 //   2. Là direct manager (có ít nhất 1 thuộc cấp trong bảng users)
 router.post(
-  '/',
+  "/",
   validate(v.createTaskSchema),
-  auditAction('CREATE_TASK'),
+  auditAction("CREATE_TASK"),
   ctrl.createTask,
 );
 
 // GET /api/tasks/:id
-router.get('/:id', ctrl.getTaskById);
+router.get("/:id", ctrl.getTaskById);
 
 // PATCH /api/tasks/:id   — sửa thông tin (manager / direct manager / admin)
 router.patch(
-  '/:id',
+  "/:id",
   validate(v.updateTaskSchema),
-  auditAction('UPDATE_TASK'),
+  auditAction("UPDATE_TASK"),
   ctrl.updateTask,
 );
 
 // PATCH /api/tasks/:id/assign   — gán người thực hiện
 router.patch(
-  '/:id/assign',
+  "/:id/assign",
   validate(v.assignTaskSchema),
-  auditAction('ASSIGN_TASK'),
+  auditAction("ASSIGN_TASK"),
   ctrl.assignTask,
 );
 
@@ -74,33 +77,29 @@ router.patch(
 // - Employee (được gán): chỉ TODO → IN_PROGRESS → IN_REVIEW
 // Service xử lý rule này, không cần middleware cứng
 router.patch(
-  '/:id/status',
+  "/:id/status",
   validate(v.updateStatusSchema),
-  auditAction('UPDATE_TASK_STATUS'),
+  auditAction("UPDATE_TASK_STATUS"),
   ctrl.updateTaskStatus,
 );
 
 // PATCH /api/tasks/:id/complete
 // Người được gán hoặc manager xác nhận hoàn thành
 router.patch(
-  '/:id/complete',
+  "/:id/complete",
   validate(v.completeTaskSchema),
-  auditAction('COMPLETE_TASK'),
+  auditAction("COMPLETE_TASK"),
   ctrl.completeTask,
 );
 
 // PATCH /api/tasks/:id/cancel   — chỉ manager / direct manager / Admin
-router.patch(
-  '/:id/cancel',
-  auditAction('CANCEL_TASK'),
-  ctrl.cancelTask,
-);
+router.patch("/:id/cancel", auditAction("CANCEL_TASK"), ctrl.cancelTask);
 
 // DELETE /api/tasks/:id   — chỉ ADMIN (xóa mềm)
 router.delete(
-  '/:id',
+  "/:id",
   authorize(ROLES.ADMIN),
-  auditAction('DELETE_TASK'),
+  auditAction("DELETE_TASK"),
   ctrl.deleteTask,
 );
 
@@ -109,24 +108,20 @@ router.delete(
 // ─────────────────────────────────────────────────────────────
 
 // GET  /api/tasks/:id/comments
-router.get('/:id/comments', ctrl.getComments);
+router.get("/:id/comments", ctrl.getComments);
 
 // POST /api/tasks/:id/comments
 // Mọi người có access vào task đều được comment
-router.post(
-  '/:id/comments',
-  validate(v.createCommentSchema),
-  ctrl.addComment,
-);
+router.post("/:id/comments", validate(v.createCommentSchema), ctrl.addComment);
 
 // PATCH /api/tasks/:id/comments/:commentId   — chỉ tác giả hoặc Admin
 router.patch(
-  '/:id/comments/:commentId',
+  "/:id/comments/:commentId",
   validate(v.updateCommentSchema),
   ctrl.updateComment,
 );
 
 // DELETE /api/tasks/:id/comments/:commentId  — chỉ tác giả hoặc Admin
-router.delete('/:id/comments/:commentId', ctrl.deleteComment);
+router.delete("/:id/comments/:commentId", ctrl.deleteComment);
 
 module.exports = router;

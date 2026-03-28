@@ -1,27 +1,34 @@
 // src/modules/tasks/tasks.repository.js
-const prisma = require('../../config/db');
+const prisma = require("../../config/db");
 
 // ── Select helpers ───────────────────────────────────────────
 
 const USER_BRIEF = {
-  id: true, fullName: true, email: true, avatarUrl: true, userCode: true,
+  id: true,
+  fullName: true,
+  email: true,
+  avatarUrl: true,
+  userCode: true,
 };
 
 const PROJECT_BRIEF = {
-  id: true, name: true, code: true, status: true,
+  id: true,
+  name: true,
+  code: true,
+  status: true,
 };
 
 const TASK_BASE_INCLUDE = {
   assignedTo: { select: USER_BRIEF },
-  createdBy:  { select: USER_BRIEF },
-  project:    { select: PROJECT_BRIEF },
-  _count:     { select: { comments: true } },
+  createdBy: { select: USER_BRIEF },
+  project: { select: PROJECT_BRIEF },
+  _count: { select: { comments: true } },
 };
 
 const TASK_DETAIL_INCLUDE = {
   ...TASK_BASE_INCLUDE,
   comments: {
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: "asc" },
     include: { user: { select: USER_BRIEF } },
   },
 };
@@ -33,7 +40,7 @@ const createTask = (data) =>
 
 const findTaskById = (id, includeDetail = false) =>
   prisma.task.findFirst({
-    where:   { id, isActive: true },
+    where: { id, isActive: true },
     include: includeDetail ? TASK_DETAIL_INCLUDE : TASK_BASE_INCLUDE,
   });
 
@@ -45,9 +52,9 @@ const findTasks = async ({ where, page = 1, limit = 20 }) => {
       include: TASK_BASE_INCLUDE,
       // Sắp xếp: quá hạn lên đầu, rồi theo priority, rồi ngày tạo
       orderBy: [
-        { deadline: 'asc' },
-        { priority: 'desc' },
-        { createdAt: 'desc' },
+        { deadline: "asc" },
+        { priority: "desc" },
+        { createdAt: "desc" },
       ],
       skip,
       take: limit,
@@ -68,14 +75,16 @@ const softDeleteTask = (id) =>
 
 const countByStatus = async (where = {}) => {
   const rows = await prisma.task.groupBy({
-    by:     ['status'],
-    where:  { ...where, isActive: true },
+    by: ["status"],
+    where: { ...where, isActive: true },
     _count: { _all: true },
   });
   const map = {};
-  rows.forEach((r) => { map[r.status] = r._count._all; });
+  rows.forEach((r) => {
+    map[r.status] = r._count._all;
+  });
   // Đảm bảo tất cả status đều có giá trị (kể cả 0)
-  for (const s of ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'CANCELLED']) {
+  for (const s of ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE", "CANCELLED"]) {
     map[s] = map[s] ?? 0;
   }
   return map;
@@ -86,7 +95,7 @@ const countOverdue = (where = {}) =>
     where: {
       ...where,
       isActive: true,
-      status:   { notIn: ['DONE', 'CANCELLED'] },
+      status: { notIn: ["DONE", "CANCELLED"] },
       deadline: { lt: new Date() },
     },
   });
@@ -101,26 +110,25 @@ const createComment = (data) =>
 
 const findCommentById = (id) =>
   prisma.taskComment.findUnique({
-    where:   { id },
+    where: { id },
     include: { user: { select: USER_BRIEF } },
   });
 
 const findCommentsByTask = (taskId) =>
   prisma.taskComment.findMany({
-    where:   { taskId },
-    orderBy: { createdAt: 'asc' },
+    where: { taskId },
+    orderBy: { createdAt: "asc" },
     include: { user: { select: USER_BRIEF } },
   });
 
 const updateComment = (id, data) =>
   prisma.taskComment.update({
-    where:   { id },
+    where: { id },
     data,
     include: { user: { select: USER_BRIEF } },
   });
 
-const deleteComment = (id) =>
-  prisma.taskComment.delete({ where: { id } });
+const deleteComment = (id) => prisma.taskComment.delete({ where: { id } });
 
 // ── Permission helpers ───────────────────────────────────────
 
@@ -130,7 +138,7 @@ const deleteComment = (id) =>
  */
 const isDirectManager = async (userId) => {
   const count = await prisma.user.count({
-    where: { managerId: userId, accountStatus: 'ACTIVE' },
+    where: { managerId: userId, accountStatus: "ACTIVE" },
   });
   return count > 0;
 };
@@ -140,7 +148,7 @@ const isDirectManager = async (userId) => {
  */
 const findSubordinateIds = async (managerId) => {
   const rows = await prisma.user.findMany({
-    where:  { managerId, accountStatus: 'ACTIVE' },
+    where: { managerId, accountStatus: "ACTIVE" },
     select: { id: true },
   });
   return rows.map((u) => u.id);
