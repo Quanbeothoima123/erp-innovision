@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
-import { getDepartmentById, getJobTitleById } from "../data/mockData";
 import * as attendanceService from "../../lib/services/attendance.service";
 import {
   LayoutDashboard,
@@ -70,32 +69,24 @@ export function Layout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [pendingAttendance, setPendingAttendance] = useState(0);
 
-  // FIX: Fetch badge count từ API thay vì đọc mock data
-  const USE_API = !!import.meta.env.VITE_API_URL;
   useEffect(() => {
-    if (!USE_API || !currentUser) return;
+    if (!currentUser) return;
     attendanceService
       .listRequests({ status: "PENDING", limit: 1 })
       .then((res) =>
         setPendingAttendance(res.pagination?.total ?? res.items?.length ?? 0),
       )
       .catch(() => {});
-  }, [currentUser, USE_API]);
+  }, [currentUser]);
 
   if (!currentUser) return null;
 
-  const dept = getDepartmentById(currentUser.departmentId);
-  const job = getJobTitleById(currentUser.jobTitleId);
+  const deptName = currentUser.department?.name ?? currentUser.departmentId;
+  const jobName = currentUser.jobTitle?.name ?? currentUser.jobTitleId;
 
-  // Badge counts: dùng API count nếu có, fallback mock
-  const pendingCheckins = USE_API ? 0 : 3; // mock split không cần khi dùng API
-  const pendingCheckouts = USE_API ? 0 : 2;
   const pendingLeaves = 0; // TODO: fetch từ leave service
   const pendingOT = 0; // TODO: fetch từ OT service
-  // Khi USE_API: dùng tổng pendingAttendance cho badge Duyệt yêu cầu
-  const pendingAttendanceBadge = USE_API
-    ? pendingAttendance
-    : pendingCheckins + pendingCheckouts;
+  const pendingAttendanceBadge = pendingAttendance;
 
   const buildNav = (): NavItem[] => {
     const items: NavItem[] = [];
@@ -448,7 +439,7 @@ export function Layout() {
               <Menu size={18} />
             </button>
             <div className="hidden sm:block text-muted-foreground text-[13px]">
-              {dept?.name} / {job?.name}
+              {deptName} / {jobName}
             </div>
           </div>
           <div className="flex items-center gap-1">

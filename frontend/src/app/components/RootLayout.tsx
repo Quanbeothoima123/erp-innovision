@@ -1,8 +1,7 @@
-import { Outlet, useNavigate, useLocation } from 'react-router';
-import { AuthProvider, useAuth } from '../context/AuthContext';
-import { EmployeeProvider } from '../context/EmployeeContext';
-import { useEffect } from 'react';
-import { Toaster } from 'sonner';
+import { Outlet, useNavigate, useLocation } from "react-router";
+import { AuthProvider, useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
+import { Toaster } from "sonner";
 
 function AuthGuard() {
   // FIX: lấy thêm `initializing` để không redirect khi đang restore session
@@ -14,11 +13,16 @@ function AuthGuard() {
     // Chờ AuthContext restore token xong mới kiểm tra
     if (initializing) return;
 
-    const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/setup-account'];
-    const isPublic = publicRoutes.some(r => location.pathname.startsWith(r));
+    const publicRoutes = [
+      "/login",
+      "/forgot-password",
+      "/reset-password",
+      "/setup-account",
+    ];
+    const isPublic = publicRoutes.some((r) => location.pathname.startsWith(r));
 
     if (!currentUser && !isPublic) {
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -26,10 +30,10 @@ function AuthGuard() {
     if (
       currentUser &&
       currentUser.mustChangePassword &&
-      location.pathname !== '/change-password' &&
-      location.pathname !== '/login'
+      location.pathname !== "/change-password" &&
+      location.pathname !== "/login"
     ) {
-      navigate('/change-password', { replace: true });
+      navigate("/change-password", { replace: true });
     }
   }, [currentUser, navigate, location.pathname, initializing]);
 
@@ -51,10 +55,8 @@ function AuthGuard() {
 export function RootLayout() {
   return (
     <AuthProvider>
-      <EmployeeProvider>
-        <AuthGuard />
-        <Toaster position="top-right" richColors closeButton />
-      </EmployeeProvider>
+      <AuthGuard />
+      <Toaster position="top-right" richColors closeButton />
     </AuthProvider>
   );
 }

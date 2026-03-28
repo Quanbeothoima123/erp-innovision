@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import * as systemService from "../../lib/services/system.service";
+import * as usersService from "../../lib/services/users.service";
+import type { ApiUser } from "../../lib/services/auth.service";
 import type {
   ApiAuditLog,
   ApiSystemConfig,
@@ -53,7 +55,6 @@ type RoleCode =
   | "SALES"
   | "ACCOUNTANT"
   | "DIRECTOR";
-import { useEmployeeData } from "../context/EmployeeContext";
 
 // ─── CONFIG constants (used by SystemConfigPage) ──────────────
 const CONFIG_LABELS: Record<string, string> = {
@@ -214,14 +215,36 @@ const ALL_ROLES: {
 ];
 
 export function AccountsPage() {
-  const { allUsers, updateUser, addAuditLog } = useEmployeeData();
   const { currentUser } = useAuth();
+  const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [roleDialogUser, setRoleDialogUser] = useState<string | null>(null);
   const [lockDialogUser, setLockDialogUser] = useState<string | null>(null);
   const [resetDialogUser, setResetDialogUser] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await usersService.listUsers({ limit: 500 });
+      setAllUsers(res.items);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Không tải được danh sách tài khoản",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   let filtered = allUsers;
   if (search) {
@@ -245,30 +268,9 @@ export function AccountsPage() {
   const active = allUsers.filter((u) => u.accountStatus === "ACTIVE").length;
   const locked = allUsers.filter((u) => u.accountStatus === "LOCKED").length;
 
-  const logAction = (
-    actionType: string,
-    description: string,
-    userId: string,
-    oldV?: Record<string, unknown>,
-    newV?: Record<string, unknown>,
-  ) => {
-    addAuditLog({
-      id: `audit-${Date.now()}`,
-      actorUserId: currentUser!.id,
-      entityType: "User",
-      actionType,
-      description,
-      ipAddress: "192.168.1.100",
-      createdAt: new Date().toISOString(),
-      oldValues: oldV,
-      newValues: newV,
-    });
-  };
-
-  const handleToggleRole = (userId: string, role: RoleCode) => {
+  const handleToggleRole = async (userId: string, role: RoleCode) => {
     const user = allUsers.find((u) => u.id === userId);
     if (!user) return;
-    const oldRoles = [...user.roles];
     const newRoles = user.roles.includes(role)
       ? user.roles.filter((r) => r !== role)
       : [...user.roles, role];
@@ -276,44 +278,62 @@ export function AccountsPage() {
       toast.error("Người dùng phải có ít nhất 1 vai trò");
       return;
     }
-    updateUser(userId, { roles: newRoles });
-    logAction(
-      "UPDATE_ROLE",
-      `Cập nhật vai trò ${user.fullName}: ${oldRoles.join(",")} → ${newRoles.join(",")}`,
-      userId,
-      { roles: oldRoles },
-      { roles: newRoles },
-    );
-    toast.success(`Đã cập nhật vai trò cho ${user.fullName}`);
+    setActionLoading(true);
+    try {
+      await usersService.updateUserRoles(userId, { roles: newRoles });
+      setAllUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, roles: newRoles } : u)),
+      );
+      toast.success(`Đã cập nhật vai trò cho ${user.fullName}`);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Cập nhật vai trò thất bại",
+      );
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleLockToggle = (userId: string) => {
+  const handleLockToggle = async (userId: string) => {
     const user = allUsers.find((u) => u.id === userId);
     if (!user) return;
     const newStatus = user.accountStatus === "LOCKED" ? "ACTIVE" : "LOCKED";
-    updateUser(userId, { accountStatus: newStatus as any });
-    logAction(
-      newStatus === "LOCKED" ? "LOCK_ACCOUNT" : "UNLOCK_ACCOUNT",
-      `${newStatus === "LOCKED" ? "Khoá" : "Mở khoá"} tài khoản ${user.fullName}`,
-      userId,
-      { accountStatus: user.accountStatus },
-      { accountStatus: newStatus },
-    );
-    toast.success(
-      `Đã ${newStatus === "LOCKED" ? "khoá" : "mở khoá"} tài khoản ${user.fullName}`,
-    );
-    setLockDialogUser(null);
+    setActionLoading(true);
+    try {
+      await usersService.updateAccountStatus(userId, {
+        accountStatus: newStatus as "ACTIVE" | "LOCKED" | "DISABLED",
+      });
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, accountStatus: newStatus } : u,
+        ),
+      );
+      toast.success(
+        `Đã ${newStatus === "LOCKED" ? "khoá" : "mở khoá"} tài khoản ${user.fullName}`,
+      );
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Thao tác thất bại");
+    } finally {
+      setActionLoading(false);
+      setLockDialogUser(null);
+    }
   };
 
-  const handleResetPassword = (userId: string) => {
+  const handleResetPassword = async (userId: string) => {
     const user = allUsers.find((u) => u.id === userId);
     if (!user) return;
-    updateUser(userId, { mustChangePassword: true });
-    logAction("RESET_PASSWORD", `Reset mật khẩu cho ${user.fullName}`, userId);
-    toast.success(
-      `Đã reset mật khẩu cho ${user.fullName}. Mật khẩu mặc định: TechVN@2025`,
-    );
-    setResetDialogUser(null);
+    setActionLoading(true);
+    try {
+      await usersService.resendSetupEmail(userId);
+      toast.success(`Đã gửi email đặt lại mật khẩu cho ${user.fullName}.`);
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Reset mật khẩu thất bại",
+      );
+    } finally {
+      setActionLoading(false);
+      setResetDialogUser(null);
+    }
   };
 
   const roleDialogUserObj = roleDialogUser
@@ -329,6 +349,12 @@ export function AccountsPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-[20px]">Tài khoản & Phân quyền</h1>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+          <Loader2 size={14} className="animate-spin" /> Đang tải...
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">

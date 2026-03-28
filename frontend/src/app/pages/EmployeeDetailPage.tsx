@@ -21,12 +21,10 @@ import type { ApiUser } from "../../lib/services/auth.service";
 import type { UserProfile } from "../../lib/services/users.service";
 import type { DepartmentOption } from "../../lib/services/departments.service";
 import type { JobTitleOption } from "../../lib/services/jobTitles.service";
-import {
-  getDepartmentById,
-  getJobTitleById,
-  getUserById,
-  formatFullVND,
-} from "../data/mockData";
+
+const formatFullVND = (amount: number): string =>
+  new Intl.NumberFormat("vi-VN").format(Math.round(amount)) + " ₫";
+
 import {
   ChevronLeft,
   Edit2,
@@ -458,13 +456,9 @@ export function EmployeeDetailPage() {
   }, [auditPage, auditMode]); // eslint-disable-line
 
   const getDeptName = (dId: string) =>
-    deptOptions.find((d) => d.id === dId)?.name ??
-    getDepartmentById(dId)?.name ??
-    dId;
+    deptOptions.find((d) => d.id === dId)?.name ?? dId;
   const getJobName = (jId: string) =>
-    jobOptions.find((j) => j.id === jId)?.name ??
-    getJobTitleById(jId)?.name ??
-    jId;
+    jobOptions.find((j) => j.id === jId)?.name ?? jId;
 
   // ── Handlers ───────────────────────────────────────────────
   const handleUpdateUser = async (data: Partial<ApiUser>) => {
@@ -655,7 +649,6 @@ export function EmployeeDetailPage() {
 
   const managerName = user.managerId
     ? (allUsersForSelect.find((u) => u.id === user.managerId)?.fullName ??
-      getUserById(user.managerId)?.fullName ??
       user.managerId)
     : null;
 

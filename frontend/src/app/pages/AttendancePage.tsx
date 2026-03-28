@@ -9,12 +9,6 @@
 // ================================================================
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
-import {
-  attendanceRequests as mockReqs,
-  attendanceRecords as mockRecords,
-  workShifts as mockShifts,
-  holidays as mockHolidays,
-} from "../data/mockData";
 import { Link } from "react-router";
 import {
   Check,
@@ -44,7 +38,6 @@ import type {
 } from "../../lib/services/attendance.service";
 import { ApiError } from "../../lib/apiClient";
 
-const USE_API = !!import.meta.env.VITE_API_URL;
 const TODAY = new Date().toISOString().split("T")[0];
 
 const reqStatusColors: Record<string, string> = {
@@ -167,67 +160,39 @@ export function MyAttendancePage() {
 
   // Load shifts
   useEffect(() => {
-    if (USE_API) {
-      attendanceService
-        .getShiftOptions()
-        .then((data) => {
-          setShifts(data);
-          if (data.length > 0) setSelectedShift(data[0].id);
-        })
-        .catch(() => {});
-    } else {
-      const s = mockShifts as unknown as ApiWorkShift[];
-      setShifts(s);
-      if (s.length > 0) setSelectedShift(s[0].id);
-    }
+    attendanceService
+      .getShiftOptions()
+      .then((data) => {
+        setShifts(data);
+        if (data.length > 0) setSelectedShift(data[0].id);
+      })
+      .catch(() => {});
   }, []);
 
   // Load holidays for calendar
   useEffect(() => {
-    if (USE_API) {
-      attendanceService
-        .listHolidays({ year: calYear, limit: 100 })
-        .then((res) => setCalHolidays(res.items))
-        .catch(() => {});
-    } else {
-      setCalHolidays(mockHolidays as { date: string; name: string }[]);
-    }
+    attendanceService
+      .listHolidays({ year: calYear, limit: 100 })
+      .then((res) => setCalHolidays(res.items))
+      .catch(() => {});
   }, [calYear]);
 
   const fetchMyData = useCallback(async () => {
     setLoadingData(true);
     try {
       const pad = (n: number) => String(n).padStart(2, "0");
-      if (USE_API) {
-        const [reqsRes, recsRes, statsRes] = await Promise.all([
-          attendanceService.listRequests({ userId: uid, limit: 50 }),
-          attendanceService.getMyAttendance({
-            startDate: `${calYear}-${pad(calMonth + 1)}-01`,
-            endDate: `${calYear}-${pad(calMonth + 1)}-31`,
-            limit: 100,
-          }),
-          attendanceService.getMyMonthlyStats(calYear, calMonth + 1),
-        ]);
-        setMyReqs(reqsRes.items ?? []);
-        setMyRecords(recsRes.items ?? []);
-        setMonthStats(statsRes);
-      } else {
-        setMyReqs(
-          mockReqs.filter(
-            (r) => r.userId === uid,
-          ) as unknown as ApiAttendanceRequest[],
-        );
-        setMyRecords(
-          mockRecords.filter(
-            (r) =>
-              r.userId === uid &&
-              (() => {
-                const d = new Date(r.workDate);
-                return d.getMonth() === calMonth && d.getFullYear() === calYear;
-              })(),
-          ) as unknown as ApiAttendanceRecord[],
-        );
-      }
+      const [reqsRes, recsRes, statsRes] = await Promise.all([
+        attendanceService.listRequests({ userId: uid, limit: 50 }),
+        attendanceService.getMyAttendance({
+          startDate: `${calYear}-${pad(calMonth + 1)}-01`,
+          endDate: `${calYear}-${pad(calMonth + 1)}-31`,
+          limit: 100,
+        }),
+        attendanceService.getMyMonthlyStats(calYear, calMonth + 1),
+      ]);
+      setMyReqs(reqsRes.items ?? []);
+      setMyRecords(recsRes.items ?? []);
+      setMonthStats(statsRes);
     } catch {
       /**/
     } finally {
@@ -243,28 +208,12 @@ export function MyAttendancePage() {
     setSending(true);
     const now = new Date();
     try {
-      if (USE_API) {
-        await attendanceService.createRequest({
-          type,
-          requestedTime: now.toISOString(),
-          reason: note || undefined,
-        });
-        await fetchMyData();
-      } else {
-        const newReq: ApiAttendanceRequest = {
-          id: `ar-${Date.now()}`,
-          userId: uid,
-          requestType: type,
-          requestedAt: now.toISOString(),
-          workDate: now.toISOString().split("T")[0],
-          note: note || null,
-          status: "PENDING" as const,
-          reviewedAt: null,
-          rejectReason: null,
-          createdAt: now.toISOString(),
-        };
-        setMyReqs((prev) => [...prev, newReq]);
-      }
+      await attendanceService.createRequest({
+        type,
+        requestedTime: now.toISOString(),
+        reason: note || undefined,
+      });
+      await fetchMyData();
       toast.success(
         `Đã gửi yêu cầu ${type === "CHECK_IN" ? "check-in" : "check-out"}`,
       );
@@ -288,7 +237,7 @@ export function MyAttendancePage() {
 
   // Stats
   const stats = useMemo(() => {
-    if (USE_API && monthStats) {
+    if (monthStats) {
       return {
         present: monthStats.presentDays,
         absent: monthStats.absentDays,
@@ -775,10 +724,8 @@ export function ShiftsPage() {
   const fetchShifts = useCallback(async () => {
     setLoading(true);
     try {
-      if (USE_API) {
-        const res = await attendanceService.listShifts({ limit: 100 });
-        setShifts(res.items);
-      }
+      const res = await attendanceService.listShifts({ limit: 100 });
+      setShifts(res.items);
     } catch {
       toast.error("Không tải được ca làm việc");
     } finally {
@@ -797,22 +744,20 @@ export function ShiftsPage() {
     }
     setSaving(true);
     try {
-      if (USE_API) {
-        if (editShift) {
-          const u = await attendanceService.updateShift(editShift.id, {
-            ...form,
-            shiftType:
-              form.shiftType as import("../../lib/services/attendance.service").ShiftType,
-          });
-          setShifts((prev) => prev.map((s) => (s.id === editShift.id ? u : s)));
-        } else {
-          const c = await attendanceService.createShift({
-            ...form,
-            shiftType:
-              form.shiftType as import("../../lib/services/attendance.service").ShiftType,
-          });
-          setShifts((prev) => [...prev, c]);
-        }
+      if (editShift) {
+        const u = await attendanceService.updateShift(editShift.id, {
+          ...form,
+          shiftType:
+            form.shiftType as import("../../lib/services/attendance.service").ShiftType,
+        });
+        setShifts((prev) => prev.map((s) => (s.id === editShift.id ? u : s)));
+      } else {
+        const c = await attendanceService.createShift({
+          ...form,
+          shiftType:
+            form.shiftType as import("../../lib/services/attendance.service").ShiftType,
+        });
+        setShifts((prev) => [...prev, c]);
       }
       toast.success(
         editShift ? "Đã cập nhật ca làm việc" : "Đã tạo ca làm việc",
@@ -830,10 +775,8 @@ export function ShiftsPage() {
     setShiftMembers([]);
     setMembersLoading(true);
     try {
-      if (USE_API) {
-        const members = await attendanceService.getShiftMembers(s.id);
-        setShiftMembers(members);
-      }
+      const members = await attendanceService.getShiftMembers(s.id);
+      setShiftMembers(members);
     } catch {
       toast.error("Không tải được danh sách nhân viên");
     } finally {
@@ -1095,8 +1038,7 @@ export function ShiftsPage() {
                 onClick={async () => {
                   if (!deleteConfirm) return;
                   try {
-                    if (USE_API)
-                      await attendanceService.deleteShift(deleteConfirm);
+                    await attendanceService.deleteShift(deleteConfirm);
                     setShifts((prev) =>
                       prev.filter((s) => s.id !== deleteConfirm),
                     );
@@ -1287,10 +1229,8 @@ export function HolidaysPage() {
   const fetchHolidays = useCallback(async () => {
     setLoading(true);
     try {
-      if (USE_API) {
-        const res = await attendanceService.listHolidays({ year, limit: 100 });
-        setHolidays(res.items);
-      }
+      const res = await attendanceService.listHolidays({ year, limit: 100 });
+      setHolidays(res.items);
     } catch {
       toast.error("Không tải được ngày lễ");
     } finally {
@@ -1309,20 +1249,18 @@ export function HolidaysPage() {
     }
     setSaving(true);
     try {
-      if (USE_API) {
-        if (editH) {
-          const u = await attendanceService.updateHoliday(editH.id, {
-            ...form,
-            description: form.description || null,
-          });
-          setHolidays((prev) => prev.map((h) => (h.id === editH.id ? u : h)));
-        } else {
-          const c = await attendanceService.createHoliday({
-            ...form,
-            description: form.description || null,
-          });
-          setHolidays((prev) => [...prev, c]);
-        }
+      if (editH) {
+        const u = await attendanceService.updateHoliday(editH.id, {
+          ...form,
+          description: form.description || null,
+        });
+        setHolidays((prev) => prev.map((h) => (h.id === editH.id ? u : h)));
+      } else {
+        const c = await attendanceService.createHoliday({
+          ...form,
+          description: form.description || null,
+        });
+        setHolidays((prev) => [...prev, c]);
       }
       toast.success(editH ? "Đã cập nhật ngày lễ" : "Đã thêm ngày lễ");
       setShowForm(false);
@@ -1424,8 +1362,7 @@ export function HolidaysPage() {
                       <button
                         onClick={async () => {
                           try {
-                            if (USE_API)
-                              await attendanceService.deleteHoliday(h.id);
+                            await attendanceService.deleteHoliday(h.id);
                             setHolidays((prev) =>
                               prev.filter((x) => x.id !== h.id),
                             );

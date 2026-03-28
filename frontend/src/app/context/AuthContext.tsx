@@ -1,7 +1,5 @@
 // ============================================================
-// AUTH CONTEXT — v2 với Real API + Mock Fallback
-// Real mode: VITE_API_URL set → gọi backend thật
-// Mock mode: VITE_API_URL không set → dùng mockData (demo)
+// AUTH CONTEXT — v3 Real API only (mock via AuthContext.mock)
 // ============================================================
 
 import React, {
@@ -10,13 +8,24 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
 } from "react";
-import { notifications as allNotifications } from "../data/mockData";
-import type { Notification, RoleCode } from "../data/mockData";
 import { TokenStore, ApiError } from "../../lib/apiClient";
 import * as authService from "../../lib/services/auth.service";
 import type { ApiUser } from "../../lib/services/auth.service";
+import * as notificationsService from "../../lib/services/notifications.service";
+import type { ApiNotification } from "../../lib/services/notifications.service";
 import { useMockAuth } from "./AuthContext.mock";
+
+export type RoleCode =
+  | "ADMIN"
+  | "HR"
+  | "MANAGER"
+  | "EMPLOYEE"
+  | "SALES"
+  | "ACCOUNTANT"
+  | "DIRECTOR";
+export type Notification = ApiNotification;
 
 // ─── Exported type ────────────────────────────────────────────
 export interface AuthContextType {
@@ -64,9 +73,11 @@ function RealAuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
   });
-  const [notifs, setNotifs] = useState<Notification[]>(allNotifications);
+  const [notifs, setNotifs] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [passwordChanged, setPasswordChanged] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const notifPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isDark) document.documentElement.classList.add("dark");
@@ -77,6 +88,32 @@ function RealAuthProvider({ children }: { children: React.ReactNode }) {
       /**/
     }
   }, [isDark]);
+
+  // ── Notification helpers ───────────────────────────────────────────
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await notificationsService.listMyNotifications({ limit: 50 });
+      setNotifs(res.notifications);
+      setUnreadCount(res.unreadCount);
+    } catch {
+      /* silent */
+    }
+  }, []);
+
+  // Start polling when user is logged in, stop on logout
+  useEffect(() => {
+    if (!currentUser) {
+      setNotifs([]);
+      setUnreadCount(0);
+      if (notifPollingRef.current) clearInterval(notifPollingRef.current);
+      return;
+    }
+    fetchNotifications();
+    notifPollingRef.current = setInterval(fetchNotifications, 30_000);
+    return () => {
+      if (notifPollingRef.current) clearInterval(notifPollingRef.current);
+    };
+  }, [currentUser, fetchNotifications]);
 
   // Restore session từ stored token khi app load
   useEffect(() => {
@@ -132,39 +169,57 @@ function RealAuthProvider({ children }: { children: React.ReactNode }) {
 
   const toggleTheme = useCallback(() => setIsDark((p) => !p), []);
 
-  const userNotifs = notifs
-    .filter((n) => n.recipientUserId === currentUser?.id)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const unreadCount = userNotifs.filter((n) => !n.isRead).length;
-
-  const markAsRead = useCallback((id: string) => {
-    setNotifs((prev) =>
-      prev.map((n) =>
-        n.id === id
-          ? { ...n, isRead: true, readAt: new Date().toISOString() }
-          : n,
-      ),
-    );
+  const markAsRead = useCallback(async (id: string) => {
+    try {
+      await notificationsService.markAsRead(id);
+      setNotifs((prev) =>
+        prev.map((n) =>
+          n.id === id
+            ? { ...n, isRead: true, readAt: new Date().toISOString() }
+            : n,
+        ),
+      );
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } catch {
+      /* silent */
+    }
   }, []);
-  const markAllRead = useCallback(() => {
-    if (!currentUser) return;
-    setNotifs((prev) =>
-      prev.map((n) =>
-        n.recipientUserId === currentUser.id
-          ? { ...n, isRead: true, readAt: new Date().toISOString() }
-          : n,
-      ),
-    );
-  }, [currentUser]);
-  const deleteNotification = useCallback((id: string) => {
-    setNotifs((prev) => prev.filter((n) => n.id !== id));
+  const markAllRead = useCallback(async () => {
+    try {
+      await notificationsService.markAllAsRead();
+      setNotifs((prev) =>
+        prev.map((n) => ({
+          ...n,
+          isRead: true,
+          readAt: new Date().toISOString(),
+        })),
+      );
+      setUnreadCount(0);
+    } catch {
+      /* silent */
+    }
   }, []);
-  const deleteAllRead = useCallback(() => {
-    if (!currentUser) return;
-    setNotifs((prev) =>
-      prev.filter((n) => !(n.recipientUserId === currentUser.id && n.isRead)),
-    );
-  }, [currentUser]);
+  const deleteNotification = useCallback(async (id: string) => {
+    try {
+      await notificationsService.deleteNotification(id);
+      setNotifs((prev) => {
+        const removed = prev.find((n) => n.id === id);
+        if (removed && !removed.isRead)
+          setUnreadCount((c) => Math.max(0, c - 1));
+        return prev.filter((n) => n.id !== id);
+      });
+    } catch {
+      /* silent */
+    }
+  }, []);
+  const deleteAllRead = useCallback(async () => {
+    try {
+      await notificationsService.deleteAllRead();
+      setNotifs((prev) => prev.filter((n) => !n.isRead));
+    } catch {
+      /* silent */
+    }
+  }, []);
 
   const can = useCallback(
     (...roles: RoleCode[]) => {
@@ -220,7 +275,7 @@ function RealAuthProvider({ children }: { children: React.ReactNode }) {
         updateCurrentUser,
         isDark,
         toggleTheme,
-        notifications: userNotifs,
+        notifications: notifs,
         unreadCount,
         markAsRead,
         markAllRead,
