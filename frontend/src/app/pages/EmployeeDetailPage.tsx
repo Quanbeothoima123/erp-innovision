@@ -22,13 +22,10 @@ import type { UserProfile } from "../../lib/services/users.service";
 import type { DepartmentOption } from "../../lib/services/departments.service";
 import type { JobTitleOption } from "../../lib/services/jobTitles.service";
 import {
-  departments as mockDepts,
-  jobTitles as mockJobTitles,
   getDepartmentById,
   getJobTitleById,
   getUserById,
   formatFullVND,
-  users as mockUsers,
 } from "../data/mockData";
 import {
   ChevronLeft,
@@ -359,12 +356,6 @@ export function EmployeeDetailPage() {
         ]);
         setUser(u);
         setProfile(p);
-      } else {
-        const mockUser = mockUsers.find((u) => u.id === id) as unknown as
-          | ApiUser
-          | undefined;
-        if (mockUser) setUser(mockUser);
-        setProfile(null);
       }
     } catch {
       toast.error("Không tải được thông tin nhân viên");
@@ -378,26 +369,18 @@ export function EmployeeDetailPage() {
   }, [fetchUser]);
 
   useEffect(() => {
-    if (USE_API) {
-      departmentsService
-        .getDepartmentOptions()
-        .then(setDeptOptions)
-        .catch(() => {});
-      jobTitlesService
-        .getJobTitleOptions()
-        .then(setJobOptions)
-        .catch(() => {});
-      usersService
-        .listUsers({ limit: 200 })
-        .then((r) => setAllUsersForSelect(r.items))
-        .catch(() => {});
-    } else {
-      setDeptOptions(mockDepts.map((d) => ({ id: d.id, name: d.name })));
-      setJobOptions(
-        mockJobTitles.map((j) => ({ id: j.id, name: j.name, code: j.code })),
-      );
-      setAllUsersForSelect(mockUsers as unknown as ApiUser[]);
-    }
+    departmentsService
+      .getDepartmentOptions()
+      .then(setDeptOptions)
+      .catch(() => {});
+    jobTitlesService
+      .getJobTitleOptions()
+      .then(setJobOptions)
+      .catch(() => {});
+    usersService
+      .listUsers({ limit: 200 })
+      .then((r) => setAllUsersForSelect(r.items))
+      .catch(() => {});
   }, []);
 
   // ── Lazy fetch: compensation khi vào tab ────────────────────

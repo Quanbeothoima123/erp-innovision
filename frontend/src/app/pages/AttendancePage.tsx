@@ -161,6 +161,9 @@ export function MyAttendancePage() {
   const [myRecords, setMyRecords] = useState<ApiAttendanceRecord[]>([]);
   const [monthStats, setMonthStats] = useState<MonthlyStats | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [calHolidays, setCalHolidays] = useState<
+    { date: string; name: string }[]
+  >([]);
 
   // Load shifts
   useEffect(() => {
@@ -178,6 +181,18 @@ export function MyAttendancePage() {
       if (s.length > 0) setSelectedShift(s[0].id);
     }
   }, []);
+
+  // Load holidays for calendar
+  useEffect(() => {
+    if (USE_API) {
+      attendanceService
+        .listHolidays({ year: calYear, limit: 100 })
+        .then((res) => setCalHolidays(res.items))
+        .catch(() => {});
+    } else {
+      setCalHolidays(mockHolidays as { date: string; name: string }[]);
+    }
+  }, [calYear]);
 
   const fetchMyData = useCallback(async () => {
     setLoadingData(true);
@@ -298,7 +313,7 @@ export function MyAttendancePage() {
     const firstDow = new Date(calYear, calMonth, 1).getDay();
     const offset = firstDow === 0 ? 6 : firstDow - 1;
     const hDates = new Set(
-      (mockHolidays as { date: string; name: string }[])
+      calHolidays
         .filter((h) => {
           const d = new Date(h.date);
           return d.getMonth() === calMonth && d.getFullYear() === calYear;
@@ -324,7 +339,7 @@ export function MyAttendancePage() {
       });
     }
     return { days, offset };
-  }, [calYear, calMonth, myRecords]);
+  }, [calYear, calMonth, myRecords, calHolidays]);
 
   const selectedDayRecord = selectedDay
     ? myRecords.find((r) => r.workDate === selectedDay)
@@ -763,8 +778,6 @@ export function ShiftsPage() {
       if (USE_API) {
         const res = await attendanceService.listShifts({ limit: 100 });
         setShifts(res.items);
-      } else {
-        setShifts(mockShifts as unknown as ApiWorkShift[]);
       }
     } catch {
       toast.error("Không tải được ca làm việc");
@@ -799,32 +812,6 @@ export function ShiftsPage() {
               form.shiftType as import("../../lib/services/attendance.service").ShiftType,
           });
           setShifts((prev) => [...prev, c]);
-        }
-      } else {
-        if (editShift) {
-          setShifts((prev) =>
-            prev.map((s) =>
-              s.id === editShift.id
-                ? {
-                    ...s,
-                    ...form,
-                    shiftType:
-                      form.shiftType as import("../../lib/services/attendance.service").ShiftType,
-                  }
-                : s,
-            ),
-          );
-        } else {
-          setShifts((prev) => [
-            ...prev,
-            {
-              id: `ws-${Date.now()}`,
-              ...form,
-              shiftType:
-                form.shiftType as import("../../lib/services/attendance.service").ShiftType,
-              description: form.description || null,
-            },
-          ]);
         }
       }
       toast.success(
@@ -1303,12 +1290,6 @@ export function HolidaysPage() {
       if (USE_API) {
         const res = await attendanceService.listHolidays({ year, limit: 100 });
         setHolidays(res.items);
-      } else {
-        setHolidays(
-          (mockHolidays as unknown as Holiday[]).filter(
-            (h) => new Date(h.date).getFullYear() === year,
-          ),
-        );
       }
     } catch {
       toast.error("Không tải được ngày lễ");
@@ -1342,24 +1323,6 @@ export function HolidaysPage() {
           });
           setHolidays((prev) => [...prev, c]);
         }
-      } else {
-        if (editH)
-          setHolidays((prev) =>
-            prev.map((h) =>
-              h.id === editH.id
-                ? { ...h, ...form, description: form.description || null }
-                : h,
-            ),
-          );
-        else
-          setHolidays((prev) => [
-            ...prev,
-            {
-              id: `hol-${Date.now()}`,
-              ...form,
-              description: form.description || null,
-            },
-          ]);
       }
       toast.success(editH ? "Đã cập nhật ngày lễ" : "Đã thêm ngày lễ");
       setShowForm(false);

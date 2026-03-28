@@ -35,16 +35,6 @@ import * as attendanceService from "../../lib/services/attendance.service";
 import type { ApiWorkShift } from "../../lib/services/attendance.service";
 import * as payrollService from "../../lib/services/payroll.service";
 
-// ── Mock fallback ──────────────────────────────────────────────
-import {
-  users as mockUsers,
-  departments as mockDepts,
-  jobTitles as mockJobTitles,
-  getDepartmentById,
-  getJobTitleById,
-  getUserById as getMockUserById,
-} from "../data/mockData";
-
 const USE_API = !!import.meta.env.VITE_API_URL;
 
 type SortKey = "fullName" | "hireDate" | "department" | "employmentStatus";
@@ -309,21 +299,14 @@ export function EmployeesPage() {
   };
 
   useEffect(() => {
-    if (USE_API) {
-      departmentsService
-        .getDepartmentOptions()
-        .then(setDeptOptions)
-        .catch(() => {});
-      jobTitlesService
-        .getJobTitleOptions()
-        .then(setJobOptions)
-        .catch(() => {});
-    } else {
-      setDeptOptions(mockDepts.map((d) => ({ id: d.id, name: d.name })));
-      setJobOptions(
-        mockJobTitles.map((j) => ({ id: j.id, name: j.name, code: j.code })),
-      );
-    }
+    departmentsService
+      .getDepartmentOptions()
+      .then(setDeptOptions)
+      .catch(() => {});
+    jobTitlesService
+      .getJobTitleOptions()
+      .then(setJobOptions)
+      .catch(() => {});
   }, []);
 
   const fetchUsers = useCallback(async () => {
@@ -355,65 +338,6 @@ export function EmployeesPage() {
           active: gc("ACTIVE"),
           probation: gc("PROBATION"),
           terminated: gc("TERMINATED"),
-        });
-      } else {
-        let filtered = [...mockUsers] as unknown as ApiUser[];
-        if (!isAdminHR)
-          filtered = filtered.filter(
-            (u) => u.departmentId === currentUser?.departmentId,
-          );
-        if (search) {
-          const s = search.toLowerCase();
-          filtered = filtered.filter(
-            (u) =>
-              u.fullName.toLowerCase().includes(s) ||
-              u.email.toLowerCase().includes(s) ||
-              u.userCode.toLowerCase().includes(s),
-          );
-        }
-        if (deptFilter)
-          filtered = filtered.filter((u) => u.departmentId === deptFilter);
-        if (empStatusFilter)
-          filtered = filtered.filter(
-            (u) => u.employmentStatus === empStatusFilter,
-          );
-        if (accStatusFilter)
-          filtered = filtered.filter(
-            (u) => u.accountStatus === accStatusFilter,
-          );
-        if (roleFilter)
-          filtered = filtered.filter((u) =>
-            (u.roles as string[]).includes(roleFilter),
-          );
-        if (hireDateFrom)
-          filtered = filtered.filter((u) => u.hireDate >= hireDateFrom);
-        if (hireDateTo)
-          filtered = filtered.filter((u) => u.hireDate <= hireDateTo);
-        filtered.sort((a, b) => {
-          let cmp = 0;
-          if (sortKey === "fullName")
-            cmp = a.fullName.localeCompare(b.fullName);
-          else if (sortKey === "hireDate")
-            cmp = a.hireDate.localeCompare(b.hireDate);
-          else if (sortKey === "department")
-            cmp = (getDepartmentById(a.departmentId)?.name ?? "").localeCompare(
-              getDepartmentById(b.departmentId)?.name ?? "",
-            );
-          else if (sortKey === "employmentStatus")
-            cmp = a.employmentStatus.localeCompare(b.employmentStatus);
-          return sortAsc ? cmp : -cmp;
-        });
-        setTotalCount(filtered.length);
-        setUsers(filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
-        setStats({
-          total: mockUsers.length,
-          active: mockUsers.filter((u) => u.employmentStatus === "ACTIVE")
-            .length,
-          probation: mockUsers.filter((u) => u.employmentStatus === "PROBATION")
-            .length,
-          terminated: mockUsers.filter(
-            (u) => u.employmentStatus === "TERMINATED",
-          ).length,
         });
       }
     } catch (err) {
@@ -557,31 +481,19 @@ export function EmployeesPage() {
 
   const getDeptName = (u: ApiUser) => {
     if (u.department?.name) return u.department.name;
-    if (USE_API)
-      return (
-        deptOptions.find((d) => d.id === u.departmentId)?.name ?? u.departmentId
-      );
-    return getDepartmentById(u.departmentId)?.name ?? u.departmentId;
+    return (
+      deptOptions.find((d) => d.id === u.departmentId)?.name ?? u.departmentId
+    );
   };
   const getJobName = (u: ApiUser) => {
     if (u.jobTitle?.name) return u.jobTitle.name;
-    if (USE_API)
-      return (
-        jobOptions.find((j) => j.id === u.jobTitleId)?.name ?? u.jobTitleId
-      );
-    return getJobTitleById(u.jobTitleId)?.name ?? u.jobTitleId;
+    return jobOptions.find((j) => j.id === u.jobTitleId)?.name ?? u.jobTitleId;
   };
   const getMgrName = (u: ApiUser) => {
     if (u.manager?.fullName) return u.manager.fullName;
     if (!u.managerId) return "—";
     const found = users.find((x) => x.id === u.managerId);
     if (found) return found.fullName;
-    if (!USE_API)
-      return (
-        (getMockUserById as (id: string) => { fullName?: string } | undefined)(
-          u.managerId,
-        )?.fullName ?? "—"
-      );
     return "—";
   };
 

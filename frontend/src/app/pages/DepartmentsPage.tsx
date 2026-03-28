@@ -1,6 +1,6 @@
 // ================================================================
 // DEPARTMENTS PAGE + JOB TITLES PAGE — Module 3
-// Fixed: headUserOptions now loads from API, mockUsers used in mock mode
+// Fixed: headUserOptions now loads from API
 // Fixed: _count.members luôn hiển thị đúng
 // Feature: click card → slide-over hiển thị danh sách nhân viên
 // UI: upgraded to match Figma design
@@ -31,13 +31,6 @@ import type { ApiDepartment } from "../../lib/services/departments.service";
 import * as jobTitlesService from "../../lib/services/jobTitles.service";
 import type { ApiJobTitle } from "../../lib/services/jobTitles.service";
 import * as usersService from "../../lib/services/users.service";
-
-// Mock fallback
-import {
-  departments as mockDepts,
-  jobTitles as mockJobTitles,
-  users as mockUsers,
-} from "../data/mockData";
 
 const USE_API = !!import.meta.env.VITE_API_URL;
 
@@ -145,43 +138,21 @@ export function DepartmentsPage() {
   >([]);
 
   useEffect(() => {
-    if (USE_API) {
-      // Load danh sách nhân viên để chọn trưởng phòng
-      usersService
-        .listUsers({ limit: 200 })
-        .then((res) =>
-          setHeadUserOptions(
-            res.items.map((u) => ({ id: u.id, name: u.fullName })),
-          ),
-        )
-        .catch(() => {});
-    } else {
-      setHeadUserOptions(
-        mockUsers.map((u) => ({ id: u.id, name: u.fullName })),
-      );
-    }
+    usersService
+      .listUsers({ limit: 200 })
+      .then((res) =>
+        setHeadUserOptions(
+          res.items.map((u) => ({ id: u.id, name: u.fullName })),
+        ),
+      )
+      .catch(() => {});
   }, []);
 
   const fetchDepts = useCallback(async () => {
     setLoading(true);
     try {
-      if (USE_API) {
-        const res = await departmentsService.listDepartments({ limit: 200 });
-        setDepts(res.items);
-      } else {
-        setDepts(
-          mockDepts.map((d) => ({
-            id: d.id,
-            name: d.name,
-            description: d.description,
-            headUserId: d.headUserId,
-            isActive: d.isActive,
-            _count: {
-              members: mockUsers.filter((u) => u.departmentId === d.id).length,
-            },
-          })),
-        );
-      }
+      const res = await departmentsService.listDepartments({ limit: 200 });
+      setDepts(res.items);
     } catch {
       toast.error("Không tải được danh sách phòng ban");
     } finally {
@@ -239,21 +210,6 @@ export function DepartmentsPage() {
           });
           setDepts((prev) => [...prev, created]);
         }
-      } else {
-        if (editDept) {
-          setDepts((prev) =>
-            prev.map((d) => (d.id === editDept.id ? { ...d, ...payload } : d)),
-          );
-        } else {
-          const newDept: ApiDepartment = {
-            id: `dept-${Date.now()}`,
-            ...payload,
-            description: payload.description || "",
-            headUserId: payload.headUserId,
-            _count: { members: 0 },
-          };
-          setDepts((prev) => [...prev, newDept]);
-        }
       }
       toast.success(
         editDept
@@ -297,12 +253,6 @@ export function DepartmentsPage() {
           isActive: !d.isActive,
         });
         setDepts((prev) => prev.map((x) => (x.id === d.id ? updated : x)));
-      } else {
-        setDepts((prev) =>
-          prev.map((x) =>
-            x.id === d.id ? { ...x, isActive: !x.isActive } : x,
-          ),
-        );
       }
       toast.success(
         `Đã ${d.isActive ? "vô hiệu" : "kích hoạt"} phòng ban ${d.name}`,
@@ -321,18 +271,6 @@ export function DepartmentsPage() {
       if (USE_API) {
         const members = await departmentsService.getDepartmentMembers(dept.id);
         setDeptMembers(members as DeptMember[]);
-      } else {
-        const mock = mockUsers
-          .filter((u) => u.departmentId === dept.id)
-          .map((u) => ({
-            id: u.id,
-            fullName: u.fullName,
-            avatarUrl: null,
-            jobTitle: null,
-            employmentStatus: u.employmentStatus ?? "ACTIVE",
-            accountStatus: u.accountStatus ?? "ACTIVE",
-          }));
-        setDeptMembers(mock);
       }
     } catch {
       toast.error("Không tải được danh sách nhân viên");
@@ -797,8 +735,6 @@ export function JobTitlesPage() {
       if (USE_API) {
         const res = await jobTitlesService.listJobTitles({ limit: 200 });
         setJobs(res.items);
-      } else {
-        setJobs(mockJobTitles as ApiJobTitle[]);
       }
     } catch {
       toast.error("Không tải được danh sách chức danh");
@@ -854,21 +790,6 @@ export function JobTitlesPage() {
           });
           setJobs((prev) => [...prev, created]);
         }
-      } else {
-        if (editJob) {
-          setJobs((prev) =>
-            prev.map((j) => (j.id === editJob.id ? { ...j, ...form } : j)),
-          );
-        } else {
-          setJobs((prev) => [
-            ...prev,
-            {
-              id: `jt-${Date.now()}`,
-              ...form,
-              description: form.description,
-            } as ApiJobTitle,
-          ]);
-        }
       }
       toast.success(
         editJob ? "Đã cập nhật chức danh" : `Đã tạo chức danh ${form.name}`,
@@ -908,12 +829,6 @@ export function JobTitlesPage() {
           isActive: !j.isActive,
         });
         setJobs((prev) => prev.map((x) => (x.id === j.id ? updated : x)));
-      } else {
-        setJobs((prev) =>
-          prev.map((x) =>
-            x.id === j.id ? { ...x, isActive: !x.isActive } : x,
-          ),
-        );
       }
       toast.success(
         `Đã ${j.isActive ? "vô hiệu" : "kích hoạt"} chức danh ${j.name}`,
@@ -932,18 +847,6 @@ export function JobTitlesPage() {
       if (USE_API) {
         const members = await jobTitlesService.getJobTitleMembers(job.id);
         setJobMembers(members);
-      } else {
-        const mock = mockUsers
-          .filter((u) => u.jobTitleId === job.id)
-          .map((u) => ({
-            id: u.id,
-            fullName: u.fullName,
-            avatarUrl: null,
-            department: null,
-            employmentStatus: u.employmentStatus ?? "ACTIVE",
-            accountStatus: u.accountStatus ?? "ACTIVE",
-          }));
-        setJobMembers(mock);
       }
     } catch {
       toast.error("Không tải được danh sách nhân viên");
