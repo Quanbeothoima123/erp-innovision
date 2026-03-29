@@ -32,7 +32,7 @@ router.get("/stats", ctrl.getTaskStats);
 
 // GET /api/tasks/my
 // Nhân viên dùng route này để xem task của bản thân
-router.get("/my", validate(v.listTasksSchema), ctrl.getMyTasks);
+router.get("/my", validate(v.listTasksSchema, "query"), ctrl.getMyTasks);
 
 // ─────────────────────────────────────────────────────────────
 // Task CRUD
@@ -40,7 +40,7 @@ router.get("/my", validate(v.listTasksSchema), ctrl.getMyTasks);
 
 // GET /api/tasks
 // ADMIN/HR thấy tất cả; Manager/direct-manager thấy nhóm; Employee thấy task mình
-router.get("/", validate(v.listTasksSchema), ctrl.listTasks);
+router.get("/", validate(v.listTasksSchema, "query"), ctrl.listTasks);
 
 // POST /api/tasks
 // Không dùng authorize() cứng — service._canManageTask() sẽ kiểm tra:

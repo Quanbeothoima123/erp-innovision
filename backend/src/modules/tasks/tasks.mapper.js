@@ -15,8 +15,8 @@ const mapProjectBrief = (project) => {
   if (!project) return null;
   return {
     id: project.id,
-    name: project.name,
-    code: project.code ?? null,
+    name: project.projectName,
+    code: project.projectCode ?? null,
     status: project.status,
   };
 };

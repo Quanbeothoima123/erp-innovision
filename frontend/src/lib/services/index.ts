@@ -15,3 +15,4 @@ export * as projectsService from "./projects.service";
 export * as clientsService from "./clients.service";
 export * as reportsService from "./reports.service";
 export * as systemService from "./system.service";
+export * as tasksService from "./tasks.service";

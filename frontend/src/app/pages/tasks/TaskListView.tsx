@@ -1,12 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTaskData } from "../../context/TaskContext";
-import {
-  getUserById,
-  getProjectById,
-  taskStatusLabels,
-  taskPriorityLabels,
-} from "../../data/mockData";
+import { taskStatusLabels, taskPriorityLabels } from "../../data/mockData";
 import type { Task, TaskStatus, TaskPriority } from "../../data/mockData";
 import {
   Table,
@@ -69,7 +64,7 @@ interface TaskListViewProps {
 
 export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
   const { currentUser, can } = useAuth();
-  const { updateTaskStatus, deleteTask, updateTask, addAuditLog } =
+  const { updateTaskStatus, deleteTask, updateTask, addAuditLog, assignTask } =
     useTaskData();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -132,14 +127,13 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
     }
   };
 
-  const handleMarkComplete = (taskId: string) => {
-    updateTaskStatus(
+  const handleMarkComplete = async (taskId: string) => {
+    await updateTaskStatus(
       taskId,
       "DONE",
       undefined,
       "Marked complete from list view",
     );
-    toast.success("Đã đánh dấu hoàn thành");
 
     if (currentUser) {
       addAuditLog({
@@ -154,9 +148,8 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
     }
   };
 
-  const handleCancelTask = (taskId: string) => {
-    updateTaskStatus(taskId, "CANCELLED");
-    toast.success("Đã hủy công việc");
+  const handleCancelTask = async (taskId: string) => {
+    await updateTaskStatus(taskId, "CANCELLED");
 
     if (currentUser) {
       addAuditLog({
@@ -176,10 +169,9 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteTask = () => {
+  const handleDeleteTask = async () => {
     if (taskToDelete) {
-      deleteTask(taskToDelete);
-      toast.success("Đã xóa công việc");
+      await deleteTask(taskToDelete);
 
       if (currentUser) {
         addAuditLog({
@@ -242,7 +234,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
   const canEditTask = (task: Task) => {
     if (can("ADMIN")) return true;
     if (can("MANAGER")) return true;
-    if (task.createdByUserId === currentUser?.id) return true;
+    if (task.createdBy?.id === currentUser?.id) return true;
     return false;
   };
 
@@ -306,12 +298,8 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                 </TableHeader>
                 <TableBody>
                   {groupTasks.map((task) => {
-                    const assignee = task.assignedToUserId
-                      ? getUserById(task.assignedToUserId)
-                      : null;
-                    const project = task.projectId
-                      ? getProjectById(task.projectId)
-                      : null;
+                    const assignee = task.assignedTo;
+                    const project = task.project;
                     const isOverdue = isDeadlineOverdue(task);
                     const isDueToday = isDeadlineToday(task);
 
@@ -356,7 +344,9 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                           {assignee ? (
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarImage src={assignee.avatarUrl} />
+                                <AvatarImage
+                                  src={assignee.avatarUrl ?? undefined}
+                                />
                                 <AvatarFallback>
                                   {assignee.fullName[0]}
                                 </AvatarFallback>
@@ -373,9 +363,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                         </TableCell>
                         <TableCell>
                           {project ? (
-                            <Badge variant="outline">
-                              {project.projectName}
-                            </Badge>
+                            <Badge variant="outline">{project.name}</Badge>
                           ) : (
                             <span className="text-sm text-muted-foreground">
                               -
@@ -399,7 +387,9 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                         </TableCell>
                         <TableCell>
                           <span className="text-sm">
-                            {task.estimatedHours}h
+                            {task.estimatedHours
+                              ? `${task.estimatedHours}h`
+                              : "-"}
                           </span>
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>

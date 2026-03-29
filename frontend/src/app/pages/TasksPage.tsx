@@ -1,17 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useTaskData } from "../context/TaskContext";
-import {
-  users,
-  projects,
-  getTaskById,
-  getUserById,
-  getProjectById,
-  taskStatusLabels,
-  taskPriorityLabels,
-} from "../data/mockData";
+import { taskStatusLabels, taskPriorityLabels } from "../data/mockData";
 import type { Task, TaskStatus, TaskPriority } from "../data/mockData";
+import * as usersService from "../../lib/services/users.service";
+import * as projectsService from "../../lib/services/projects.service";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -53,10 +47,41 @@ import { parseISO, isBefore, isToday, isThisWeek, isAfter } from "date-fns";
 
 export function TasksPage() {
   const { currentUser, can } = useAuth();
-  const { allTasks } = useTaskData();
+  const { allTasks, loading } = useTaskData();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Danh sách users/projects cho filters
+  const [userOptions, setUserOptions] = useState<
+    { id: string; fullName: string }[]
+  >([]);
+  const [projectOptions, setProjectOptions] = useState<
+    { id: string; projectName: string; projectCode: string | null }[]
+  >([]);
+
+  useEffect(() => {
+    usersService
+      .listUsers({ limit: 100, accountStatus: "ACTIVE" })
+      .then((res) => {
+        setUserOptions(
+          res.items.map((u) => ({ id: u.id, fullName: u.fullName })),
+        );
+      })
+      .catch(() => {});
+    projectsService
+      .listProjects({ limit: 100 })
+      .then((res) => {
+        setProjectOptions(
+          res.items.map((p) => ({
+            id: p.id,
+            projectName: p.projectName,
+            projectCode: p.projectCode,
+          })),
+        );
+      })
+      .catch(() => {});
+  }, []);
 
   // View mode: list | board | calendar
   const [viewMode, setViewMode] = useState<"list" | "board" | "calendar">(
@@ -91,15 +116,15 @@ export function TasksPage() {
 
     // Tab filter: my tasks vs all tasks
     if (tab === "my") {
-      result = result.filter((t) => t.assignedToUserId === currentUser?.id);
+      result = result.filter((t) => t.assignedTo?.id === currentUser?.id);
     } else {
       // All tasks - scope by role
       if (!can("ADMIN", "MANAGER")) {
         // Employee only sees tasks assigned to them or created by them
         result = result.filter(
           (t) =>
-            t.assignedToUserId === currentUser?.id ||
-            t.createdByUserId === currentUser?.id,
+            t.assignedTo?.id === currentUser?.id ||
+            t.createdBy?.id === currentUser?.id,
         );
       }
     }
@@ -110,7 +135,7 @@ export function TasksPage() {
       result = result.filter(
         (t) =>
           t.title.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q),
+          (t.description ?? "").toLowerCase().includes(q),
       );
     }
 
@@ -127,18 +152,18 @@ export function TasksPage() {
     // Project filter
     if (projectFilter !== "ALL") {
       if (projectFilter === "NONE") {
-        result = result.filter((t) => !t.projectId);
+        result = result.filter((t) => !t.project);
       } else {
-        result = result.filter((t) => t.projectId === projectFilter);
+        result = result.filter((t) => t.project?.id === projectFilter);
       }
     }
 
     // Assignee filter
     if (assigneeFilter !== "ALL") {
       if (assigneeFilter === "UNASSIGNED") {
-        result = result.filter((t) => !t.assignedToUserId);
+        result = result.filter((t) => !t.assignedTo);
       } else {
-        result = result.filter((t) => t.assignedToUserId === assigneeFilter);
+        result = result.filter((t) => t.assignedTo?.id === assigneeFilter);
       }
     }
 
@@ -215,9 +240,7 @@ export function TasksPage() {
     }
   };
 
-  const canCreateTask =
-    can("ADMIN", "MANAGER") ||
-    (currentUser && users.some((u) => u.managerId === currentUser.id));
+  const canCreateTask = can("ADMIN", "MANAGER");
 
   return (
     <div className="flex flex-col h-full">
@@ -355,7 +378,7 @@ export function TasksPage() {
             <SelectContent>
               <SelectItem value="ALL">Tất cả dự án</SelectItem>
               <SelectItem value="NONE">Không dự án</SelectItem>
-              {projects.map((p) => (
+              {projectOptions.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.projectName}
                 </SelectItem>
@@ -370,7 +393,7 @@ export function TasksPage() {
             <SelectContent>
               <SelectItem value="ALL">Tất cả người</SelectItem>
               <SelectItem value="UNASSIGNED">Chưa giao</SelectItem>
-              {users.map((u) => (
+              {userOptions.map((u) => (
                 <SelectItem key={u.id} value={u.id}>
                   {u.fullName}
                 </SelectItem>

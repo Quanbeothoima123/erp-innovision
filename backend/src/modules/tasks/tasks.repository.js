@@ -1,5 +1,5 @@
 // src/modules/tasks/tasks.repository.js
-const prisma = require("../../config/db");
+const { prisma } = require("../../config/db");
 
 // ── Select helpers ───────────────────────────────────────────
 
@@ -13,8 +13,8 @@ const USER_BRIEF = {
 
 const PROJECT_BRIEF = {
   id: true,
-  name: true,
-  code: true,
+  projectName: true,
+  projectCode: true,
   status: true,
 };
 

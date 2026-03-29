@@ -3,12 +3,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useAuth } from "../../context/AuthContext";
 import { useTaskData } from "../../context/TaskContext";
-import {
-  getUserById,
-  getProjectById,
-  taskStatusLabels,
-  taskPriorityLabels,
-} from "../../data/mockData";
+import { taskStatusLabels, taskPriorityLabels } from "../../data/mockData";
 import type { Task, TaskStatus, TaskPriority } from "../../data/mockData";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -69,7 +64,7 @@ function TaskCard({ task, onClick }: TaskCardProps) {
     canDrag: () => {
       // Employee can only drag their own tasks
       if (!can("ADMIN", "MANAGER")) {
-        return task.assignedToUserId === currentUser?.id;
+        return task.assignedTo?.id === currentUser?.id;
       }
       return true;
     },
@@ -78,10 +73,8 @@ function TaskCard({ task, onClick }: TaskCardProps) {
     }),
   });
 
-  const assignee = task.assignedToUserId
-    ? getUserById(task.assignedToUserId)
-    : null;
-  const project = task.projectId ? getProjectById(task.projectId) : null;
+  const assignee = task.assignedTo;
+  const project = task.project;
 
   const isOverdue =
     task.deadline &&
@@ -127,7 +120,7 @@ function TaskCard({ task, onClick }: TaskCardProps) {
       {/* Project tag */}
       {project && (
         <Badge variant="outline" className="mb-2 text-xs">
-          {project.projectName}
+          {project.name}
         </Badge>
       )}
 
@@ -136,7 +129,7 @@ function TaskCard({ task, onClick }: TaskCardProps) {
         <div className="flex items-center gap-2">
           {assignee ? (
             <Avatar className="h-5 w-5">
-              <AvatarImage src={assignee.avatarUrl} />
+              <AvatarImage src={assignee.avatarUrl ?? undefined} />
               <AvatarFallback className="text-[10px]">
                 {assignee.fullName[0]}
               </AvatarFallback>
@@ -296,7 +289,7 @@ export function TaskBoardView({ tasks, onTaskClick }: TaskBoardViewProps) {
   const canQuickCreate = can("ADMIN", "MANAGER");
   const isEmployee = !can("ADMIN", "MANAGER");
 
-  const handleDrop = (taskId: string, newStatus: TaskStatus) => {
+  const handleDrop = async (taskId: string, newStatus: TaskStatus) => {
     // If moving to DONE, show confirmation dialog
     if (newStatus === "DONE") {
       setTaskToComplete(taskId);
@@ -305,8 +298,7 @@ export function TaskBoardView({ tasks, onTaskClick }: TaskBoardViewProps) {
     }
 
     // Otherwise, update immediately
-    updateTaskStatus(taskId, newStatus);
-    toast.success(`Đã chuyển sang "${taskStatusLabels[newStatus]}"`);
+    await updateTaskStatus(taskId, newStatus);
 
     if (currentUser) {
       addAuditLog({
@@ -321,11 +313,10 @@ export function TaskBoardView({ tasks, onTaskClick }: TaskBoardViewProps) {
     }
   };
 
-  const handleConfirmComplete = () => {
+  const handleConfirmComplete = async () => {
     if (taskToComplete) {
       const hours = actualHours ? parseFloat(actualHours) : undefined;
-      updateTaskStatus(taskToComplete, "DONE", hours, completionNote);
-      toast.success("Đã đánh dấu hoàn thành");
+      await updateTaskStatus(taskToComplete, "DONE", hours, completionNote);
 
       if (currentUser) {
         addAuditLog({

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { getUserById, taskPriorityLabels } from "../../data/mockData";
+import { taskPriorityLabels } from "../../data/mockData";
 import type { Task, TaskPriority } from "../../data/mockData";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
@@ -160,9 +160,7 @@ export function TaskCalendarView({
                 {/* Task cards (show max 3, rest in popover) */}
                 <div className="space-y-1">
                   {dayTasks.slice(0, 3).map((task) => {
-                    const assignee = task.assignedToUserId
-                      ? getUserById(task.assignedToUserId)
-                      : null;
+                    const assignee = task.assignedTo;
                     const isTaskOverdue = isOverdue(task);
 
                     return (
@@ -186,7 +184,9 @@ export function TaskCalendarView({
                         {assignee && (
                           <div className="flex items-center gap-1 mt-1">
                             <Avatar className="h-3 w-3">
-                              <AvatarImage src={assignee.avatarUrl} />
+                              <AvatarImage
+                                src={assignee.avatarUrl ?? undefined}
+                              />
                               <AvatarFallback className="text-[8px]">
                                 {assignee.fullName[0]}
                               </AvatarFallback>
@@ -215,9 +215,7 @@ export function TaskCalendarView({
                             {format(day, "dd/MM/yyyy", { locale: vi })}
                           </h4>
                           {dayTasks.map((task) => {
-                            const assignee = task.assignedToUserId
-                              ? getUserById(task.assignedToUserId)
-                              : null;
+                            const assignee = task.assignedTo;
                             const isTaskOverdue = isOverdue(task);
 
                             return (
@@ -244,7 +242,9 @@ export function TaskCalendarView({
                                       <div className="flex items-center gap-1 mt-1">
                                         <Avatar className="h-4 w-4">
                                           <AvatarImage
-                                            src={assignee.avatarUrl}
+                                            src={
+                                              assignee.avatarUrl ?? undefined
+                                            }
                                           />
                                           <AvatarFallback className="text-[9px]">
                                             {assignee.fullName[0]}

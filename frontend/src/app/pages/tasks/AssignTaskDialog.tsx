@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTaskData } from "../../context/TaskContext";
-import { users } from "../../data/mockData";
+import * as usersService from "../../../lib/services/users.service";
 import {
   Dialog,
   DialogContent,
@@ -34,30 +34,49 @@ export function AssignTaskDialog({
   taskIds,
 }: AssignTaskDialogProps) {
   const { currentUser } = useAuth();
-  const { updateTask, addAuditLog, allTasks } = useTaskData();
+  const { assignTask, addAuditLog, allTasks } = useTaskData();
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [userList, setUserList] = useState<
+    { id: string; fullName: string; email: string; avatar?: string | null }[]
+  >([]);
 
-  const handleAssign = () => {
+  useEffect(() => {
+    if (open) {
+      usersService
+        .listUsers({ limit: 100, accountStatus: "ACTIVE" })
+        .then((res) => {
+          setUserList(
+            res.items.map((u) => ({
+              id: u.id,
+              fullName: u.fullName,
+              email: u.email,
+              avatar: u.avatarUrl,
+            })),
+          );
+        })
+        .catch(() => {});
+    }
+  }, [open]);
+
+  const handleAssign = async () => {
     if (!selectedUserId) {
       toast.error("Vui lòng chọn người được giao");
       return;
     }
 
-    const assignedUser = users.find((u) => u.id === selectedUserId);
+    const assignedUser = userList.find((u) => u.id === selectedUserId);
     if (!assignedUser) {
       toast.error("Không tìm thấy người dùng");
       return;
     }
 
     // Update all selected tasks
-    taskIds.forEach((taskId) => {
+    for (const taskId of taskIds) {
       const task = allTasks.find((t) => t.id === taskId);
-      if (!task) return;
+      if (!task) continue;
 
-      updateTask(taskId, {
-        assignedToUserId: selectedUserId,
-      });
+      await assignTask(taskId, selectedUserId);
 
       // Add audit log
       if (currentUser) {
@@ -71,14 +90,7 @@ export function AssignTaskDialog({
           createdAt: new Date().toISOString(),
         });
       }
-    });
-
-    const taskCount = taskIds.length;
-    toast.success(
-      taskCount === 1
-        ? `Đã giao công việc cho ${assignedUser.fullName}`
-        : `Đã giao ${taskCount} công việc cho ${assignedUser.fullName}`,
-    );
+    }
 
     setSelectedUserId("");
     onClose();
@@ -89,7 +101,7 @@ export function AssignTaskDialog({
     onClose();
   };
 
-  const filteredUsers = users.filter(
+  const filteredUsers = userList.filter(
     (user) =>
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -144,7 +156,10 @@ export function AssignTaskDialog({
                       className="flex items-center gap-3 flex-1 cursor-pointer"
                     >
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.avatar} alt={user.fullName} />
+                        <AvatarImage
+                          src={user.avatar ?? undefined}
+                          alt={user.fullName}
+                        />
                         <AvatarFallback>
                           {user.fullName
                             .split(" ")

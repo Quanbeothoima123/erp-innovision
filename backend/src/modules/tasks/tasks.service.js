@@ -2,7 +2,7 @@
 const repo = require("./tasks.repository");
 const AppError = require("../../common/errors/AppError");
 const { ROLES } = require("../../config/constants");
-const prisma = require("../../config/db");
+const { prisma } = require("../../config/db");
 
 // ─────────────────────────────────────────────────────────────
 // PERMISSION HELPERS

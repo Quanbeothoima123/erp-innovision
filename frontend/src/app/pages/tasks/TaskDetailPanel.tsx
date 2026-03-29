@@ -1,16 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTaskData } from "../../context/TaskContext";
-import {
-  getTaskById,
-  getUserById,
-  getProjectById,
-  getTaskComments,
-  taskStatusLabels,
-  taskPriorityLabels,
-  users,
-  projects,
-} from "../../data/mockData";
+import { taskStatusLabels, taskPriorityLabels } from "../../data/mockData";
 import type { Task, TaskStatus, TaskPriority } from "../../data/mockData";
 import {
   Sheet,
@@ -76,6 +67,8 @@ import {
 import { format, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import { toast } from "sonner";
+import * as usersService from "../../../lib/services/users.service";
+import * as projectsService from "../../../lib/services/projects.service";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,6 +96,7 @@ export function TaskDetailPanel({
     addComment,
     updateComment,
     deleteComment,
+    fetchComments,
     addAuditLog,
   } = useTaskData();
 
@@ -117,6 +111,13 @@ export function TaskDetailPanel({
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     [allTaskComments, taskId],
   );
+
+  // Tải comments khi mở panel
+  useEffect(() => {
+    if (open && taskId) {
+      fetchComments(taskId);
+    }
+  }, [open, taskId, fetchComments]);
 
   const [activeTab, setActiveTab] = useState<"details" | "activity">("details");
   const [isEditing, setIsEditing] = useState(false);
@@ -139,47 +140,70 @@ export function TaskDetailPanel({
   const [editEstimatedHours, setEditEstimatedHours] = useState("");
   const [editActualHours, setEditActualHours] = useState("");
 
+  // Danh sách users/projects cho dropdown khi edit
+  const [userOptions, setUserOptions] = useState<
+    { id: string; fullName: string }[]
+  >([]);
+  const [projectOptions, setProjectOptions] = useState<
+    { id: string; projectName: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (open) {
+      usersService
+        .listUsers({ limit: 100, accountStatus: "ACTIVE" })
+        .then((res) => {
+          setUserOptions(
+            res.items.map((u) => ({ id: u.id, fullName: u.fullName })),
+          );
+        })
+        .catch(() => {});
+      projectsService
+        .listProjects({ limit: 100 })
+        .then((res) => {
+          setProjectOptions(
+            res.items.map((p) => ({ id: p.id, projectName: p.projectName })),
+          );
+        })
+        .catch(() => {});
+    }
+  }, [open]);
+
   if (!task) return null;
 
-  const creator = getUserById(task.createdByUserId);
-  const assignee = task.assignedToUserId
-    ? getUserById(task.assignedToUserId)
-    : null;
-  const project = task.projectId ? getProjectById(task.projectId) : null;
+  const creator = task.createdBy;
+  const assignee = task.assignedTo;
+  const project = task.project;
 
   const canEdit =
-    can("ADMIN", "MANAGER") || task.createdByUserId === currentUser?.id;
-  const canChangeStatus = canEdit || task.assignedToUserId === currentUser?.id;
+    can("ADMIN", "MANAGER") || task.createdBy?.id === currentUser?.id;
+  const canChangeStatus = canEdit || task.assignedTo?.id === currentUser?.id;
 
   const handleStartEdit = () => {
     setEditTitle(task.title);
-    setEditDescription(task.description);
+    setEditDescription(task.description ?? "");
     setEditStatus(task.status);
     setEditPriority(task.priority);
-    setEditAssignee(task.assignedToUserId || "unassigned");
-    setEditProject(task.projectId || "no-project");
+    setEditAssignee(task.assignedTo?.id || "unassigned");
+    setEditProject(task.project?.id || "no-project");
     setEditDeadline(task.deadline ? parseISO(task.deadline) : undefined);
-    setEditEstimatedHours(task.estimatedHours.toString());
+    setEditEstimatedHours(task.estimatedHours?.toString() ?? "");
     setEditActualHours(task.actualHours?.toString() || "");
     setIsEditing(true);
   };
 
-  const handleSaveEdit = () => {
-    updateTask(task.id, {
+  const handleSaveEdit = async () => {
+    await updateTask(task.id, {
       title: editTitle,
       description: editDescription,
-      status: editStatus,
       priority: editPriority,
-      assignedToUserId: editAssignee === "unassigned" ? null : editAssignee,
       projectId: editProject === "no-project" ? null : editProject,
       deadline: editDeadline
-        ? format(editDeadline, "yyyy-MM-dd")
+        ? format(editDeadline, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
         : task.deadline,
-      estimatedHours: parseFloat(editEstimatedHours) || 0,
-      actualHours: editActualHours ? parseFloat(editActualHours) : null,
+      estimatedHours: parseFloat(editEstimatedHours) || null,
     });
 
-    toast.success("Đã cập nhật công việc");
     setIsEditing(false);
 
     if (currentUser) {
@@ -195,27 +219,14 @@ export function TaskDetailPanel({
     }
   };
 
-  const handleStatusChange = (newStatus: TaskStatus) => {
-    updateTaskStatus(task.id, newStatus);
-    toast.success(`Đã chuyển sang "${taskStatusLabels[newStatus]}"`);
+  const handleStatusChange = async (newStatus: TaskStatus) => {
+    await updateTaskStatus(task.id, newStatus);
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim() || !currentUser) return;
-
-    const comment = {
-      id: `tc-${Date.now()}`,
-      taskId: task.id,
-      userId: currentUser.id,
-      content: newComment,
-      isEdited: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    addComment(comment);
+    await addComment(task.id, newComment.trim());
     setNewComment("");
-    toast.success("Đã thêm bình luận");
   };
 
   const startEditComment = (commentId: string, content: string) => {
@@ -223,12 +234,11 @@ export function TaskDetailPanel({
     setEditingCommentText(content);
   };
 
-  const saveEditComment = () => {
+  const saveEditComment = async () => {
     if (editingCommentId && editingCommentText.trim()) {
-      updateComment(editingCommentId, editingCommentText);
+      await updateComment(task.id, editingCommentId, editingCommentText.trim());
       setEditingCommentId(null);
       setEditingCommentText("");
-      toast.success("Đã cập nhật bình luận");
     }
   };
 
@@ -237,12 +247,11 @@ export function TaskDetailPanel({
     setDeleteCommentDialog(true);
   };
 
-  const handleDeleteComment = () => {
+  const handleDeleteComment = async () => {
     if (commentToDelete) {
-      deleteComment(commentToDelete);
+      await deleteComment(task.id, commentToDelete);
       setDeleteCommentDialog(false);
       setCommentToDelete(null);
-      toast.success("Đã xóa bình luận");
     }
   };
 
@@ -252,7 +261,7 @@ export function TaskDetailPanel({
       return ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE", "CANCELLED"];
 
     // Employee restrictions
-    if (task.assignedToUserId === currentUser?.id) {
+    if (task.assignedTo?.id === currentUser?.id) {
       const current = task.status;
       if (current === "TODO") return ["TODO", "IN_PROGRESS"];
       if (current === "IN_PROGRESS") return ["IN_PROGRESS", "IN_REVIEW"];
@@ -410,7 +419,7 @@ export function TaskDetailPanel({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">Chưa giao</SelectItem>
-                    {users.map((u) => (
+                    {userOptions.map((u) => (
                       <SelectItem key={u.id} value={u.id}>
                         {u.fullName}
                       </SelectItem>
@@ -422,7 +431,7 @@ export function TaskDetailPanel({
                   {assignee ? (
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={assignee.avatarUrl} />
+                        <AvatarImage src={assignee.avatarUrl ?? undefined} />
                         <AvatarFallback>{assignee.fullName[0]}</AvatarFallback>
                       </Avatar>
                       <span>{assignee.fullName}</span>
@@ -454,7 +463,7 @@ export function TaskDetailPanel({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="no-project">Không dự án</SelectItem>
-                    {projects.map((p) => (
+                    {projectOptions.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.projectName}
                       </SelectItem>
@@ -464,7 +473,7 @@ export function TaskDetailPanel({
               ) : (
                 <div className="mt-2">
                   {project ? (
-                    <Badge variant="outline">{project.projectName}</Badge>
+                    <Badge variant="outline">{project.name}</Badge>
                   ) : (
                     <span className="text-sm text-muted-foreground">
                       Không dự án
@@ -527,7 +536,9 @@ export function TaskDetailPanel({
                     className="mt-2"
                   />
                 ) : (
-                  <p className="mt-2 text-sm">{task.estimatedHours}h</p>
+                  <p className="mt-2 text-sm">
+                    {task.estimatedHours ? `${task.estimatedHours}h` : "-"}
+                  </p>
                 )}
               </div>
 
@@ -556,7 +567,7 @@ export function TaskDetailPanel({
                   {creator && (
                     <>
                       <Avatar className="h-6 w-6">
-                        <AvatarImage src={creator.avatarUrl} />
+                        <AvatarImage src={creator.avatarUrl ?? undefined} />
                         <AvatarFallback>{creator.fullName[0]}</AvatarFallback>
                       </Avatar>
                       <span className="text-sm">{creator.fullName}</span>
@@ -631,13 +642,13 @@ export function TaskDetailPanel({
             {/* Comment thread */}
             <div className="space-y-4">
               {comments.map((comment) => {
-                const commentUser = getUserById(comment.userId);
-                const isOwn = comment.userId === currentUser?.id;
+                const commentUser = comment.user;
+                const isOwn = comment.user?.id === currentUser?.id;
 
                 return (
                   <div key={comment.id} className="flex gap-3">
                     <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={commentUser?.avatarUrl} />
+                      <AvatarImage src={commentUser?.avatarUrl ?? undefined} />
                       <AvatarFallback>
                         {commentUser?.fullName[0]}
                       </AvatarFallback>

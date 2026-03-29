@@ -1,13 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTaskData } from "../../context/TaskContext";
-import {
-  users,
-  projects,
-  taskStatusLabels,
-  taskPriorityLabels,
-} from "../../data/mockData";
+import { taskStatusLabels, taskPriorityLabels } from "../../data/mockData";
 import type { TaskStatus, TaskPriority } from "../../data/mockData";
+import * as usersService from "../../../lib/services/users.service";
+import * as projectsService from "../../../lib/services/projects.service";
 import {
   Dialog,
   DialogContent,
@@ -74,14 +71,52 @@ export function CreateTaskModal({ open, onClose }: CreateTaskModalProps) {
 
   const [assigneePickerOpen, setAssigneePickerOpen] = useState(false);
 
-  // Filter users based on role
-  const availableUsers = can("ADMIN")
-    ? users
-    : users.filter(
-        (u) => u.managerId === currentUser?.id || u.id === currentUser?.id,
-      );
+  // Danh sách users/projects từ API
+  const [availableUsers, setAvailableUsers] = useState<
+    {
+      id: string;
+      fullName: string;
+      email: string;
+      userCode: string;
+      avatarUrl?: string | null;
+    }[]
+  >([]);
+  const [availableProjects, setAvailableProjects] = useState<
+    { id: string; projectName: string; projectCode: string | null }[]
+  >([]);
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    if (open) {
+      usersService
+        .listUsers({ limit: 100, accountStatus: "ACTIVE" })
+        .then((res) => {
+          setAvailableUsers(
+            res.items.map((u) => ({
+              id: u.id,
+              fullName: u.fullName,
+              email: u.email,
+              userCode: u.userCode,
+              avatarUrl: u.avatarUrl,
+            })),
+          );
+        })
+        .catch(() => {});
+      projectsService
+        .listProjects({ limit: 100 })
+        .then((res) => {
+          setAvailableProjects(
+            res.items.map((p) => ({
+              id: p.id,
+              projectName: p.projectName,
+              projectCode: p.projectCode,
+            })),
+          );
+        })
+        .catch(() => {});
+    }
+  }, [open]);
+
+  const handleSubmit = async () => {
     if (!title.trim()) {
       toast.error("Vui lòng nhập tiêu đề công việc");
       return;
@@ -89,27 +124,18 @@ export function CreateTaskModal({ open, onClose }: CreateTaskModalProps) {
 
     if (!currentUser) return;
 
-    const newTask = {
-      id: `task-${Date.now()}`,
+    await addTask({
       title: title.trim(),
-      description: description.trim(),
-      deadline: deadline ? format(deadline, "yyyy-MM-dd") : "",
+      description: description.trim() || null,
+      deadline: deadline
+        ? format(deadline, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        : null,
       priority,
-      status,
-      sourceMessage: sourceMessage.trim() || undefined,
+      sourceMessage: sourceMessage.trim() || null,
       projectId: projectId === "no-project" ? null : projectId,
       assignedToUserId: assigneeId === "unassigned" ? null : assigneeId,
-      createdByUserId: currentUser.id,
-      estimatedHours: parseFloat(estimatedHours) || 0,
-      actualHours: null,
-      completedAt: null,
-      commentCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    addTask(newTask);
-    toast.success("Đã tạo công việc mới");
+      estimatedHours: parseFloat(estimatedHours) || null,
+    });
 
     addAuditLog({
       id: `audit-${Date.now()}`,
@@ -276,7 +302,7 @@ export function CreateTaskModal({ open, onClose }: CreateTaskModalProps) {
                         return user ? (
                           <div className="flex items-center gap-2">
                             <Avatar className="h-5 w-5">
-                              <AvatarImage src={user.avatarUrl} />
+                              <AvatarImage src={user.avatarUrl ?? undefined} />
                               <AvatarFallback>
                                 {user.fullName[0]}
                               </AvatarFallback>
@@ -324,7 +350,7 @@ export function CreateTaskModal({ open, onClose }: CreateTaskModalProps) {
                             className={`h-4 w-4 mr-2 ${assigneeId === user.id ? "opacity-100" : "opacity-0"}`}
                           />
                           <Avatar className="h-6 w-6 mr-2">
-                            <AvatarImage src={user.avatarUrl} />
+                            <AvatarImage src={user.avatarUrl ?? undefined} />
                             <AvatarFallback>{user.fullName[0]}</AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col">
@@ -351,7 +377,7 @@ export function CreateTaskModal({ open, onClose }: CreateTaskModalProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="no-project">Không dự án</SelectItem>
-                {projects.map((p) => (
+                {availableProjects.map((p) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.projectCode} - {p.projectName}
                   </SelectItem>
