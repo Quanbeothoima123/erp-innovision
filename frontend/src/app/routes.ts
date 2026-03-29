@@ -49,6 +49,8 @@ import {
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
+// ── THÊM MỚI ─────────────────────────────────────────────────
+import { TasksPage, MyTasksPage } from "./pages/TasksPage";
 
 export const router = createBrowserRouter([
   {
@@ -89,6 +91,10 @@ export const router = createBrowserRouter([
           { path: "contracts", Component: ContractsPage },
           { path: "invoices", Component: InvoicesPage },
           { path: "payments", Component: PaymentsPage },
+          // ── THÊM MỚI ───────────────────────────────────────
+          { path: "tasks", Component: TasksPage },
+          { path: "tasks/my", Component: MyTasksPage },
+          // ───────────────────────────────────────────────────
           { path: "reports/hr", Component: HRReportPage },
           { path: "reports/attendance", Component: AttendanceReportPage },
           { path: "reports/finance", Component: FinanceReportPage },

@@ -30,6 +30,8 @@ import {
   Lock,
   KeyRound,
   BarChart3,
+  // ── THÊM MỚI ───────────────────────────────────────────────
+  CheckSquare,
 } from "lucide-react";
 
 interface NavItem {
@@ -84,8 +86,8 @@ export function Layout() {
   const deptName = currentUser.department?.name ?? currentUser.departmentId;
   const jobName = currentUser.jobTitle?.name ?? currentUser.jobTitleId;
 
-  const pendingLeaves = 0; // TODO: fetch từ leave service
-  const pendingOT = 0; // TODO: fetch từ OT service
+  const pendingLeaves = 0;
+  const pendingOT = 0;
   const pendingAttendanceBadge = pendingAttendance;
 
   const buildNav = (): NavItem[] => {
@@ -95,6 +97,19 @@ export function Layout() {
       icon: <LayoutDashboard size={18} />,
       path: "/",
     });
+
+    // ── THÊM MỚI: Công việc — visible cho tất cả roles ────────
+    // ADMIN/MANAGER/direct manager: thấy tất cả + tạo được task
+    // EMPLOYEE: chỉ thấy task của mình (TasksPage tự scope theo role)
+    items.push({
+      label: "Công Việc",
+      icon: <CheckSquare size={18} />,
+      children: [
+        { label: "Tất cả công việc", path: "/tasks" },
+        { label: "Công việc của tôi", path: "/tasks/my" },
+      ],
+    });
+    // ──────────────────────────────────────────────────────────
 
     if (can("ADMIN", "HR")) {
       items.push({
@@ -242,7 +257,6 @@ export function Layout() {
       }
     }
 
-    // Reports — visible to ADMIN, HR, MANAGER, ACCOUNTANT
     if (can("ADMIN", "HR", "MANAGER", "ACCOUNTANT")) {
       const reportChildren = [];
       if (can("ADMIN", "HR")) {
@@ -280,6 +294,7 @@ export function Layout() {
         ],
       });
     }
+
     return items;
   };
 
@@ -293,8 +308,10 @@ export function Layout() {
 
   const isActive = (path: string) => {
     if (location.pathname === path) return true;
-    // Match /employees/:id to /employees
     if (path === "/employees" && location.pathname.startsWith("/employees/"))
+      return true;
+    // ── THÊM MỚI: active state cho tasks ───────────────────────
+    if (path === "/tasks" && location.pathname.startsWith("/tasks"))
       return true;
     return false;
   };

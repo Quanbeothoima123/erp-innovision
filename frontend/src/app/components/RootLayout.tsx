@@ -1,16 +1,16 @@
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+// ── THÊM MỚI ─────────────────────────────────────────────────
+import { TaskProvider } from "../context/TaskContext";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 
 function AuthGuard() {
-  // FIX: lấy thêm `initializing` để không redirect khi đang restore session
   const { currentUser, initializing } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Chờ AuthContext restore token xong mới kiểm tra
     if (initializing) return;
 
     const publicRoutes = [
@@ -26,7 +26,6 @@ function AuthGuard() {
       return;
     }
 
-    // Redirect to change-password if mustChangePassword is true
     if (
       currentUser &&
       currentUser.mustChangePassword &&
@@ -37,7 +36,6 @@ function AuthGuard() {
     }
   }, [currentUser, navigate, location.pathname, initializing]);
 
-  // Hiển thị màn hình loading trong khi restore session
   if (initializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -55,8 +53,12 @@ function AuthGuard() {
 export function RootLayout() {
   return (
     <AuthProvider>
-      <AuthGuard />
-      <Toaster position="top-right" richColors closeButton />
+      {/* TaskProvider bọc bên trong AuthProvider để TaskContext có thể
+          dùng currentUser nếu cần sau này khi nối real API */}
+      <TaskProvider>
+        <AuthGuard />
+        <Toaster position="top-right" richColors closeButton />
+      </TaskProvider>
     </AuthProvider>
   );
 }
