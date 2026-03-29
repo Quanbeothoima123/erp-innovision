@@ -24,6 +24,19 @@ async function login(req, res, next) {
       userAgent,
     });
 
+    // 2FA bật → trả token tạm, frontend chuyển sang màn nhập TOTP
+    if (result.requiresTwoFactor) {
+      return successResponse(
+        res,
+        {
+          requiresTwoFactor: true,
+          twoFactorToken: result.twoFactorToken,
+        },
+        "Vui lòng nhập mã xác thực từ ứng dụng Google Authenticator.",
+      );
+    }
+
+    // 2FA không bật → đăng nhập hoàn tất
     const responseData = {
       ...toAuthResponse(result.user, result.accessToken, result.refreshToken),
       mustChangePassword: result.mustChangePassword,

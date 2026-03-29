@@ -103,5 +103,7 @@ router.post(
   validate(changePasswordSchema),
   controller.changePassword,
 );
+const twofaRouter = require("./twofa.routes");
+router.use("/2fa", twofaRouter);
 
 module.exports = router;

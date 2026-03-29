@@ -22,7 +22,7 @@ const { AppError } = require("../../common/errors/AppError");
 const { ERROR_CODES } = require("../../common/errors/errorCodes");
 const { ACCOUNT_STATUS, AUTH_TOKEN_TYPE } = require("../../config/constants");
 const { env } = require("../../config/env");
-
+const { signTwoFactorToken } = require("../../common/utils/token.util");
 // ── Login ────────────────────────────────────────────────────
 
 /**
@@ -50,7 +50,6 @@ async function login({ email, password, ipAddress, userAgent }) {
     : false;
 
   if (!isPasswordValid) {
-    // Tăng failed login count, có thể lock account
     await repo.incrementFailedLogin(
       user.id,
       env.MAX_FAILED_LOGIN,
@@ -66,9 +65,23 @@ async function login({ email, password, ipAddress, userAgent }) {
   // 4. Reset failed count + ghi lastLoginAt
   await repo.updateLoginSuccess(user.id);
 
-  // 5. Tạo tokens
+  // 5. Kiểm tra 2FA — nếu bật thì dừng, trả token tạm
+  if (user.twoFactorEnabled) {
+    const twoFactorToken = signTwoFactorToken({ sub: user.id });
+    return {
+      requiresTwoFactor: true,
+      twoFactorToken,
+      // Không có accessToken / refreshToken ở bước này
+    };
+  }
+
+  // 6. Không có 2FA → tạo session thật luôn
+  return createSessionForUser(user, ipAddress, userAgent);
+}
+
+async function createSessionForUser(user, ipAddress, userAgent) {
   const roleCodes = extractRoleCodes(user.roles);
-  const { accessToken, refreshToken, session } = await _createTokenPair(
+  const { accessToken, refreshToken } = await _createTokenPair(
     user,
     roleCodes,
     ipAddress,
@@ -461,4 +474,5 @@ module.exports = {
   resetPassword,
   changePassword,
   getMe,
+  createSessionForUser,
 };

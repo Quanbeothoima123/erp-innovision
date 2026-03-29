@@ -26,6 +26,7 @@ function toUserDto(user) {
     employmentStatus: user.employmentStatus,
     accountStatus: user.accountStatus,
     mustChangePassword: user.mustChangePassword,
+    twoFactorEnabled: user.twoFactorEnabled ?? false,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
   };

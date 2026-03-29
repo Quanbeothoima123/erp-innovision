@@ -2,7 +2,6 @@
 
 const jwt = require("jsonwebtoken");
 const { env } = require("../../config/env");
-
 /**
  * Payload cơ bản của Access Token
  * @typedef {Object} AccessTokenPayload
@@ -79,6 +78,21 @@ function parseMs(duration) {
   return parseInt(match[1], 10) * units[match[2]];
 }
 
+function signTwoFactorToken(payload) {
+  return jwt.sign(payload, env.JWT_SECRET, {
+    expiresIn: env.TWO_FACTOR_TOKEN_EXPIRY,
+    issuer: "erp-innovision",
+    audience: "2fa",
+  });
+}
+
+function verifyTwoFactorToken(token) {
+  return jwt.verify(token, env.JWT_SECRET, {
+    issuer: "erp-innovision",
+    audience: "2fa",
+  });
+}
+
 module.exports = {
   signAccessToken,
   signRefreshToken,
@@ -86,4 +100,6 @@ module.exports = {
   verifyRefreshToken,
   decodeToken,
   getRefreshTokenExpiresAt,
+  signTwoFactorToken,
+  verifyTwoFactorToken,
 };
