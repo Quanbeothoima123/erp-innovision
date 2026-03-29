@@ -158,6 +158,11 @@ const deleteComment = async (req, res) => {
   return noContentResponse(res, "Bình luận đã được xóa");
 };
 
+const getDashboardSummary = async (req, res) => {
+  const data = await service.getDashboardSummary(req.user);
+  res.json(success(data, "Lấy dashboard task thành công"));
+};
+
 module.exports = {
   createTask,
   listTasks,
@@ -174,4 +179,5 @@ module.exports = {
   getComments,
   updateComment,
   deleteComment,
+  getDashboardSummary,
 };

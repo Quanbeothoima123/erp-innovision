@@ -124,4 +124,7 @@ router.patch(
 // DELETE /api/tasks/:id/comments/:commentId  — chỉ tác giả hoặc Admin
 router.delete("/:id/comments/:commentId", ctrl.deleteComment);
 
+// GET /api/tasks/dashboard-summary
+router.get("/dashboard-summary", ctrl.getDashboardSummary);
+
 module.exports = router;

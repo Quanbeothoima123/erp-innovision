@@ -154,6 +154,37 @@ const findSubordinateIds = async (managerId) => {
   return rows.map((u) => u.id);
 };
 
+const getDashboardMyTasks = (userId, limit = 5) =>
+  prisma.task.findMany({
+    where: {
+      assignedToUserId: userId,
+      isActive: true,
+      status: { notIn: ["DONE", "CANCELLED"] },
+      deadline: { not: null },
+    },
+    orderBy: { deadline: "asc" },
+    take: limit,
+    include: { project: { select: { id: true, name: true } } },
+  });
+
+const getDashboardTeamOverdue = async (managerId, limit = 5) => {
+  const subIds = await findSubordinateIds(managerId);
+  if (subIds.length === 0) return [];
+  return prisma.task.findMany({
+    where: {
+      assignedToUserId: { in: subIds },
+      isActive: true,
+      status: { notIn: ["DONE", "CANCELLED"] },
+      deadline: { lt: new Date() },
+    },
+    orderBy: { deadline: "asc" },
+    take: limit,
+    include: {
+      assignedTo: { select: { id: true, fullName: true, avatarUrl: true } },
+    },
+  });
+};
+
 module.exports = {
   createTask,
   findTaskById,
@@ -168,5 +199,7 @@ module.exports = {
   updateComment,
   deleteComment,
   isDirectManager,
+  getDashboardMyTasks,
+  getDashboardTeamOverdue,
   findSubordinateIds,
 };

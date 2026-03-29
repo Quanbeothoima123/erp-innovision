@@ -601,6 +601,50 @@ const deleteComment = async (taskId, commentId, currentUser) => {
   return repo.deleteComment(commentId);
 };
 
+const getDashboardSummary = async (currentUser) => {
+  const roles = currentUser.roles ?? [];
+  const isAdmin = roles.includes(ROLES.ADMIN);
+
+  // Stats scope
+  const statsWhere = isAdmin ? {} : { assignedToUserId: currentUser.id };
+
+  const [byStatus, overdue, completedThisWeek, myUpcoming, teamOverdue] =
+    await Promise.all([
+      repo.countByStatus(statsWhere),
+      repo.countOverdue(statsWhere),
+      prisma.task.count({
+        where: {
+          ...statsWhere,
+          isActive: true,
+          status: "DONE",
+          completedAt: {
+            gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+          },
+        },
+      }),
+      repo.getDashboardMyTasks(currentUser.id),
+      (await _canManageTask(currentUser))
+        ? repo.getDashboardTeamOverdue(currentUser.id)
+        : Promise.resolve([]),
+    ]);
+
+  const totalOpen =
+    (byStatus.TODO ?? 0) +
+    (byStatus.IN_PROGRESS ?? 0) +
+    (byStatus.IN_REVIEW ?? 0);
+
+  return {
+    stats: {
+      totalOpen,
+      overdue,
+      inReview: byStatus.IN_REVIEW ?? 0,
+      completedThisWeek,
+    },
+    myUpcomingTasks: myUpcoming.map(mapper.mapTask),
+    teamOverdueTasks: teamOverdue.map(mapper.mapTask),
+  };
+};
+
 module.exports = {
   createTask,
   listTasks,
@@ -617,4 +661,5 @@ module.exports = {
   getComments,
   updateComment,
   deleteComment,
+  getDashboardSummary,
 };
