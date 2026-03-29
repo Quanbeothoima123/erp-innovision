@@ -925,19 +925,19 @@ export function AuditLogPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
-                    Thoi gian
+                    Thời gian
                   </th>
                   <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
-                    Actor
+                    Người thực hiện
                   </th>
                   <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
-                    Hanh dong
+                    Hành động
                   </th>
                   <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
-                    Entity
+                    Thực thể
                   </th>
                   <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
-                    Mo ta
+                    Mô tả
                   </th>
                   <th className="px-4 py-3 w-12" />
                 </tr>
@@ -990,7 +990,7 @@ export function AuditLogPage() {
                       colSpan={6}
                       className="text-center py-8 text-muted-foreground"
                     >
-                      Chua co du lieu
+                      Chưa có dữ liệu
                     </td>
                   </tr>
                 )}
@@ -998,7 +998,7 @@ export function AuditLogPage() {
             </table>
           </div>
           <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
-            <span>{total} ban ghi</span>
+            <span>{total} bản ghi</span>
             {totalPages > 1 && (
               <div className="flex gap-2">
                 <button
@@ -1006,7 +1006,7 @@ export function AuditLogPage() {
                   disabled={page <= 1}
                   className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
                 >
-                  Truoc
+                  Trước
                 </button>
                 <span className="px-2 py-1 text-[11px]">
                   {page}/{totalPages}
@@ -1044,18 +1044,18 @@ export function AuditLogPage() {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   {
-                    label: "Thoi gian",
+                    label: "Thời gian",
                     value: new Date(selectedLog.createdAt).toLocaleString(
                       "vi-VN",
                     ),
                   },
                   {
-                    label: "Actor",
+                    label: "Người thực hiện",
                     value: selectedLog.actor?.fullName ?? "System",
                   },
-                  { label: "Hanh dong", value: selectedLog.actionType },
-                  { label: "Entity", value: selectedLog.entityType },
-                  { label: "Entity ID", value: selectedLog.entityId ?? "—" },
+                  { label: "Hành động", value: selectedLog.actionType },
+                  { label: "Thực thể", value: selectedLog.entityType },
+                  { label: "ID thực thể", value: selectedLog.entityId ?? "—" },
                   { label: "IP", value: selectedLog.ipAddress ?? "—" },
                 ].map((f) => (
                   <div key={f.label}>
@@ -1068,7 +1068,7 @@ export function AuditLogPage() {
               </div>
               <div>
                 <div className="text-[11px] text-muted-foreground mb-1">
-                  Mo ta
+                  Mô tả
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3 text-[12px]">
                   {selectedLog.description}
@@ -1080,7 +1080,7 @@ export function AuditLogPage() {
                 onClick={() => setSelectedLog(null)}
                 className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
               >
-                Dong
+                Đóng
               </button>
             </div>
           </div>

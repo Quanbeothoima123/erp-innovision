@@ -64,7 +64,7 @@ interface TaskListViewProps {
 
 export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
   const { currentUser, can } = useAuth();
-  const { updateTaskStatus, deleteTask, updateTask, addAuditLog, assignTask } =
+  const { updateTaskStatus, deleteTask, updateTask, addAuditLog, assignTask, cancelTask } =
     useTaskData();
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -73,6 +73,8 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [bulkCancelDialogOpen, setBulkCancelDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [assignTaskDialogOpen, setAssignTaskDialogOpen] = useState(false);
   const [taskIdsToAssign, setTaskIdsToAssign] = useState<string[]>([]);
 
@@ -119,6 +121,18 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
     }
   };
 
+  const handleSelectGroup = (groupTasks: Task[], checked: boolean) => {
+    const groupIds = groupTasks.map((t) => t.id);
+    if (checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...groupIds.filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !groupIds.includes(id)));
+    }
+  };
+
   const handleSelectTask = (taskId: string, checked: boolean) => {
     if (checked) {
       setSelectedIds((prev) => [...prev, taskId]);
@@ -149,19 +163,41 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
   };
 
   const handleCancelTask = async (taskId: string) => {
-    await updateTaskStatus(taskId, "CANCELLED");
+    const task = tasks.find((t) => t.id === taskId);
+    await cancelTask(taskId);
+    toast.success(`Đã hủy "${task?.title ?? taskId}"`);
+  };
 
-    if (currentUser) {
-      addAuditLog({
-        id: `audit-${Date.now()}`,
-        actorUserId: currentUser.id,
-        entityType: "TASK",
-        actionType: "CANCEL",
-        description: `Đã hủy công việc #${taskId}`,
-        ipAddress: "127.0.0.1",
-        createdAt: new Date().toISOString(),
-      });
+  const handleBulkChangeStatus = async (newStatus: TaskStatus) => {
+    const eligible = selectedIds.filter((id) => {
+      const t = tasks.find((x) => x.id === id);
+      return t && t.status !== "DONE" && t.status !== "CANCELLED";
+    });
+    if (eligible.length === 0) {
+      toast.error("Không có công việc nào hợp lệ để đổi trạng thái");
+      return;
     }
+    await Promise.all(eligible.map((id) => updateTaskStatus(id, newStatus)));
+    toast.success(`Đã đổi ${eligible.length} công việc sang ${taskStatusLabels[newStatus]}`);
+    setSelectedIds([]);
+  };
+
+  const handleBulkCancel = async () => {
+    const eligible = selectedIds.filter((id) => {
+      const t = tasks.find((x) => x.id === id);
+      return t && t.status !== "DONE" && t.status !== "CANCELLED";
+    });
+    await Promise.all(eligible.map((id) => cancelTask(id)));
+    toast.success(`Đã hủy ${eligible.length} công việc`);
+    setSelectedIds([]);
+    setBulkCancelDialogOpen(false);
+  };
+
+  const handleBulkDelete = async () => {
+    await Promise.all(selectedIds.map((id) => deleteTask(id)));
+    toast.success(`Đã xóa ${selectedIds.length} công việc`);
+    setSelectedIds([]);
+    setBulkDeleteDialogOpen(false);
   };
 
   const confirmDeleteTask = (taskId: string) => {
@@ -171,20 +207,9 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
 
   const handleDeleteTask = async () => {
     if (taskToDelete) {
+      const task = tasks.find((t) => t.id === taskToDelete);
       await deleteTask(taskToDelete);
-
-      if (currentUser) {
-        addAuditLog({
-          id: `audit-${Date.now()}`,
-          actorUserId: currentUser.id,
-          entityType: "TASK",
-          actionType: "DELETE",
-          description: `Đã xóa công việc #${taskToDelete}`,
-          ipAddress: "127.0.0.1",
-          createdAt: new Date().toISOString(),
-        });
-      }
-
+      toast.success(`Đã xóa "${task?.title ?? taskToDelete}"`);
       setDeleteDialogOpen(false);
       setTaskToDelete(null);
     }
@@ -279,10 +304,13 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                   <TableRow>
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={groupTasks.every((t) =>
-                          selectedIds.includes(t.id),
-                        )}
-                        onCheckedChange={handleSelectAll}
+                        checked={
+                          groupTasks.length > 0 &&
+                          groupTasks.every((t) => selectedIds.includes(t.id))
+                        }
+                        onCheckedChange={(checked) =>
+                          handleSelectGroup(groupTasks, !!checked)
+                        }
                       />
                     </TableHead>
                     <TableHead className="w-12">Ưu tiên</TableHead>
@@ -490,15 +518,34 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
               <UserPlus className="h-4 w-4 mr-2" />
               Giao việc
             </Button>
-            <Button variant="secondary" size="sm">
-              Đổi trạng thái
-            </Button>
-            <Button variant="secondary" size="sm">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="sm">
+                  Đổi trạng thái
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {(["TODO", "IN_PROGRESS", "IN_REVIEW"] as TaskStatus[]).map((s) => (
+                  <DropdownMenuItem key={s} onClick={() => handleBulkChangeStatus(s)}>
+                    {taskStatusLabels[s]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setBulkCancelDialogOpen(true)}
+            >
               <Ban className="h-4 w-4 mr-2" />
               Hủy
             </Button>
             {can("ADMIN", "MANAGER") && (
-              <Button variant="destructive" size="sm">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkDeleteDialogOpen(true)}
+              >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Xóa
               </Button>
@@ -515,7 +562,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
         </div>
       )}
 
-      {/* Delete confirmation dialog */}
+      {/* Single delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -532,6 +579,45 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
               className="bg-destructive hover:bg-destructive/90"
             >
               Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk cancel confirmation dialog */}
+      <AlertDialog open={bulkCancelDialogOpen} onOpenChange={setBulkCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận hủy</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn hủy {selectedIds.length} công việc đã chọn?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Không</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkCancel}>
+              Hủy công việc
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete confirmation dialog */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa {selectedIds.length} công việc đã chọn? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Không</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Xóa tất cả
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
