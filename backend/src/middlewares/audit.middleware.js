@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const { prisma } = require('../config/db');
+const { prisma } = require("../config/db");
 
 /**
  * audit.middleware.js
@@ -18,47 +18,48 @@ const { prisma } = require('../config/db');
 
 // ── HTTP method → AuditActionType mapping ─────────────────────
 const METHOD_TO_ACTION = {
-  POST:   'CREATE',
-  PATCH:  'UPDATE',
-  PUT:    'UPDATE',
-  DELETE: 'DEACTIVATE',
+  POST: "CREATE",
+  PATCH: "UPDATE",
+  PUT: "UPDATE",
+  DELETE: "DEACTIVATE",
 };
 
 // ── URL segment → AuditEntityType mapping ────────────────────
 const SEGMENT_TO_ENTITY = {
-  'users':             'USER',
-  'departments':       'DEPARTMENT',
-  'job-titles':        'JOB_TITLE',
-  'attendance':        'ATTENDANCE_RECORD',
-  'leave':             'LEAVE_REQUEST',
-  'overtime':          'OVERTIME_REQUEST',
-  'payroll':           'PAYROLL_RECORD',
-  'projects':          'PROJECT',
-  'clients':           'CLIENT',
-  'contracts':         'CONTRACT',
-  'invoices':          'INVOICE',
-  'payments':          'CLIENT_PAYMENT',
-  'notifications':     'NOTIFICATION',
-  'system':            'USER',
+  users: "USER",
+  departments: "DEPARTMENT",
+  "job-titles": "JOB_TITLE",
+  attendance: "ATTENDANCE_RECORD",
+  leave: "LEAVE_REQUEST",
+  overtime: "OVERTIME_REQUEST",
+  payroll: "PAYROLL_RECORD",
+  projects: "PROJECT",
+  clients: "CLIENT",
+  contracts: "CONTRACT",
+  invoices: "INVOICE",
+  payments: "CLIENT_PAYMENT",
+  notifications: "NOTIFICATION",
+  tasks: "TASK",
+  system: "USER",
 };
 
 // URL path action overrides (pattern → actionType)
 const PATH_ACTION_OVERRIDES = [
-  { pattern: /\/approve$/,        action: 'APPROVE'       },
-  { pattern: /\/reject$/,         action: 'REJECT'        },
-  { pattern: /\/cancel$/,         action: 'CANCEL'        },
-  { pattern: /\/sign$/,           action: 'SIGN'          },
-  { pattern: /\/assign$/,         action: 'ASSIGN'        },
-  { pattern: /\/terminate$/,      action: 'STATUS_CHANGE' },
-  { pattern: /\/status$/,         action: 'STATUS_CHANGE' },
-  { pattern: /\/lock$/,           action: 'STATUS_CHANGE' },
-  { pattern: /\/unlock$/,         action: 'STATUS_CHANGE' },
-  { pattern: /\/roles$/,          action: 'ASSIGN'        },
-  { pattern: /\/send$/,           action: 'SEND'          },
-  { pattern: /\/mark-paid$/,      action: 'PAYMENT'       },
-  { pattern: /\/close$/,          action: 'STATUS_CHANGE' },
-  { pattern: /\/payments/,        action: 'PAYMENT'       },
-  { pattern: /\/reset-password$/,  action: 'UPDATE'        },
+  { pattern: /\/approve$/, action: "APPROVE" },
+  { pattern: /\/reject$/, action: "REJECT" },
+  { pattern: /\/cancel$/, action: "CANCEL" },
+  { pattern: /\/sign$/, action: "SIGN" },
+  { pattern: /\/assign$/, action: "ASSIGN" },
+  { pattern: /\/terminate$/, action: "STATUS_CHANGE" },
+  { pattern: /\/status$/, action: "STATUS_CHANGE" },
+  { pattern: /\/lock$/, action: "STATUS_CHANGE" },
+  { pattern: /\/unlock$/, action: "STATUS_CHANGE" },
+  { pattern: /\/roles$/, action: "ASSIGN" },
+  { pattern: /\/send$/, action: "SEND" },
+  { pattern: /\/mark-paid$/, action: "PAYMENT" },
+  { pattern: /\/close$/, action: "STATUS_CHANGE" },
+  { pattern: /\/payments/, action: "PAYMENT" },
+  { pattern: /\/reset-password$/, action: "UPDATE" },
 ];
 
 // ── Factory: tạo middleware cho 1 action cụ thể ───────────────
@@ -79,23 +80,25 @@ function auditAction(entityType, actionType, getDescription) {
       // Chỉ ghi log khi response thành công (2xx)
       if (res.statusCode >= 200 && res.statusCode < 300 && req.user) {
         const entityId = _extractEntityId(req, body);
-        const action   = actionType ?? _detectAction(req);
-        const desc     = getDescription
+        const action = actionType ?? _detectAction(req);
+        const desc = getDescription
           ? getDescription(req, body)
           : _buildDescription(action, entityType, entityId, req);
 
         // Fire-and-forget — không block response
-        prisma.auditLog.create({
-          data: {
-            entityType,
-            entityId:    entityId ?? 'N/A',
-            actionType:  action,
-            actorUserId: req.user.id,
-            description: desc,
-            ipAddress:   _getClientIP(req),
-            userAgent:   req.headers['user-agent']?.slice(0, 1024) ?? null,
-          },
-        }).catch(err => console.error('[AuditLog] Error:', err.message));
+        prisma.auditLog
+          .create({
+            data: {
+              entityType,
+              entityId: entityId ?? "N/A",
+              actionType: action,
+              actorUserId: req.user.id,
+              description: desc,
+              ipAddress: _getClientIP(req),
+              userAgent: req.headers["user-agent"]?.slice(0, 1024) ?? null,
+            },
+          })
+          .catch((err) => console.error("[AuditLog] Error:", err.message));
       }
 
       return originalJson(body);
@@ -111,7 +114,7 @@ function auditAction(entityType, actionType, getDescription) {
  */
 function autoAudit(req, res, next) {
   // Chỉ audit mutations
-  if (!['POST','PATCH','PUT','DELETE'].includes(req.method)) return next();
+  if (!["POST", "PATCH", "PUT", "DELETE"].includes(req.method)) return next();
   if (!req.user) return next();
 
   const entityType = _detectEntityType(req.path);
@@ -123,7 +126,7 @@ function autoAudit(req, res, next) {
 // ── Private helpers ───────────────────────────────────────────
 
 function _detectEntityType(path) {
-  const segments = path.split('/').filter(Boolean);
+  const segments = path.split("/").filter(Boolean);
   for (const seg of segments) {
     if (SEGMENT_TO_ENTITY[seg]) return SEGMENT_TO_ENTITY[seg];
   }
@@ -136,7 +139,7 @@ function _detectAction(req) {
     if (pattern.test(req.path)) return action;
   }
   // Fallback to HTTP method
-  return METHOD_TO_ACTION[req.method] ?? 'UPDATE';
+  return METHOD_TO_ACTION[req.method] ?? "UPDATE";
 }
 
 function _extractEntityId(req, responseBody) {
@@ -151,32 +154,34 @@ function _extractEntityId(req, responseBody) {
 }
 
 function _buildDescription(action, entityType, entityId, req) {
-  const actor = req.user?.fullName ?? 'Unknown';
-  const entity = entityType.replace(/_/g, ' ').toLowerCase();
-  const id = entityId ? `#${entityId}` : '';
+  const actor = req.user?.fullName ?? "Unknown";
+  const entity = entityType.replace(/_/g, " ").toLowerCase();
+  const id = entityId ? `#${entityId}` : "";
 
   const labels = {
-    CREATE:        `${actor} tạo ${entity} ${id}`.trim(),
-    UPDATE:        `${actor} cập nhật ${entity} ${id}`.trim(),
-    DEACTIVATE:    `${actor} vô hiệu hoá ${entity} ${id}`.trim(),
-    APPROVE:       `${actor} duyệt ${entity} ${id}`.trim(),
-    REJECT:        `${actor} từ chối ${entity} ${id}`.trim(),
-    CANCEL:        `${actor} hủy ${entity} ${id}`.trim(),
-    SIGN:          `${actor} ký ${entity} ${id}`.trim(),
-    ASSIGN:        `${actor} gán ${entity} ${id}`.trim(),
+    CREATE: `${actor} tạo ${entity} ${id}`.trim(),
+    UPDATE: `${actor} cập nhật ${entity} ${id}`.trim(),
+    DEACTIVATE: `${actor} vô hiệu hoá ${entity} ${id}`.trim(),
+    APPROVE: `${actor} duyệt ${entity} ${id}`.trim(),
+    REJECT: `${actor} từ chối ${entity} ${id}`.trim(),
+    CANCEL: `${actor} hủy ${entity} ${id}`.trim(),
+    SIGN: `${actor} ký ${entity} ${id}`.trim(),
+    ASSIGN: `${actor} gán ${entity} ${id}`.trim(),
     STATUS_CHANGE: `${actor} thay đổi trạng thái ${entity} ${id}`.trim(),
-    SEND:          `${actor} gửi ${entity} ${id}`.trim(),
-    PAYMENT:       `${actor} ghi nhận thanh toán ${entity} ${id}`.trim(),
-    REMOVE:        `${actor} xóa ${entity} ${id}`.trim(),
+    SEND: `${actor} gửi ${entity} ${id}`.trim(),
+    PAYMENT: `${actor} ghi nhận thanh toán ${entity} ${id}`.trim(),
+    REMOVE: `${actor} xóa ${entity} ${id}`.trim(),
   };
 
-  return labels[action] ?? `${actor} ${action.toLowerCase()} ${entity} ${id}`.trim();
+  return (
+    labels[action] ?? `${actor} ${action.toLowerCase()} ${entity} ${id}`.trim()
+  );
 }
 
 function _getClientIP(req) {
   return (
-    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ??
-    req.headers['x-real-ip'] ??
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ??
+    req.headers["x-real-ip"] ??
     req.connection?.remoteAddress ??
     req.socket?.remoteAddress ??
     null

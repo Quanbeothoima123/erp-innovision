@@ -49,7 +49,7 @@ router.get("/", validate(v.listTasksSchema, "query"), ctrl.listTasks);
 router.post(
   "/",
   validate(v.createTaskSchema),
-  auditAction("CREATE_TASK"),
+  auditAction("TASK", "CREATE"),
   ctrl.createTask,
 );
 
@@ -60,7 +60,7 @@ router.get("/:id", ctrl.getTaskById);
 router.patch(
   "/:id",
   validate(v.updateTaskSchema),
-  auditAction("UPDATE_TASK"),
+  auditAction("TASK", "UPDATE"),
   ctrl.updateTask,
 );
 
@@ -68,7 +68,7 @@ router.patch(
 router.patch(
   "/:id/assign",
   validate(v.assignTaskSchema),
-  auditAction("ASSIGN_TASK"),
+  auditAction("TASK", "ASSIGN"),
   ctrl.assignTask,
 );
 
@@ -79,7 +79,7 @@ router.patch(
 router.patch(
   "/:id/status",
   validate(v.updateStatusSchema),
-  auditAction("UPDATE_TASK_STATUS"),
+  auditAction("TASK", "STATUS_CHANGE"),
   ctrl.updateTaskStatus,
 );
 
@@ -88,18 +88,18 @@ router.patch(
 router.patch(
   "/:id/complete",
   validate(v.completeTaskSchema),
-  auditAction("COMPLETE_TASK"),
+  auditAction("TASK", "STATUS_CHANGE"),
   ctrl.completeTask,
 );
 
 // PATCH /api/tasks/:id/cancel   — chỉ manager / direct manager / Admin
-router.patch("/:id/cancel", auditAction("CANCEL_TASK"), ctrl.cancelTask);
+router.patch("/:id/cancel", auditAction("TASK", "CANCEL"), ctrl.cancelTask);
 
 // DELETE /api/tasks/:id   — chỉ ADMIN (xóa mềm)
 router.delete(
   "/:id",
   authorize(ROLES.ADMIN),
-  auditAction("DELETE_TASK"),
+  auditAction("TASK", "DEACTIVATE"),
   ctrl.deleteTask,
 );
 

@@ -1408,6 +1408,8 @@ enum AuditEntityType {
   CLIENT_DOCUMENT
   USER_ROLE
   NOTIFICATION
+  TASK
+  TASK_COMMENT
 }
 
 enum AuditActionType {
