@@ -290,6 +290,9 @@ export function TaskBoardView({ tasks, onTaskClick }: TaskBoardViewProps) {
   const isEmployee = !can("ADMIN", "MANAGER");
 
   const handleDrop = async (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find((t) => t.id === taskId);
+    const oldStatus = task?.status;
+
     // If moving to DONE, show confirmation dialog
     if (newStatus === "DONE") {
       setTaskToComplete(taskId);
@@ -299,6 +302,11 @@ export function TaskBoardView({ tasks, onTaskClick }: TaskBoardViewProps) {
 
     // Otherwise, update immediately
     await updateTaskStatus(taskId, newStatus);
+
+    const taskTitle = task?.title ?? taskId;
+    const fromLabel = oldStatus ? taskStatusLabels[oldStatus] : "?";
+    const toLabel = taskStatusLabels[newStatus];
+    toast.success(`"${taskTitle}" đã chuyển từ ${fromLabel} sang ${toLabel}`);
 
     if (currentUser) {
       addAuditLog({

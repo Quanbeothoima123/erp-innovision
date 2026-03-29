@@ -1032,7 +1032,7 @@ export function AuditLogPage() {
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-[16px]">Chi tiet nhat ky</h3>
+              <h3 className="text-[16px]">Chi tiết nhật ký</h3>
               <button
                 onClick={() => setSelectedLog(null)}
                 className="p-1 rounded hover:bg-accent"
