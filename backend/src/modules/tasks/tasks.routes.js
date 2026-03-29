@@ -30,6 +30,9 @@ router.use(authenticate);
 // Mọi user đều thấy stats trong phạm vi quyền của mình
 router.get("/stats", ctrl.getTaskStats);
 
+// GET /api/tasks/dashboard-summary
+router.get("/dashboard-summary", ctrl.getDashboardSummary);
+
 // GET /api/tasks/my
 // Nhân viên dùng route này để xem task của bản thân
 router.get("/my", validate(v.listTasksSchema, "query"), ctrl.getMyTasks);
@@ -123,8 +126,5 @@ router.patch(
 
 // DELETE /api/tasks/:id/comments/:commentId  — chỉ tác giả hoặc Admin
 router.delete("/:id/comments/:commentId", ctrl.deleteComment);
-
-// GET /api/tasks/dashboard-summary
-router.get("/dashboard-summary", ctrl.getDashboardSummary);
 
 module.exports = router;

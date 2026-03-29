@@ -160,7 +160,7 @@ const deleteComment = async (req, res) => {
 
 const getDashboardSummary = async (req, res) => {
   const data = await service.getDashboardSummary(req.user);
-  res.json(success(data, "Lấy dashboard task thành công"));
+  return successResponse(res, data, "Lấy dashboard task thành công");
 };
 
 module.exports = {

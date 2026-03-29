@@ -26,6 +26,8 @@ import {
   BarChart3,
   Loader2,
   PieChart as PieChartIcon,
+  CheckSquare,
+  ListTodo,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import {
@@ -68,6 +70,8 @@ import type {
   ApiContract,
   ApiInvoice,
 } from "../../lib/services/clients.service";
+import * as tasksService from "../../lib/services/tasks.service";
+import type { TaskDashboardSummary } from "../../lib/services/tasks.service";
 
 // ─── Constants ──────────────────────────────────────────────
 const DEPT_COLORS = [
@@ -232,14 +236,14 @@ export function DashboardPage() {
 
   // Shared KPI data
   const [dash, setDash] = useState<DashboardReport | null>(null);
+  const [tasksDash, setTasksDash] = useState<TaskDashboardSummary | null>(null);
   const [dashLoading, setDashLoading] = useState(true);
 
   useEffect(() => {
-    reportsService
-      .getDashboard()
-      .then(setDash)
-      .catch(() => {})
-      .finally(() => setDashLoading(false));
+    Promise.allSettled([
+      reportsService.getDashboard().then(setDash),
+      tasksService.getDashboardSummary().then(setTasksDash),
+    ]).finally(() => setDashLoading(false));
   }, []);
 
   if (dashLoading) {
@@ -266,18 +270,28 @@ export function DashboardPage() {
     return (
       <AdminHRDashboard
         dash={dash}
+        tasksDash={tasksDash}
         currentUser={currentUser}
         navigate={navigate}
       />
     );
   if (isSales && !isAdminHR)
-    return <SalesDashboard dash={dash} navigate={navigate} />;
+    return (
+      <SalesDashboard dash={dash} tasksDash={tasksDash} navigate={navigate} />
+    );
   if (isAccountant && !isAdminHR && !isSales)
-    return <AccountantDashboard dash={dash} navigate={navigate} />;
+    return (
+      <AccountantDashboard
+        dash={dash}
+        tasksDash={tasksDash}
+        navigate={navigate}
+      />
+    );
   if (isManager && !isAdminHR && !isSales && !isAccountant)
     return (
       <ManagerDashboard
         dash={dash}
+        tasksDash={tasksDash}
         currentUser={currentUser}
         navigate={navigate}
       />
@@ -285,9 +299,175 @@ export function DashboardPage() {
   return (
     <EmployeeDashboard
       dash={dash}
+      tasksDash={tasksDash}
       currentUser={currentUser}
       navigate={navigate}
     />
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHARED TASKS DASHBOARD SECTION
+// ═══════════════════════════════════════════════════════════════
+
+const PRIORITY_COLORS: Record<string, string> = {
+  URGENT: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  LOW: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+};
+const PRIORITY_LABELS: Record<string, string> = {
+  URGENT: "Gấp",
+  HIGH: "Cao",
+  MEDIUM: "TB",
+  LOW: "Thấp",
+};
+const STATUS_LABELS: Record<string, string> = {
+  TODO: "Cần làm",
+  IN_PROGRESS: "Đang làm",
+  IN_REVIEW: "Chờ review",
+  DONE: "Xong",
+  CANCELLED: "Huỷ",
+};
+
+function TasksDashboardCards({
+  tasksDash,
+  navigate,
+}: {
+  tasksDash: TaskDashboardSummary | null;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  if (!tasksDash) return null;
+  const { stats } = tasksDash;
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <StatCard
+        icon={<ListTodo size={20} />}
+        label="Task đang mở"
+        value={stats.totalOpen}
+        color="bg-blue-500"
+        onClick={() => navigate("/tasks")}
+      />
+      <StatCard
+        icon={<AlertTriangle size={20} />}
+        label="Quá hạn"
+        value={stats.overdue}
+        color={stats.overdue > 0 ? "bg-red-500" : "bg-gray-400"}
+        onClick={() => navigate("/tasks")}
+      />
+      <StatCard
+        icon={<Clock size={20} />}
+        label="Chờ review"
+        value={stats.inReview}
+        color="bg-amber-500"
+        onClick={() => navigate("/tasks")}
+      />
+      <StatCard
+        icon={<CheckSquare size={20} />}
+        label="Hoàn thành tuần này"
+        value={stats.completedThisWeek}
+        color="bg-green-500"
+        onClick={() => navigate("/tasks")}
+      />
+    </div>
+  );
+}
+
+function TasksDashboardLists({
+  tasksDash,
+  navigate,
+}: {
+  tasksDash: TaskDashboardSummary | null;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  if (!tasksDash) return null;
+  const { myUpcomingTasks, teamOverdueTasks } = tasksDash;
+  if (myUpcomingTasks.length === 0 && teamOverdueTasks.length === 0)
+    return null;
+
+  return (
+    <div
+      className={`grid ${teamOverdueTasks.length > 0 ? "lg:grid-cols-2" : ""} gap-4`}
+    >
+      {myUpcomingTasks.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <ListTodo size={16} className="text-blue-500" /> Task sắp tới của
+            tôi
+          </h3>
+          <div className="space-y-2">
+            {myUpcomingTasks.map((t) => (
+              <div
+                key={t.id}
+                className="py-2 border-b border-border last:border-0 cursor-pointer hover:bg-accent/30 rounded px-2 -mx-2"
+                onClick={() => navigate("/tasks")}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[13px] truncate flex-1">{t.title}</span>
+                  <Badge
+                    color={
+                      PRIORITY_COLORS[t.priority] ?? PRIORITY_COLORS.MEDIUM
+                    }
+                  >
+                    {PRIORITY_LABELS[t.priority] ?? t.priority}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                  {t.deadline && (
+                    <span
+                      className={
+                        new Date(t.deadline) < new Date() ? "text-red-500" : ""
+                      }
+                    >
+                      ⏰ {fmtDate(t.deadline)}
+                    </span>
+                  )}
+                  <span>{STATUS_LABELS[t.status] ?? t.status}</span>
+                  {t.project && <span>📁 {t.project.name}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {teamOverdueTasks.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <AlertTriangle size={16} className="text-red-500" /> Task quá hạn
+            (team)
+          </h3>
+          <div className="space-y-2">
+            {teamOverdueTasks.map((t) => (
+              <div
+                key={t.id}
+                className="py-2 border-b border-border last:border-0 cursor-pointer hover:bg-accent/30 rounded px-2 -mx-2"
+                onClick={() => navigate("/tasks")}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[13px] truncate flex-1">{t.title}</span>
+                  <Badge
+                    color={
+                      PRIORITY_COLORS[t.priority] ?? PRIORITY_COLORS.MEDIUM
+                    }
+                  >
+                    {PRIORITY_LABELS[t.priority] ?? t.priority}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                  {t.deadline && (
+                    <span className="text-red-500">
+                      ⏰ {fmtDate(t.deadline)}
+                    </span>
+                  )}
+                  {t.assignedTo && <span>👤 {t.assignedTo.fullName}</span>}
+                  {t.project && <span>📁 {t.project.name}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -296,10 +476,12 @@ export function DashboardPage() {
 // ═══════════════════════════════════════════════════════════════
 function AdminHRDashboard({
   dash,
+  tasksDash,
   currentUser,
   navigate,
 }: {
   dash: DashboardReport | null;
+  tasksDash: TaskDashboardSummary | null;
   currentUser: any;
   navigate: ReturnType<typeof useNavigate>;
 }) {
@@ -818,6 +1000,10 @@ function AdminHRDashboard({
           </div>
         </div>
       )}
+
+      {/* Tasks Section */}
+      <TasksDashboardCards tasksDash={tasksDash} navigate={navigate} />
+      <TasksDashboardLists tasksDash={tasksDash} navigate={navigate} />
     </div>
   );
 }
@@ -827,9 +1013,11 @@ function AdminHRDashboard({
 // ═══════════════════════════════════════════════════════════════
 function SalesDashboard({
   dash,
+  tasksDash,
   navigate,
 }: {
   dash: DashboardReport | null;
+  tasksDash: TaskDashboardSummary | null;
   navigate: ReturnType<typeof useNavigate>;
 }) {
   const [finance, setFinance] = useState<FinanceReport | null>(null);
@@ -1104,6 +1292,10 @@ function SalesDashboard({
           </div>
         </div>
       )}
+
+      {/* ── Task Overview ── */}
+      <TasksDashboardCards tasksDash={tasksDash} navigate={navigate} />
+      <TasksDashboardLists tasksDash={tasksDash} navigate={navigate} />
     </div>
   );
 }
@@ -1114,9 +1306,11 @@ function SalesDashboard({
 function AccountantDashboard({
   dash,
   navigate,
+  tasksDash,
 }: {
   dash: DashboardReport | null;
   navigate: ReturnType<typeof useNavigate>;
+  tasksDash: TaskDashboardSummary | null;
 }) {
   const [finance, setFinance] = useState<FinanceReport | null>(null);
   const [payroll, setPayroll] = useState<PayrollReport | null>(null);
@@ -1375,6 +1569,10 @@ function AccountantDashboard({
           )}
         </div>
       )}
+
+      {/* ── Task Overview ── */}
+      <TasksDashboardCards tasksDash={tasksDash} navigate={navigate} />
+      <TasksDashboardLists tasksDash={tasksDash} navigate={navigate} />
     </div>
   );
 }
@@ -1386,10 +1584,12 @@ function ManagerDashboard({
   dash,
   currentUser,
   navigate,
+  tasksDash,
 }: {
   dash: DashboardReport | null;
   currentUser: any;
   navigate: ReturnType<typeof useNavigate>;
+  tasksDash: TaskDashboardSummary | null;
 }) {
   const [pendingLeaves, setPendingLeaves] = useState<ApiLeaveRequest[]>([]);
   const [pendingOT, setPendingOT] = useState<ApiOvertimeRequest[]>([]);
@@ -1562,6 +1762,10 @@ function ManagerDashboard({
           </div>
         </div>
       )}
+
+      {/* ── Task Overview ── */}
+      <TasksDashboardCards tasksDash={tasksDash} navigate={navigate} />
+      <TasksDashboardLists tasksDash={tasksDash} navigate={navigate} />
     </div>
   );
 }
@@ -1573,10 +1777,12 @@ function EmployeeDashboard({
   dash,
   currentUser,
   navigate,
+  tasksDash,
 }: {
   dash: DashboardReport | null;
   currentUser: any;
   navigate: ReturnType<typeof useNavigate>;
+  tasksDash: TaskDashboardSummary | null;
 }) {
   const [myBalances, setMyBalances] = useState<ApiLeaveBalance[]>([]);
   const [myProjects, setMyProjects] = useState<ApiProject[]>([]);
@@ -1844,6 +2050,10 @@ function EmployeeDashboard({
             </div>
           </div>
         )}
+
+      {/* ── Task Overview ── */}
+      <TasksDashboardCards tasksDash={tasksDash} navigate={navigate} />
+      <TasksDashboardLists tasksDash={tasksDash} navigate={navigate} />
     </div>
   );
 }

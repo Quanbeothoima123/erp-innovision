@@ -164,7 +164,16 @@ const getDashboardMyTasks = (userId, limit = 5) =>
     },
     orderBy: { deadline: "asc" },
     take: limit,
-    include: { project: { select: { id: true, name: true } } },
+    include: {
+      project: {
+        select: {
+          id: true,
+          projectName: true,
+          projectCode: true,
+          status: true,
+        },
+      },
+    },
   });
 
 const getDashboardTeamOverdue = async (managerId, limit = 5) => {

@@ -409,7 +409,7 @@ export function TasksPage() {
               <SelectValue placeholder="Deadline" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Tất cả</SelectItem>
+              <SelectItem value="ALL">Deadline</SelectItem>
               <SelectItem value="OVERDUE">Quá hạn</SelectItem>
               <SelectItem value="TODAY">Hôm nay</SelectItem>
               <SelectItem value="THIS_WEEK">Tuần này</SelectItem>

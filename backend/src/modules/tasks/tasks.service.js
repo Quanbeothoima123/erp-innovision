@@ -1,5 +1,6 @@
 // src/modules/tasks/tasks.service.js
 const repo = require("./tasks.repository");
+const mapper = require("./tasks.mapper");
 const AppError = require("../../common/errors/AppError");
 const { ROLES } = require("../../config/constants");
 const { prisma } = require("../../config/db");

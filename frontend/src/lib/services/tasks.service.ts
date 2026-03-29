@@ -213,3 +213,20 @@ export async function deleteComment(
 ): Promise<void> {
   return api.delete(`/tasks/${taskId}/comments/${commentId}`);
 }
+
+// ─── Dashboard Summary ──────────────────────────────────────
+
+export interface TaskDashboardSummary {
+  stats: {
+    totalOpen: number;
+    overdue: number;
+    inReview: number;
+    completedThisWeek: number;
+  };
+  myUpcomingTasks: ApiTask[];
+  teamOverdueTasks: ApiTask[];
+}
+
+export async function getDashboardSummary(): Promise<TaskDashboardSummary> {
+  return api.get<TaskDashboardSummary>("/tasks/dashboard-summary");
+}
