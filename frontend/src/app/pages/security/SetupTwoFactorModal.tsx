@@ -55,21 +55,33 @@ export function SetupTwoFactorModal({
       setSecretKey(initialQrData.manualKey);
       return;
     }
+    // Skip if we already have QR data (avoids React StrictMode double-call)
+    if (qrCodeUrl) return;
+    let cancelled = false;
     setIsLoading(true);
     authService
       .setupTwoFactor()
       .then((data) => {
-        setQrCodeUrl(data.qrCodeDataUrl);
-        setSecretKey(data.manualKey);
+        if (!cancelled) {
+          setQrCodeUrl(data.qrCodeDataUrl);
+          setSecretKey(data.manualKey);
+        }
       })
       .catch((err) => {
-        toast.error(
-          err instanceof ApiError ? err.message : "Không thể tạo mã QR",
-        );
-        handleClose();
+        if (!cancelled) {
+          toast.error(
+            err instanceof ApiError ? err.message : "Không thể tạo mã QR",
+          );
+          onClose();
+        }
       })
-      .finally(() => setIsLoading(false));
-  }, [open, initialQrData]);
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNext = () => {
     setStep(2);
@@ -109,6 +121,8 @@ export function SetupTwoFactorModal({
     setOtpValue("");
     setError("");
     setSecretCopied(false);
+    setQrCodeUrl("");
+    setSecretKey("");
   };
 
   const handleClose = () => {
