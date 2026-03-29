@@ -15,6 +15,7 @@ function AuthGuard() {
 
     const publicRoutes = [
       "/login",
+      "/2fa-verify",
       "/forgot-password",
       "/reset-password",
       "/setup-account",

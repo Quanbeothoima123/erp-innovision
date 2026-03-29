@@ -79,15 +79,15 @@ function parseMs(duration) {
 }
 
 function signTwoFactorToken(payload) {
-  return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: env.TWO_FACTOR_TOKEN_EXPIRY,
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
+    expiresIn: "5m",
     issuer: "erp-innovision",
     audience: "2fa",
   });
 }
 
 function verifyTwoFactorToken(token) {
-  return jwt.verify(token, env.JWT_SECRET, {
+  return jwt.verify(token, env.JWT_ACCESS_SECRET, {
     issuer: "erp-innovision",
     audience: "2fa",
   });

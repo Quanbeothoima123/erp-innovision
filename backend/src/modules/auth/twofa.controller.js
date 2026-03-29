@@ -6,6 +6,7 @@
  */
 
 const twofaService = require("./twofa.service");
+const { toAuthResponse } = require("./auth.mapper");
 const {
   successResponse,
   noContentResponse,
@@ -118,7 +119,12 @@ async function verifyLogin(req, res, next) {
       userAgent,
     );
 
-    return successResponse(res, result, "Xác thực 2 lớp thành công. Đăng nhập hoàn tất.");
+    const responseData = {
+      ...toAuthResponse(result.user, result.accessToken, result.refreshToken),
+      mustChangePassword: result.mustChangePassword,
+    };
+
+    return successResponse(res, responseData, "Xác thực 2 lớp thành công. Đăng nhập hoàn tất.");
   } catch (err) {
     next(err);
   }
