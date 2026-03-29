@@ -32,6 +32,7 @@ import {
   BarChart3,
   // ── THÊM MỚI ───────────────────────────────────────────────
   CheckSquare,
+  Shield,
 } from "lucide-react";
 
 interface NavItem {
@@ -591,6 +592,14 @@ export function Layout() {
                       >
                         <Lock size={14} className="text-muted-foreground" /> Đổi
                         mật khẩu
+                      </Link>
+                      <Link
+                        to="/security/two-factor"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] hover:bg-accent transition-colors"
+                      >
+                        <Shield size={14} className="text-muted-foreground" />{" "}
+                        Bảo mật 2 lớp
                       </Link>
                     </div>
                     <div className="p-1 border-t border-border">

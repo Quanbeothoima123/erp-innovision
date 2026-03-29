@@ -33,7 +33,12 @@ export interface AuthContextType {
   login: (
     email: string,
     password: string,
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+    requiresTwoFactor?: boolean;
+    twoFactorToken?: string;
+  }>;
   logout: () => Promise<void>;
   updateCurrentUser: (data: Partial<ApiUser>) => void;
   isDark: boolean;
@@ -142,7 +147,15 @@ function RealAuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     try {
       const res = await authService.login({ email, password });
-      setCurrentUser(res.user);
+      if ("requiresTwoFactor" in res && res.requiresTwoFactor) {
+        return {
+          success: true,
+          requiresTwoFactor: true as const,
+          twoFactorToken: res.twoFactorToken,
+        };
+      }
+      const authRes = res as authService.AuthResponse;
+      setCurrentUser(authRes.user);
       setPasswordChanged(false);
       return { success: true };
     } catch (err) {
@@ -164,7 +177,7 @@ function RealAuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateCurrentUser = useCallback((data: Partial<ApiUser>) => {
-    setCurrentUser((prev) => (prev ? { ...prev, ...data } : null));
+    setCurrentUser((prev) => (prev ? { ...prev, ...data } : (data as ApiUser)));
   }, []);
 
   const toggleTheme = useCallback(() => setIsDark((p) => !p), []);

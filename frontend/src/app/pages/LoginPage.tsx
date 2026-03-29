@@ -91,7 +91,13 @@ export function LoginPage() {
     const result = await login(loginEmail, loginPassword);
     setLoading(false);
     if (result.success) {
-      navigate("/");
+      if (result.requiresTwoFactor && result.twoFactorToken) {
+        navigate("/2fa-verify", {
+          state: { twoFactorToken: result.twoFactorToken },
+        });
+      } else {
+        navigate("/");
+      }
     } else {
       setError(result.error ?? "Đăng nhập thất bại");
     }
@@ -222,7 +228,7 @@ export function LoginPage() {
                 <div className="flex justify-end mt-1.5">
                   <button
                     type="button"
-                    onClick={() => navigate('/forgot-password')}
+                    onClick={() => navigate("/forgot-password")}
                     className="text-blue-400 hover:text-blue-300 text-xs transition-colors"
                   >
                     Quên mật khẩu?

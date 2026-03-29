@@ -14,6 +14,25 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   user: ApiUser;
+  mustChangePassword?: boolean;
+}
+
+export interface TwoFactorRequiredResponse {
+  requiresTwoFactor: true;
+  twoFactorToken: string;
+}
+
+export type LoginResponse = AuthResponse | TwoFactorRequiredResponse;
+
+export interface TwoFactorStatusResponse {
+  enabled: boolean;
+  enabledAt: string | null;
+  hasPending: boolean;
+}
+
+export interface TwoFactorSetupResponse {
+  qrCodeDataUrl: string;
+  manualKey: string;
 }
 
 export interface ApiUser {
@@ -30,6 +49,7 @@ export interface ApiUser {
   employmentStatus: string;
   accountStatus: string;
   mustChangePassword: boolean;
+  twoFactorEnabled: boolean;
   roles: string[];
   lastLoginAt?: string | null;
   createdAt: string;
@@ -64,14 +84,73 @@ export interface ResetPasswordPayload {
 
 /**
  * POST /api/auth/login
- * Returns accessToken, refreshToken, user
+ * Returns either AuthResponse or TwoFactorRequiredResponse
  */
-export async function login(payload: LoginPayload): Promise<AuthResponse> {
-  const data = await api.post<AuthResponse>("/auth/login", payload, {
+export async function login(payload: LoginPayload): Promise<LoginResponse> {
+  const data = await api.post<LoginResponse>("/auth/login", payload, {
     skipAuth: true,
   });
+  if ("accessToken" in data) {
+    TokenStore.set(data.accessToken, data.refreshToken);
+  }
+  return data;
+}
+
+/**
+ * POST /api/auth/2fa/verify-login
+ * Completes the 2FA login flow
+ */
+export async function verifyLoginTwoFactor(
+  twoFactorToken: string,
+  totpCode: string,
+): Promise<AuthResponse> {
+  const data = await api.post<AuthResponse>(
+    "/auth/2fa/verify-login",
+    { twoFactorToken, totpCode },
+    { skipAuth: true },
+  );
   TokenStore.set(data.accessToken, data.refreshToken);
   return data;
+}
+
+/**
+ * GET /api/auth/2fa/status
+ */
+export async function getTwoFactorStatus(): Promise<TwoFactorStatusResponse> {
+  return api.get<TwoFactorStatusResponse>("/auth/2fa/status");
+}
+
+/**
+ * POST /api/auth/2fa/setup — Step 1: Generate QR code
+ */
+export async function setupTwoFactor(): Promise<TwoFactorSetupResponse> {
+  return api.post<TwoFactorSetupResponse>("/auth/2fa/setup");
+}
+
+/**
+ * POST /api/auth/2fa/enable — Step 2: Verify TOTP code and enable
+ */
+export async function enableTwoFactor(totpCode: string): Promise<void> {
+  await api.post("/auth/2fa/enable", { totpCode });
+}
+
+/**
+ * POST /api/auth/2fa/disable — Disable 2FA (requires password + TOTP)
+ */
+export async function disableTwoFactor(
+  password: string,
+  totpCode: string,
+): Promise<void> {
+  await api.post("/auth/2fa/disable", { password, totpCode });
+}
+
+/**
+ * POST /api/auth/2fa/reset — Reset secret key (requires password)
+ */
+export async function resetTwoFactor(
+  password: string,
+): Promise<TwoFactorSetupResponse> {
+  return api.post<TwoFactorSetupResponse>("/auth/2fa/reset", { password });
 }
 
 /**

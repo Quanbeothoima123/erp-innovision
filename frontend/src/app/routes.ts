@@ -51,12 +51,14 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 // ── THÊM MỚI ─────────────────────────────────────────────────
 import { TasksPage, MyTasksPage } from "./pages/TasksPage";
-
+import { TwoFactorAuthPage } from "./pages/security/TwoFactorAuthPage";
+import { TwoFactorVerificationPage } from "./pages/security/TwoFactorVerificationPage";
 export const router = createBrowserRouter([
   {
     Component: RootLayout,
     children: [
       { path: "/login", Component: LoginPage },
+      { path: "/2fa-verify", Component: TwoFactorVerificationPage },
       { path: "/setup-account", Component: SetupAccountPage },
       { path: "/forgot-password", Component: ForgotPasswordPage },
       { path: "/reset-password", Component: ResetPasswordPage },
@@ -107,6 +109,7 @@ export const router = createBrowserRouter([
           { path: "system/audit-log", Component: AuditLogPage },
           { path: "notifications", Component: NotificationsPage },
           { path: "profile", Component: ProfilePage },
+          { path: "security/two-factor", Component: TwoFactorAuthPage },
         ],
       },
     ],
