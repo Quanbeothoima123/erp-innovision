@@ -59,6 +59,7 @@ export function TasksPage() {
   const [projectOptions, setProjectOptions] = useState<
     { id: string; projectName: string; projectCode: string | null }[]
   >([]);
+  const [isDirectManager, setIsDirectManager] = useState(false);
 
   useEffect(() => {
     usersService
@@ -80,6 +81,10 @@ export function TasksPage() {
           })),
         );
       })
+      .catch(() => {});
+    usersService
+      .getMyTeam()
+      .then((team) => setIsDirectManager(team.length > 0))
       .catch(() => {});
   }, []);
 
@@ -119,8 +124,8 @@ export function TasksPage() {
       result = result.filter((t) => t.assignedTo?.id === currentUser?.id);
     } else {
       // All tasks - scope by role
-      if (!can("ADMIN", "MANAGER")) {
-        // Employee only sees tasks assigned to them or created by them
+      if (!can("ADMIN", "MANAGER") && !isDirectManager) {
+        // Pure employee (manages no one): only sees tasks assigned to / created by them
         result = result.filter(
           (t) =>
             t.assignedTo?.id === currentUser?.id ||
@@ -240,7 +245,7 @@ export function TasksPage() {
     }
   };
 
-  const canCreateTask = can("ADMIN", "MANAGER");
+  const canCreateTask = can("ADMIN", "MANAGER") || isDirectManager;
 
   return (
     <div className="flex flex-col h-full">

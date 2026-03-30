@@ -88,6 +88,15 @@ async function getMyTeam(requestingUser) {
   return subordinates;
 }
 
+/**
+ * Kiểm tra xem targetId có phải là thuộc cấp trực tiếp của managerId không.
+ */
+async function isSubordinateOf(managerId, targetId) {
+  if (!managerId || !targetId) return false;
+  const subordinates = await repo.findSubordinates(managerId);
+  return subordinates.some((u) => u.id === targetId);
+}
+
 // ── Get one ───────────────────────────────────────────────────
 
 /**
@@ -454,6 +463,7 @@ function _cleanUndefined(obj) {
 module.exports = {
   listUsers,
   getMyTeam,
+  isSubordinateOf,
   getUserById,
   createUser,
   updateUser,

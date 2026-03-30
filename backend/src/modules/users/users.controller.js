@@ -23,12 +23,15 @@ const { ROLES } = require("../../config/constants");
 /**
  * Chọn DTO phù hợp cho user dựa vào người đang xem.
  */
-function _pickUserDto(user, requestingUser, targetId) {
+async function _pickUserDto(user, requestingUser, targetId) {
   const isHrOrAdmin = requestingUser.roles.some((r) =>
     [ROLES.ADMIN, ROLES.HR].includes(r),
   );
   if (isHrOrAdmin) return toAdminDto(user);
   if (targetId === requestingUser.id) return toEmployeeDto(user);
+  // Direct manager xem thông tin thuộc cấp → dùng toEmployeeDto (không có dữ liệu nhạy cảm)
+  const isSub = await usersService.isSubordinateOf(requestingUser.id, targetId);
+  if (isSub) return toEmployeeDto(user);
   return toPublicDto(user);
 }
 
@@ -187,7 +190,7 @@ async function updateMyProfile(req, res, next) {
 async function getUserById(req, res, next) {
   try {
     const user = await usersService.getUserById(req.params.id, req.user);
-    const dto = _pickUserDto(user, req.user, req.params.id);
+    const dto = await _pickUserDto(user, req.user, req.params.id);
     return successResponse(res, dto, "Lấy thông tin nhân viên thành công");
   } catch (err) {
     next(err);
@@ -223,7 +226,7 @@ async function updateUser(req, res, next) {
       req.body,
       req.user,
     );
-    const dto = _pickUserDto(user, req.user, req.params.id);
+    const dto = await _pickUserDto(user, req.user, req.params.id);
     return successResponse(res, dto, "Cập nhật thông tin thành công");
   } catch (err) {
     next(err);
@@ -263,7 +266,7 @@ async function updateAccountStatus(req, res, next) {
       req.body.accountStatus,
       req.user,
     );
-    const dto = _pickUserDto(user, req.user, req.params.id);
+    const dto = await _pickUserDto(user, req.user, req.params.id);
     return successResponse(
       res,
       dto,

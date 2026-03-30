@@ -163,6 +163,8 @@ export function ProfilePage() {
   // My team
   const [myTeam, setMyTeam] = useState<TeamMember[]>([]);
   const [teamLoading, setTeamLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<ApiUser | null>(null);
+  const [memberDetailLoading, setMemberDetailLoading] = useState(false);
 
   // ─── Fetch data ──────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
@@ -1270,62 +1272,194 @@ export function ProfilePage() {
 
           {/* ── TEAM TAB ── */}
           {activeTab === "team" && (
-            <div>
-              {teamLoading ? (
-                <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
-                  <Loader2 size={16} className="animate-spin" />
-                  <span className="text-[13px]">Đang tải...</span>
-                </div>
-              ) : myTeam.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                  <Users size={28} className="opacity-20 mb-2" />
-                  <p className="text-[13px]">Không có nhân viên trực thuộc</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="text-[12px] text-muted-foreground mb-3">
-                    {myTeam.length} nhân viên trực thuộc
+            <div className="flex gap-4">
+              {/* Member list */}
+              <div
+                className={`space-y-2 ${selectedMember ? "w-1/2" : "w-full"}`}
+              >
+                {teamLoading ? (
+                  <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span className="text-[13px]">Đang tải...</span>
                   </div>
-                  {myTeam.map((m) => {
-                    const mInitials =
-                      m.fullName?.split(" ").slice(-1)[0]?.[0]?.toUpperCase() ??
-                      "?";
-                    const mEmpStatus =
-                      empStatusMap[m.employmentStatus ?? "ACTIVE"] ??
-                      empStatusMap["ACTIVE"];
-                    return (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition"
-                      >
-                        {m.avatarUrl ? (
+                ) : myTeam.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <Users size={28} className="opacity-20 mb-2" />
+                    <p className="text-[13px]">Không có nhân viên trực thuộc</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-[12px] text-muted-foreground mb-3">
+                      {myTeam.length} nhân viên trực thuộc
+                    </div>
+                    {myTeam.map((m) => {
+                      const mInitials =
+                        m.fullName
+                          ?.split(" ")
+                          .slice(-1)[0]?.[0]
+                          ?.toUpperCase() ?? "?";
+                      const mEmpStatus =
+                        empStatusMap[m.employmentStatus ?? "ACTIVE"] ??
+                        empStatusMap["ACTIVE"];
+                      const isSelected = selectedMember?.id === m.id;
+                      return (
+                        <div
+                          key={m.id}
+                          onClick={async () => {
+                            if (isSelected) {
+                              setSelectedMember(null);
+                              return;
+                            }
+                            setMemberDetailLoading(true);
+                            try {
+                              const detail = await usersService.getUserById(
+                                m.id,
+                              );
+                              setSelectedMember(detail);
+                            } catch {
+                              toast.error("Không thể tải thông tin nhân viên");
+                            } finally {
+                              setMemberDetailLoading(false);
+                            }
+                          }}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition cursor-pointer ${isSelected ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-border hover:bg-muted/30"}`}
+                        >
+                          {m.avatarUrl ? (
+                            <img
+                              src={m.avatarUrl}
+                              alt={m.fullName}
+                              className="w-9 h-9 rounded-full object-cover shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-[13px] shrink-0">
+                              {mInitials}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[13px] truncate">
+                              {m.fullName}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground truncate">
+                              {m.jobTitle?.name ?? "—"} ·{" "}
+                              {m.department?.name ?? "—"}
+                            </div>
+                          </div>
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${mEmpStatus.color}`}
+                          >
+                            {mEmpStatus.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Member detail panel */}
+              {selectedMember && (
+                <div className="w-1/2 border border-border rounded-xl p-4 space-y-4 self-start">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[14px] font-medium">
+                      Thông tin chi tiết
+                    </h3>
+                    <button
+                      onClick={() => setSelectedMember(null)}
+                      className="p-1 rounded hover:bg-accent"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  {memberDetailLoading ? (
+                    <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+                      <Loader2 size={16} className="animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Avatar + name */}
+                      <div className="flex items-center gap-3">
+                        {selectedMember.avatarUrl ? (
                           <img
-                            src={m.avatarUrl}
-                            alt={m.fullName}
-                            className="w-9 h-9 rounded-full object-cover shrink-0"
+                            src={selectedMember.avatarUrl}
+                            alt={selectedMember.fullName}
+                            className="w-12 h-12 rounded-xl object-cover"
                           />
                         ) : (
-                          <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-[13px] shrink-0">
-                            {mInitials}
+                          <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white text-[18px]">
+                            {selectedMember.fullName
+                              ?.split(" ")
+                              .slice(-1)[0]?.[0]
+                              ?.toUpperCase() ?? "?"}
                           </div>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] truncate">
-                            {m.fullName}
+                        <div>
+                          <div className="text-[14px] font-medium">
+                            {selectedMember.fullName}
                           </div>
-                          <div className="text-[11px] text-muted-foreground truncate">
-                            {m.jobTitle?.name ?? "—"} ·{" "}
-                            {m.department?.name ?? "—"}
+                          <div className="text-[11px] text-muted-foreground font-mono">
+                            {selectedMember.userCode}
                           </div>
                         </div>
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${mEmpStatus.color}`}
-                        >
-                          {mEmpStatus.label}
-                        </span>
                       </div>
-                    );
-                  })}
+                      {/* Fields */}
+                      <div className="grid grid-cols-1 gap-3 text-[12px]">
+                        <InfoField
+                          icon={<Mail size={13} />}
+                          label="Email"
+                          value={selectedMember.email}
+                        />
+                        <InfoField
+                          icon={<Phone size={13} />}
+                          label="Điện thoại"
+                          value={selectedMember.phoneNumber || "—"}
+                        />
+                        <InfoField
+                          icon={<Building2 size={13} />}
+                          label="Phòng ban"
+                          value={
+                            (selectedMember as any).department?.name ?? "—"
+                          }
+                        />
+                        <InfoField
+                          icon={<Briefcase size={13} />}
+                          label="Chức danh"
+                          value={(selectedMember as any).jobTitle?.name ?? "—"}
+                        />
+                        <InfoField
+                          icon={<Calendar size={13} />}
+                          label="Ngày vào làm"
+                          value={
+                            selectedMember.hireDate
+                              ? fmtDate(selectedMember.hireDate)
+                              : "—"
+                          }
+                        />
+                        <InfoField
+                          icon={<Shield size={13} />}
+                          label="Trạng thái"
+                          value={
+                            empStatusMap[
+                              selectedMember.employmentStatus ?? "ACTIVE"
+                            ]?.label ?? selectedMember.employmentStatus
+                          }
+                          badge={
+                            empStatusMap[
+                              selectedMember.employmentStatus ?? "ACTIVE"
+                            ]?.color
+                          }
+                        />
+                        {selectedMember.lastLoginAt && (
+                          <InfoField
+                            icon={<Clock size={13} />}
+                            label="Đăng nhập cuối"
+                            value={new Date(
+                              selectedMember.lastLoginAt,
+                            ).toLocaleString("vi-VN")}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
