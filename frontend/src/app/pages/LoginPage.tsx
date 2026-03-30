@@ -76,9 +76,25 @@ const quickLogins = [
 
 const DEMO_PASSWORD = "TechVN@2025";
 
+const REMEMBER_KEY = "erp_remember_login";
+
+function loadRemembered(): { email: string; password: string } | null {
+  try {
+    const raw = localStorage.getItem(REMEMBER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(atob(raw));
+    if (parsed?.email && parsed?.password) return parsed;
+  } catch {
+    /* corrupted */
+  }
+  return null;
+}
+
 export function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const saved = loadRemembered();
+  const [email, setEmail] = useState(saved?.email ?? "");
+  const [password, setPassword] = useState(saved?.password ?? "");
+  const [rememberMe, setRememberMe] = useState(!!saved);
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -91,6 +107,14 @@ export function LoginPage() {
     const result = await login(loginEmail, loginPassword);
     setLoading(false);
     if (result.success) {
+      if (rememberMe) {
+        localStorage.setItem(
+          REMEMBER_KEY,
+          btoa(JSON.stringify({ email: loginEmail, password: loginPassword })),
+        );
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       if (result.requiresTwoFactor && result.twoFactorToken) {
         navigate("/2fa-verify", {
           state: { twoFactorToken: result.twoFactorToken },
@@ -225,7 +249,16 @@ export function LoginPage() {
                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <div className="flex justify-end mt-1.5">
+                <div className="flex items-center justify-between mt-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                    />
+                    <span className="text-slate-400 text-xs">Nhớ mật khẩu</span>
+                  </label>
                   <button
                     type="button"
                     onClick={() => navigate("/forgot-password")}

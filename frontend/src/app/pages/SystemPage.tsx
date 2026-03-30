@@ -742,6 +742,50 @@ const shiftTypeIcons: Record<string, React.ReactNode> = {
 // ═══════════════════════════════════════════════════════════════
 // AUDIT LOG PAGE — Enhanced with diff view & timeline
 // ═══════════════════════════════════════════════════════════════
+
+const ACTION_TYPE_LABELS: Record<string, string> = {
+  CREATE: "Tạo mới",
+  UPDATE: "Cập nhật",
+  DEACTIVATE: "Vô hiệu hoá",
+  APPROVE: "Duyệt",
+  REJECT: "Từ chối",
+  CANCEL: "Hủy",
+  SIGN: "Ký",
+  ASSIGN: "Gán",
+  REMOVE: "Xóa",
+  STATUS_CHANGE: "Đổi trạng thái",
+  SEND: "Gửi",
+  PAYMENT: "Thanh toán",
+  LOGIN: "Đăng nhập",
+  LOGOUT: "Đăng xuất",
+  PASSWORD_SET: "Đặt mật khẩu",
+  PASSWORD_RESET: "Đặt lại mật khẩu",
+  DELETE: "Xóa",
+  TERMINATE: "Chấm dứt",
+};
+
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  USER: "Người dùng",
+  DEPARTMENT: "Phòng ban",
+  JOB_TITLE: "Chức danh",
+  ATTENDANCE_RECORD: "Chấm công",
+  LEAVE_REQUEST: "Đơn nghỉ phép",
+  LEAVE_TYPE: "Loại nghỉ phép",
+  OVERTIME_REQUEST: "Yêu cầu OT",
+  PAYROLL_RECORD: "Bảng lương",
+  PROJECT: "Dự án",
+  CLIENT: "Khách hàng",
+  CONTRACT: "Hợp đồng",
+  INVOICE: "Hóa đơn",
+  CLIENT_PAYMENT: "Thanh toán",
+  NOTIFICATION: "Thông báo",
+  TASK: "Công việc",
+  TASK_COMMENT: "Bình luận task",
+  HOLIDAY: "Ngày lễ",
+  INSURANCE_POLICY: "Bảo hiểm",
+  EMPLOYEE_COMPENSATION: "Lương thưởng",
+};
+
 const actionColors: Record<string, string> = {
   CREATE:
     "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
@@ -862,7 +906,7 @@ export function AuditLogPage() {
           />
           <input
             type="text"
-            placeholder="Tim mo ta, actor..."
+            placeholder="Tìm mô tả, người thực hiện..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
@@ -873,20 +917,24 @@ export function AuditLogPage() {
           onChange={(e) => setEntityFilter(e.target.value)}
           className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
         >
-          <option value="">Tat ca entity</option>
+          <option value="">Tất cả thực thể</option>
           {[
             "USER",
             "DEPARTMENT",
-            "LEAVE",
-            "ATTENDANCE",
-            "OVERTIME",
-            "PAYROLL",
+            "TASK",
+            "TASK_COMMENT",
+            "LEAVE_REQUEST",
+            "ATTENDANCE_RECORD",
+            "OVERTIME_REQUEST",
+            "PAYROLL_RECORD",
             "PROJECT",
+            "CLIENT",
             "CONTRACT",
             "INVOICE",
+            "CLIENT_PAYMENT",
           ].map((e) => (
             <option key={e} value={e}>
-              {e}
+              {ENTITY_TYPE_LABELS[e] ?? e}
             </option>
           ))}
         </select>
@@ -895,19 +943,24 @@ export function AuditLogPage() {
           onChange={(e) => setActionFilter(e.target.value)}
           className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
         >
-          <option value="">Tat ca action</option>
+          <option value="">Tất cả hành động</option>
           {[
             "CREATE",
             "UPDATE",
             "DELETE",
             "STATUS_CHANGE",
+            "ASSIGN",
+            "APPROVE",
+            "REJECT",
+            "CANCEL",
+            "DEACTIVATE",
+            "PAYMENT",
             "LOGIN",
             "LOGOUT",
             "PASSWORD_RESET",
-            "TERMINATE",
           ].map((a) => (
             <option key={a} value={a}>
-              {a}
+              {ACTION_TYPE_LABELS[a] ?? a}
             </option>
           ))}
         </select>
@@ -916,7 +969,7 @@ export function AuditLogPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
           <Loader2 size={18} className="animate-spin" />{" "}
-          <span className="text-[13px]">Dang tai...</span>
+          <span className="text-[13px]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -970,11 +1023,11 @@ export function AuditLogPage() {
                             "bg-gray-100 text-gray-600")
                         }
                       >
-                        {log.actionType}
+                        {ACTION_TYPE_LABELS[log.actionType] ?? log.actionType}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
-                      {log.entityType}
+                      {ENTITY_TYPE_LABELS[log.entityType] ?? log.entityType}
                     </td>
                     <td className="px-4 py-3 text-[12px] max-w-[300px] truncate">
                       {log.description}
@@ -1053,9 +1106,24 @@ export function AuditLogPage() {
                     label: "Người thực hiện",
                     value: selectedLog.actor?.fullName ?? "System",
                   },
-                  { label: "Hành động", value: selectedLog.actionType },
-                  { label: "Thực thể", value: selectedLog.entityType },
-                  { label: "ID thực thể", value: selectedLog.entityId ?? "—" },
+                  {
+                    label: "Hành động",
+                    value:
+                      ACTION_TYPE_LABELS[selectedLog.actionType] ??
+                      selectedLog.actionType,
+                  },
+                  {
+                    label: "Thực thể",
+                    value:
+                      ENTITY_TYPE_LABELS[selectedLog.entityType] ??
+                      selectedLog.entityType,
+                  },
+                  {
+                    label: "ID thực thể",
+                    value: selectedLog.entityId
+                      ? `...${selectedLog.entityId.slice(-8)}`
+                      : "—",
+                  },
                   { label: "IP", value: selectedLog.ipAddress ?? "—" },
                 ].map((f) => (
                   <div key={f.label}>

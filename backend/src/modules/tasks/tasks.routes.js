@@ -52,7 +52,11 @@ router.get("/", validate(v.listTasksSchema, "query"), ctrl.listTasks);
 router.post(
   "/",
   validate(v.createTaskSchema),
-  auditAction("TASK", "CREATE"),
+  auditAction("TASK", "CREATE", (req, body) => {
+    const actor = req.user?.email ?? "Hệ thống";
+    const title = body?.data?.title ?? "";
+    return `${actor} tạo task "${title}"`;
+  }),
   ctrl.createTask,
 );
 
@@ -71,7 +75,12 @@ router.patch(
 router.patch(
   "/:id/assign",
   validate(v.assignTaskSchema),
-  auditAction("TASK", "ASSIGN"),
+  auditAction("TASK", "ASSIGN", (req, body) => {
+    const actor = req.user?.email ?? "Hệ thống";
+    const title = body?.data?.title ?? "";
+    const assignee = body?.data?.assignedTo?.fullName ?? "";
+    return `${actor} gán task "${title}" cho ${assignee}`.trim();
+  }),
   ctrl.assignTask,
 );
 
@@ -82,7 +91,12 @@ router.patch(
 router.patch(
   "/:id/status",
   validate(v.updateStatusSchema),
-  auditAction("TASK", "STATUS_CHANGE"),
+  auditAction("TASK", "STATUS_CHANGE", (req, body) => {
+    const actor = req.user?.email ?? "Hệ thống";
+    const title = body?.data?.title ?? "";
+    const status = body?.data?.status ?? "";
+    return `${actor} chuyển trạng thái task "${title}" → ${status}`;
+  }),
   ctrl.updateTaskStatus,
 );
 
@@ -91,12 +105,24 @@ router.patch(
 router.patch(
   "/:id/complete",
   validate(v.completeTaskSchema),
-  auditAction("TASK", "STATUS_CHANGE"),
+  auditAction("TASK", "STATUS_CHANGE", (req, body) => {
+    const actor = req.user?.email ?? "Hệ thống";
+    const title = body?.data?.title ?? "";
+    return `${actor} hoàn thành task "${title}"`;
+  }),
   ctrl.completeTask,
 );
 
 // PATCH /api/tasks/:id/cancel   — chỉ manager / direct manager / Admin
-router.patch("/:id/cancel", auditAction("TASK", "CANCEL"), ctrl.cancelTask);
+router.patch(
+  "/:id/cancel",
+  auditAction("TASK", "CANCEL", (req, body) => {
+    const actor = req.user?.email ?? "Hệ thống";
+    const title = body?.data?.title ?? "";
+    return `${actor} hủy task "${title}"`;
+  }),
+  ctrl.cancelTask,
+);
 
 // DELETE /api/tasks/:id   — chỉ ADMIN (xóa mềm)
 router.delete(

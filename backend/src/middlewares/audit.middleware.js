@@ -83,7 +83,7 @@ function auditAction(entityType, actionType, getDescription) {
         const action = actionType ?? _detectAction(req);
         const desc = getDescription
           ? getDescription(req, body)
-          : _buildDescription(action, entityType, entityId, req);
+          : _buildDescription(action, entityType, entityId, req, body);
 
         // Fire-and-forget — không block response
         prisma.auditLog
@@ -153,28 +153,38 @@ function _extractEntityId(req, responseBody) {
   return null;
 }
 
-function _buildDescription(action, entityType, entityId, req) {
-  const actor = req.user?.fullName ?? "Unknown";
+function _buildDescription(action, entityType, entityId, req, responseBody) {
+  const actor = req.user?.fullName || req.user?.email || "Hệ thống";
   const entity = entityType.replace(/_/g, " ").toLowerCase();
-  const id = entityId ? `#${entityId}` : "";
+
+  // Try to extract a human-readable name from the response body
+  const data = responseBody?.data;
+  const entityName =
+    data?.title || data?.name || data?.projectName || data?.fullName || null;
+  const idLabel = entityName
+    ? `"${entityName}"`
+    : entityId
+      ? `#${entityId.slice(-8)}`
+      : "";
 
   const labels = {
-    CREATE: `${actor} tạo ${entity} ${id}`.trim(),
-    UPDATE: `${actor} cập nhật ${entity} ${id}`.trim(),
-    DEACTIVATE: `${actor} vô hiệu hoá ${entity} ${id}`.trim(),
-    APPROVE: `${actor} duyệt ${entity} ${id}`.trim(),
-    REJECT: `${actor} từ chối ${entity} ${id}`.trim(),
-    CANCEL: `${actor} hủy ${entity} ${id}`.trim(),
-    SIGN: `${actor} ký ${entity} ${id}`.trim(),
-    ASSIGN: `${actor} gán ${entity} ${id}`.trim(),
-    STATUS_CHANGE: `${actor} thay đổi trạng thái ${entity} ${id}`.trim(),
-    SEND: `${actor} gửi ${entity} ${id}`.trim(),
-    PAYMENT: `${actor} ghi nhận thanh toán ${entity} ${id}`.trim(),
-    REMOVE: `${actor} xóa ${entity} ${id}`.trim(),
+    CREATE: `${actor} tạo ${entity} ${idLabel}`.trim(),
+    UPDATE: `${actor} cập nhật ${entity} ${idLabel}`.trim(),
+    DEACTIVATE: `${actor} vô hiệu hoá ${entity} ${idLabel}`.trim(),
+    APPROVE: `${actor} duyệt ${entity} ${idLabel}`.trim(),
+    REJECT: `${actor} từ chối ${entity} ${idLabel}`.trim(),
+    CANCEL: `${actor} hủy ${entity} ${idLabel}`.trim(),
+    SIGN: `${actor} ký ${entity} ${idLabel}`.trim(),
+    ASSIGN: `${actor} gán ${entity} ${idLabel}`.trim(),
+    STATUS_CHANGE: `${actor} thay đổi trạng thái ${entity} ${idLabel}`.trim(),
+    SEND: `${actor} gửi ${entity} ${idLabel}`.trim(),
+    PAYMENT: `${actor} ghi nhận thanh toán ${entity} ${idLabel}`.trim(),
+    REMOVE: `${actor} xóa ${entity} ${idLabel}`.trim(),
   };
 
   return (
-    labels[action] ?? `${actor} ${action.toLowerCase()} ${entity} ${id}`.trim()
+    labels[action] ??
+    `${actor} ${action.toLowerCase()} ${entity} ${idLabel}`.trim()
   );
 }
 
