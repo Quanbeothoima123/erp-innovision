@@ -36,6 +36,7 @@ export interface ApiAttendanceRecord {
   note: string | null;
   user?: { id: string; fullName: string; userCode: string } | null;
   shift?: { id: string; name: string } | null;
+  adjustedBy?: { id: string; fullName: string } | null;
 }
 
 export interface ApiAttendanceRequest {
@@ -54,7 +55,6 @@ export interface ApiAttendanceRequest {
   rejectReason: string | null;
   createdAt: string;
   user?: { id: string; fullName: string; userCode: string } | null;
-  reviewer?: { id: string; fullName: string } | null;
   reviewer?: { id: string; fullName: string } | null;
 }
 
@@ -110,6 +110,7 @@ export interface MonthlyStats {
   absentDays: number;
   leaveDays: number;
   holidayDays: number;
+  adjustedDays: number;
   totalWorkMinutes: number;
   totalLateMinutes: number;
   totalEarlyLeaveMinutes: number;

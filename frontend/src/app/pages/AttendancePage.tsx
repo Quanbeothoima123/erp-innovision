@@ -242,7 +242,7 @@ export function MyAttendancePage() {
         present: monthStats.presentDays,
         absent: monthStats.absentDays,
         leave: monthStats.leaveDays,
-        adjusted: 0,
+        adjusted: monthStats.adjustedDays ?? 0,
         totalLate: monthStats.totalLateMinutes,
       };
     }
@@ -277,7 +277,9 @@ export function MyAttendancePage() {
       const dow = new Date(calYear, calMonth, d).getDay();
       const isWeekend = dow === 0 || dow === 6;
       const isHoliday = hDates.has(dateStr);
-      const record = myRecords.find((r) => r.workDate === dateStr);
+      const record = myRecords.find(
+        (r) => (r.workDate ? r.workDate.split("T")[0] : "") === dateStr,
+      );
       days.push({
         day: d,
         dateStr,
@@ -291,7 +293,9 @@ export function MyAttendancePage() {
   }, [calYear, calMonth, myRecords, calHolidays]);
 
   const selectedDayRecord = selectedDay
-    ? myRecords.find((r) => r.workDate === selectedDay)
+    ? myRecords.find(
+        (r) => (r.workDate ? r.workDate.split("T")[0] : "") === selectedDay,
+      )
     : null;
 
   return (
@@ -679,7 +683,7 @@ export function MyAttendancePage() {
                       onClick={() =>
                         setSelectedDay(isSelected ? null : dateStr)
                       }
-                      className={`border-b border-r border-border min-h-[60px] p-1.5 cursor-pointer transition ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : isToday ? "bg-blue-50/50 dark:bg-blue-900/10" : isWeekend || isHoliday ? "bg-muted/30" : "hover:bg-muted/30"}`}
+                      className={`border-b border-r border-border min-h-[60px] p-1.5 cursor-pointer transition ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : isToday ? "bg-blue-50/50 dark:bg-blue-900/10" : record?.status === "MANUAL_ADJUSTED" ? "bg-amber-50 dark:bg-amber-900/10" : isWeekend || isHoliday ? "bg-muted/30" : "hover:bg-muted/30"}`}
                     >
                       <div
                         className={`text-[12px] font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : isWeekend || isHoliday ? "text-muted-foreground" : ""}`}
@@ -703,6 +707,34 @@ export function MyAttendancePage() {
                 },
               )}
             </div>
+          </div>
+
+          {/* Calendar legend */}
+          <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+            {[
+              {
+                color: "bg-emerald-100 dark:bg-emerald-900/30",
+                label: "Có mặt",
+              },
+              { color: "bg-red-100 dark:bg-red-900/30", label: "Vắng mặt" },
+              { color: "bg-blue-100 dark:bg-blue-900/30", label: "Nghỉ phép" },
+              {
+                color: "bg-purple-100 dark:bg-purple-900/30",
+                label: "Ngày lễ",
+              },
+              {
+                color: "bg-amber-100 dark:bg-amber-900/30",
+                label: "Điều chỉnh (admin)",
+              },
+              { color: "bg-muted/50", label: "Cuối tuần / lễ" },
+            ].map((item) => (
+              <span key={item.label} className="flex items-center gap-1.5">
+                <span
+                  className={`inline-block w-3 h-3 rounded-sm ${item.color} border border-border`}
+                />
+                {item.label}
+              </span>
+            ))}
           </div>
 
           {/* Selected day detail */}

@@ -22,9 +22,11 @@ import {
   LogIn,
   LogOut,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import * as attendanceService from "../../lib/services/attendance.service";
+import * as usersService from "../../lib/services/users.service";
 import type {
   ApiAttendanceRequest,
   ApiAttendanceRecord,
@@ -103,6 +105,9 @@ export function AttendanceAdminPage() {
   const [records, setRecords] = useState<ApiAttendanceRecord[]>([]);
   const [reqs, setReqs] = useState<ApiAttendanceRequest[]>([]);
   const [loadingReqs, setLoadingReqs] = useState(false);
+  const [userOptions, setUserOptions] = useState<
+    { id: string; fullName: string; userCode: string }[]
+  >([]);
 
   // Fetch thật từ API khi mount
   const fetchReqs = useCallback(async () => {
@@ -142,6 +147,18 @@ export function AttendanceAdminPage() {
   useEffect(() => {
     fetchReqs();
     fetchRecords();
+    usersService
+      .listUsers({ limit: 500, accountStatus: "ACTIVE" })
+      .then((res) =>
+        setUserOptions(
+          res.items.map((u) => ({
+            id: u.id,
+            fullName: u.fullName,
+            userCode: u.userCode,
+          })),
+        ),
+      )
+      .catch(() => {});
   }, [fetchReqs, fetchRecords]);
 
   const onApprove = useCallback(
@@ -176,6 +193,21 @@ export function AttendanceAdminPage() {
       ids.forEach((id) => onApprove(id));
     },
     [onApprove],
+  );
+
+  const onCreateRecord = useCallback(
+    async (payload: {
+      userId: string;
+      workDate: string;
+      checkInAt?: string;
+      checkOutAt?: string;
+      note?: string;
+    }) => {
+      await attendanceService.manualAdjust(payload);
+      await fetchRecords();
+      toast.success("Đã tạo bản ghi chấm công");
+    },
+    [fetchRecords],
   );
 
   const onAdjustRecord = useCallback(async (record: ApiAttendanceRecord) => {
@@ -273,7 +305,12 @@ export function AttendanceAdminPage() {
         />
       )}
       {activeTab === "adjust" && (
-        <AdjustTab records={records} onAdjust={onAdjustRecord} />
+        <AdjustTab
+          records={records}
+          onAdjust={onAdjustRecord}
+          onCreateRecord={onCreateRecord}
+          userOptions={userOptions}
+        />
       )}
       {activeTab === "summary" && <SummaryTab records={records} />}
     </div>
@@ -517,9 +554,19 @@ function ApproveTab({
 function AdjustTab({
   records,
   onAdjust,
+  onCreateRecord,
+  userOptions,
 }: {
   records: ApiAttendanceRecord[];
   onAdjust: (r: ApiAttendanceRecord) => void;
+  onCreateRecord: (payload: {
+    userId: string;
+    workDate: string;
+    checkInAt?: string;
+    checkOutAt?: string;
+    note?: string;
+  }) => Promise<void>;
+  userOptions: { id: string; fullName: string; userCode: string }[];
 }) {
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState(() => {
@@ -537,6 +584,66 @@ function AdjustTab({
     status: "PRESENT",
     note: "",
   });
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    userId: "",
+    workDate: TODAY,
+    checkInAt: "",
+    checkOutAt: "",
+    note: "",
+  });
+  const [creating, setCreating] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch) return userOptions;
+    const s = userSearch.toLowerCase();
+    return userOptions.filter(
+      (u) =>
+        u.fullName.toLowerCase().includes(s) ||
+        u.userCode.toLowerCase().includes(s),
+    );
+  }, [userOptions, userSearch]);
+
+  const selectedUser = userOptions.find((u) => u.id === createForm.userId);
+
+  const handleCreate = async () => {
+    if (!createForm.userId) {
+      toast.error("Vui lòng chọn nhân viên");
+      return;
+    }
+    if (!createForm.workDate) {
+      toast.error("Vui lòng chọn ngày làm việc");
+      return;
+    }
+    setCreating(true);
+    try {
+      await onCreateRecord({
+        userId: createForm.userId,
+        workDate: createForm.workDate,
+        checkInAt: createForm.checkInAt
+          ? new Date(createForm.checkInAt).toISOString()
+          : undefined,
+        checkOutAt: createForm.checkOutAt
+          ? new Date(createForm.checkOutAt).toISOString()
+          : undefined,
+        note: createForm.note || undefined,
+      });
+      setCreateOpen(false);
+      setCreateForm({
+        userId: "",
+        workDate: TODAY,
+        checkInAt: "",
+        checkOutAt: "",
+        note: "",
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Tạo bản ghi thất bại");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     // workDate from API may be ISO with time — normalize to date-only for comparison
@@ -607,6 +714,12 @@ function AdjustTab({
           onChange={(e) => setDateTo(e.target.value)}
           className="px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
         />
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition whitespace-nowrap"
+        >
+          <Plus size={14} /> Tạo chấm công
+        </button>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -671,6 +784,160 @@ function AdjustTab({
           })}
         </div>
       </div>
+
+      {/* Create dialog */}
+      {createOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setCreateOpen(false)}
+          />
+          <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[15px] font-medium">Tạo bản ghi chấm công</h3>
+              <button
+                onClick={() => setCreateOpen(false)}
+                className="p-1.5 rounded-lg hover:bg-accent"
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <div>
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Nhân viên <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <div
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] cursor-pointer flex items-center justify-between"
+                >
+                  <span className={selectedUser ? "" : "text-muted-foreground"}>
+                    {selectedUser
+                      ? `${selectedUser.fullName} (${selectedUser.userCode})`
+                      : "-- Chọn nhân viên --"}
+                  </span>
+                  <ChevronRight
+                    size={14}
+                    className={`text-muted-foreground transition-transform ${userDropdownOpen ? "rotate-90" : ""}`}
+                  />
+                </div>
+                {userDropdownOpen && (
+                  <div className="absolute z-10 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-hidden">
+                    <div className="p-2 border-b border-border">
+                      <div className="relative">
+                        <Search
+                          size={13}
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Tìm nhân viên..."
+                          value={userSearch}
+                          onChange={(e) => setUserSearch(e.target.value)}
+                          className="w-full pl-8 pr-3 py-1.5 rounded-md border border-border bg-background text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto max-h-44">
+                      {filteredUsers.length === 0 && (
+                        <div className="px-3 py-2 text-[12px] text-muted-foreground text-center">
+                          Không tìm thấy nhân viên
+                        </div>
+                      )}
+                      {filteredUsers.map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => {
+                            setCreateForm((p) => ({ ...p, userId: u.id }));
+                            setUserDropdownOpen(false);
+                            setUserSearch("");
+                          }}
+                          className={`w-full text-left px-3 py-2 text-[12px] hover:bg-accent transition ${
+                            createForm.userId === u.id
+                              ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600"
+                              : ""
+                          }`}
+                        >
+                          <span className="font-medium">{u.fullName}</span>
+                          <span className="text-muted-foreground ml-1">
+                            ({u.userCode})
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Ngày làm việc <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={createForm.workDate}
+                onChange={(e) =>
+                  setCreateForm((p) => ({ ...p, workDate: e.target.value }))
+                }
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+              />
+            </div>
+            {(
+              [
+                { label: "Giờ check-in", key: "checkInAt" },
+                { label: "Giờ check-out", key: "checkOutAt" },
+              ] as const
+            ).map((f) => (
+              <div key={f.key}>
+                <label className="text-[12px] text-muted-foreground block mb-1">
+                  {f.label}
+                </label>
+                <input
+                  type="datetime-local"
+                  value={(createForm as Record<string, string>)[f.key]}
+                  onChange={(e) =>
+                    setCreateForm((p) => ({ ...p, [f.key]: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                />
+              </div>
+            ))}
+            <div>
+              <label className="text-[12px] text-muted-foreground block mb-1">
+                Ghi chú
+              </label>
+              <input
+                type="text"
+                value={createForm.note}
+                onChange={(e) =>
+                  setCreateForm((p) => ({ ...p, note: e.target.value }))
+                }
+                placeholder="Lý do điều chỉnh thủ công..."
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setCreateOpen(false)}
+                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={creating}
+                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition disabled:opacity-60"
+              >
+                {creating && <Loader2 size={13} className="animate-spin" />}
+                Tạo bản ghi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit dialog */}
       {editRecord && (

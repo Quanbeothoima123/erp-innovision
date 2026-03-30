@@ -135,6 +135,7 @@ function toMonthlyStatsDto(records, year, month) {
     absentDays: 0,
     leaveDays: 0,
     holidayDays: 0,
+    adjustedDays: 0,
     totalWorkMinutes: 0,
     totalLateMinutes: 0,
     totalEarlyLeaveMinutes: 0,
@@ -144,9 +145,11 @@ function toMonthlyStatsDto(records, year, month) {
   };
 
   for (const r of records) {
-    if (r.status === "PRESENT" || r.status === "MANUAL_ADJUSTED")
+    if (r.status === "PRESENT") summary.presentDays++;
+    else if (r.status === "MANUAL_ADJUSTED") {
       summary.presentDays++;
-    else if (r.status === "ABSENT") summary.absentDays++;
+      summary.adjustedDays++;
+    } else if (r.status === "ABSENT") summary.absentDays++;
     else if (r.status === "LEAVE") summary.leaveDays++;
     else if (r.status === "HOLIDAY") summary.holidayDays++;
 
