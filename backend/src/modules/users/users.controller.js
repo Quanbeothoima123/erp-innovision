@@ -388,12 +388,42 @@ async function getUserAuditLogs(req, res, next) {
   }
 }
 
+/**
+ * POST /api/users/me/avatar
+ * Upload avatar ảnh → Cloudinary → lưu URL vào user.
+ * Middleware uploadAvatar (multer) đã parse file vào req.file.
+ */
+async function uploadAvatar(req, res, next) {
+  try {
+    if (!req.file) {
+      return next(
+        require("../../common/errors/AppError").AppError.badRequest(
+          "Vui lòng chọn file ảnh.",
+        ),
+      );
+    }
+    const user = await usersService.uploadAvatar(
+      req.user.id,
+      req.file.buffer,
+      req.file.mimetype,
+    );
+    return successResponse(
+      res,
+      toEmployeeDto(user),
+      "Cập nhật avatar thành công",
+    );
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   listUsers,
   getUserStats,
   listRoles,
   getMe,
   updateMe,
+  uploadAvatar,
   getMyProfile,
   updateMyProfile,
   getMyTeam,

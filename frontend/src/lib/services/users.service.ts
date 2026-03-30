@@ -3,7 +3,7 @@
 // Endpoints: /api/users/*
 // ============================================================
 
-import { api } from "../apiClient";
+import { api, uploadFormData } from "../apiClient";
 import type { ApiUser } from "./auth.service";
 
 // ─── Request / Response types ────────────────────────────────
@@ -158,6 +158,13 @@ export async function getMe(): Promise<ApiUser> {
 /** PATCH /api/users/me */
 export async function updateMe(payload: UpdateMePayload): Promise<ApiUser> {
   return api.patch<ApiUser>("/users/me", payload);
+}
+
+/** POST /api/users/me/avatar — upload avatar file */
+export async function uploadAvatar(file: File): Promise<ApiUser> {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  return uploadFormData<ApiUser>("/users/me/avatar", formData);
 }
 
 /** GET /api/users/me/profile */

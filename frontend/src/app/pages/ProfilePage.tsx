@@ -154,6 +154,8 @@ export function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[0]);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false);
 
   // Editable form — phone (for /me) + full profile (for /me/profile)
   const [phoneForm, setPhoneForm] = useState("");
@@ -246,6 +248,38 @@ export function ProfilePage() {
     }
   };
 
+  // ─── Avatar upload ──────────────────────────────────────────────
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate client-side
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Chỉ chấp nhận file ảnh (JPEG, PNG, WebP)");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File quá lớn. Tối đa 5 MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      await usersService.uploadAvatar(file);
+      await fetchData();
+      toast.success("Cập nhật avatar thành công");
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "Upload avatar thất bại",
+      );
+    } finally {
+      setUploadingAvatar(false);
+      // Reset input so same file can be re-selected
+      e.target.value = "";
+    }
+  };
+
   // ─── Derived values ───────────────────────────────────────────────
   const user = me ?? currentUser;
   if (!user) return null;
@@ -323,7 +357,8 @@ export function ProfilePage() {
                 <img
                   src={user.avatarUrl}
                   alt={user.fullName}
-                  className="w-20 h-20 rounded-2xl border-4 border-card shadow-lg object-cover"
+                  onClick={() => setAvatarLightboxOpen(true)}
+                  className="w-20 h-20 rounded-2xl border-4 border-card shadow-lg object-cover cursor-zoom-in"
                 />
               ) : (
                 <div
@@ -332,44 +367,49 @@ export function ProfilePage() {
                   {initials}
                 </div>
               )}
-              {/* Color picker (chỉ khi không có avatar URL) */}
-              {!user.avatarUrl && (
-                <button
-                  onClick={() => setShowColorPicker(!showColorPicker)}
-                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center shadow-sm hover:bg-accent"
-                  title="Đổi màu avatar"
-                >
+              {/* Upload / color-picker button */}
+              <label
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center shadow-sm hover:bg-accent cursor-pointer"
+                title={
+                  user.avatarUrl ? "Đổi avatar" : "Tải ảnh lên hoặc đổi màu"
+                }
+              >
+                {uploadingAvatar ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
                   <Camera size={12} />
-                </button>
-              )}
-              {showColorPicker && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowColorPicker(false)}
-                  />
-                  <div className="absolute top-full mt-2 left-0 z-50 bg-card border border-border rounded-xl p-3 shadow-xl">
-                    <div className="text-[11px] text-muted-foreground mb-2">
-                      Chọn màu avatar
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {AVATAR_COLORS.map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => {
-                            setAvatarColor(c);
-                            setShowColorPicker(false);
-                          }}
-                          className={`w-8 h-8 rounded-lg ${c} flex items-center justify-center text-white text-[12px] ${avatarColor === c ? "ring-2 ring-white ring-offset-2 ring-offset-card" : ""}`}
-                        >
-                          {avatarColor === c && <Check size={14} />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                />
+              </label>
             </div>
+
+            {/* Avatar lightbox */}
+            {avatarLightboxOpen && user.avatarUrl && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                onClick={() => setAvatarLightboxOpen(false)}
+              >
+                <img
+                  src={user.avatarUrl}
+                  alt={user.fullName}
+                  className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain select-none"
+                  style={{ maxWidth: "480px", maxHeight: "80vh" }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                  onClick={() => setAvatarLightboxOpen(false)}
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            )}
 
             {/* Name + meta */}
             <div className="flex-1 pt-2 sm:pt-0">

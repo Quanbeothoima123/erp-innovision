@@ -21,6 +21,7 @@ const {
   userIdParamSchema,
   auditLogQuerySchema,
 } = require("./users.validation");
+const { uploadAvatar } = require("../../middlewares/upload.middleware");
 
 const router = Router();
 
@@ -38,6 +39,7 @@ router.use(authenticate);
  */
 router.get("/me", controller.getMe);
 router.patch("/me", validate(updateMeSchema), controller.updateMe);
+router.post("/me/avatar", uploadAvatar, controller.uploadAvatar);
 router.get("/me/profile", controller.getMyProfile);
 router.put(
   "/me/profile",

@@ -52,6 +52,11 @@ const env = {
   // ── Upload ───────────────────────────────────────────────
   UPLOAD_DIR: process.env.UPLOAD_DIR || "uploads",
   MAX_FILE_SIZE_MB: parseInt(process.env.MAX_FILE_SIZE_MB || "10", 10),
+
+  // ── Cloudinary ───────────────────────────────────────────
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || "",
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "",
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
 };
 
 module.exports = { env };

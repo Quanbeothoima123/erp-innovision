@@ -146,3 +146,44 @@ export const api = {
   delete: <T>(path: string, opts?: RequestOptions) =>
     request<T>(path, { method: "DELETE", ...opts }),
 };
+
+/**
+ * Upload FormData (multipart/form-data) — used for file uploads.
+ * Does NOT set Content-Type (browser sets it with boundary automatically).
+ */
+export async function uploadFormData<T = unknown>(
+  path: string,
+  formData: FormData,
+): Promise<T> {
+  const token = TokenStore.getAccess();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (res.status === 401) {
+    if (!refreshPromise) {
+      refreshPromise = refreshTokens().finally(() => {
+        refreshPromise = null;
+      });
+    }
+    const ok = await refreshPromise;
+    if (ok) return uploadFormData<T>(path, formData);
+    window.dispatchEvent(new CustomEvent("auth:logout"));
+    throw new ApiError(401, "UNAUTHORIZED", "Phiên đăng nhập đã hết hạn");
+  }
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new ApiError(
+      res.status,
+      data.code ?? "UNKNOWN_ERROR",
+      data.message ?? `HTTP ${res.status}`,
+    );
+  }
+  return (data.data ?? data) as T;
+}

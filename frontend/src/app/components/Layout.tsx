@@ -406,9 +406,17 @@ export function Layout() {
           onClick={() => setMobileSidebar(false)}
           className="flex items-center gap-2 hover:bg-accent rounded-lg p-1 -m-1 transition-colors"
         >
-          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px]">
-            {currentUser.fullName.split(" ").slice(-1)[0][0]}
-          </div>
+          {currentUser.avatarUrl ? (
+            <img
+              src={currentUser.avatarUrl}
+              alt={currentUser.fullName}
+              className="w-8 h-8 rounded-full object-cover border border-border"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px] shrink-0">
+              {currentUser.fullName.split(" ").slice(-1)[0][0]}
+            </div>
+          )}
           {sidebarOpen && (
             <div className="flex-1 min-w-0">
               <div className="text-[12px] truncate">{currentUser.fullName}</div>
@@ -542,9 +550,17 @@ export function Layout() {
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-accent"
               >
-                <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px]">
-                  {currentUser.fullName.split(" ").slice(-1)[0][0]}
-                </div>
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.fullName}
+                    className="w-7 h-7 rounded-full object-cover border border-border"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                    {currentUser.fullName.split(" ").slice(-1)[0][0]}
+                  </div>
+                )}
                 <ChevronDown
                   size={12}
                   className="text-muted-foreground hidden sm:block"

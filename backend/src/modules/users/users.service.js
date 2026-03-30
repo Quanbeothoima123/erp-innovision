@@ -200,6 +200,38 @@ async function updateMe(userId, dto) {
   return repo.updateUser(userId, _cleanUndefined(dto));
 }
 
+/**
+ * Upload avatar → Cloudinary, lưu URL vào user record.
+ * @param {string} userId
+ * @param {Buffer} fileBuffer
+ * @param {string} mimetype
+ * @returns {Promise<object>} updated user
+ */
+async function uploadAvatar(userId, fileBuffer, mimetype) {
+  await _assertUserExists(userId);
+
+  const cloudinary = require("../../common/services/cloudinary.service");
+
+  const ext =
+    mimetype === "image/png"
+      ? "png"
+      : mimetype === "image/webp"
+        ? "webp"
+        : "jpg";
+  const publicId = `avatars/${userId}`;
+
+  const { url } = await cloudinary.uploadBuffer(fileBuffer, {
+    folder: "erp-innovision",
+    publicId,
+    transformation: [
+      { width: 400, height: 400, crop: "fill", gravity: "face" },
+      { quality: "auto", fetch_format: "auto" },
+    ],
+  });
+
+  return repo.updateUser(userId, { avatarUrl: url });
+}
+
 // ── Roles ─────────────────────────────────────────────────────
 
 async function updateUserRoles(targetId, roleCodes, requestingUser) {
@@ -468,6 +500,7 @@ module.exports = {
   createUser,
   updateUser,
   updateMe,
+  uploadAvatar,
   updateUserRoles,
   updateAccountStatus,
   terminateUser,
