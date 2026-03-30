@@ -535,7 +535,7 @@ function ContractDetailPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between p-5 border-b border-border">
           <div>
@@ -755,7 +755,7 @@ function AmendmentFormDialog({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">Thêm phụ lục</h3>
@@ -923,7 +923,7 @@ function ContractFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">

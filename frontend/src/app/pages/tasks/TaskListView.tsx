@@ -336,7 +336,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                         key={task.id}
                         className="cursor-pointer hover:bg-muted/50"
                       >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        <TableCell onClick={(e) => e.stopPropagation()} className="cursor-pointer">
                           <Checkbox
                             checked={selectedIds.includes(task.id)}
                             onCheckedChange={(checked) =>
@@ -350,7 +350,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                             title={taskPriorityLabels[task.priority]}
                           />
                         </TableCell>
-                        <TableCell onClick={() => onTaskClick(task.id)}>
+                        <TableCell onClick={() => onTaskClick(task.id)} className="cursor-pointer">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{task.title}</span>
                             {task.commentCount > 0 && (
@@ -420,7 +420,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                               : "-"}
                           </span>
                         </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        <TableCell onClick={(e) => e.stopPropagation()} className="cursor-pointer">
                           {task.commentCount > 0 && (
                             <Button
                               variant="ghost"
@@ -431,7 +431,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                             </Button>
                           )}
                         </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        <TableCell onClick={(e) => e.stopPropagation()} className="cursor-pointer">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon">
@@ -442,7 +442,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                               {canEditTask(task) && (
                                 <>
                                   <DropdownMenuItem
-                                    onClick={() => onTaskClick(task.id)}
+                                    onClick={() => onTaskClick(task.id)} className="cursor-pointer"
                                   >
                                     <Edit className="h-4 w-4 mr-2" />
                                     Chỉnh sửa
@@ -451,7 +451,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                                     onClick={() => {
                                       setTaskIdsToAssign([task.id]);
                                       setAssignTaskDialogOpen(true);
-                                    }}
+                                    }} className="cursor-pointer"
                                   >
                                     <UserPlus className="h-4 w-4 mr-2" />
                                     Giao việc
@@ -460,7 +460,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                               )}
                               {task.status !== "DONE" && (
                                 <DropdownMenuItem
-                                  onClick={() => handleMarkComplete(task.id)}
+                                  onClick={() => handleMarkComplete(task.id)} className="cursor-pointer"
                                 >
                                   <CheckCircle className="h-4 w-4 mr-2" />
                                   Hoàn thành
@@ -469,7 +469,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                               {canEditTask(task) &&
                                 task.status !== "CANCELLED" && (
                                   <DropdownMenuItem
-                                    onClick={() => handleCancelTask(task.id)}
+                                    onClick={() => handleCancelTask(task.id)} className="cursor-pointer"
                                   >
                                     <Ban className="h-4 w-4 mr-2" />
                                     Hủy công việc
@@ -480,7 +480,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onClick={() => confirmDeleteTask(task.id)}
-                                    className="text-destructive"
+                                    className="text-destructive cursor-pointer"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Xóa
@@ -526,7 +526,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {(["TODO", "IN_PROGRESS", "IN_REVIEW"] as TaskStatus[]).map((s) => (
-                  <DropdownMenuItem key={s} onClick={() => handleBulkChangeStatus(s)}>
+                  <DropdownMenuItem key={s} onClick={() => handleBulkChangeStatus(s)} className="cursor-pointer">
                     {taskStatusLabels[s]}
                   </DropdownMenuItem>
                 ))}
@@ -576,7 +576,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteTask}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 cursor-pointer"
             >
               Xóa
             </AlertDialogAction>
@@ -595,7 +595,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Không</AlertDialogCancel>
-            <AlertDialogAction onClick={handleBulkCancel}>
+            <AlertDialogAction onClick={handleBulkCancel} className="cursor-pointer">
               Hủy công việc
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -615,7 +615,7 @@ export function TaskListView({ tasks, onTaskClick }: TaskListViewProps) {
             <AlertDialogCancel>Không</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBulkDelete}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 cursor-pointer"
             >
               Xóa tất cả
             </AlertDialogAction>

@@ -683,14 +683,14 @@ export function TaskDetailPanel({
                               <DropdownMenuItem
                                 onClick={() =>
                                   startEditComment(comment.id, comment.content)
-                                }
+                                } className="cursor-pointer"
                               >
                                 <Edit className="h-4 w-4 mr-2" />
                                 Sửa
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => confirmDeleteComment(comment.id)}
-                                className="text-destructive"
+                                className="text-destructive cursor-pointer"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Xóa
@@ -780,7 +780,7 @@ export function TaskDetailPanel({
               <AlertDialogCancel>Hủy</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteComment}
-                className="bg-destructive hover:bg-destructive/90"
+                className="bg-destructive hover:bg-destructive/90 cursor-pointer"
               >
                 Xóa
               </AlertDialogAction>

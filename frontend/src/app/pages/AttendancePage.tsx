@@ -974,7 +974,7 @@ export function ShiftsPage() {
               </div>
               {isAdmin && (
                 <div
-                  className="flex gap-1 mt-3"
+                  className="flex gap-1 mt-3 cursor-pointer"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -999,7 +999,7 @@ export function ShiftsPage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 cursor-pointer"
             onClick={() => setShowForm(false)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -1129,7 +1129,7 @@ export function ShiftsPage() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 cursor-pointer"
             onClick={() => setDeleteConfirm(null)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
@@ -1170,7 +1170,7 @@ export function ShiftsPage() {
       {selectedShift && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/40 cursor-pointer"
             onClick={() => setSelectedShift(null)}
           />
           <div className="relative w-full max-w-md bg-card border-l border-border h-full flex flex-col shadow-2xl">
@@ -1497,7 +1497,7 @@ export function HolidaysPage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 cursor-pointer"
             onClick={() => setShowForm(false)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">

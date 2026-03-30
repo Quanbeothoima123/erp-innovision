@@ -404,7 +404,7 @@ export function Layout() {
         <Link
           to="/profile"
           onClick={() => setMobileSidebar(false)}
-          className="flex items-center gap-2 hover:bg-accent rounded-lg p-1 -m-1 transition-colors"
+          className="flex items-center gap-2 hover:bg-accent rounded-lg p-1 -m-1 transition-colors cursor-pointer"
         >
           {currentUser.avatarUrl ? (
             <img
@@ -442,7 +442,7 @@ export function Layout() {
       {mobileSidebar && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 cursor-pointer"
             onClick={() => setMobileSidebar(false)}
           />
           <aside className="absolute left-0 top-0 h-full w-60 bg-sidebar border-r border-border">
@@ -491,7 +491,7 @@ export function Layout() {
               {notifOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-40 cursor-pointer"
                     onClick={() => setNotifOpen(false)}
                   />
                   <div className="absolute right-0 top-10 z-50 w-80 max-h-96 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
@@ -535,7 +535,7 @@ export function Layout() {
                       <Link
                         to="/notifications"
                         onClick={() => setNotifOpen(false)}
-                        className="block p-2.5 text-center text-xs text-blue-600 hover:bg-accent border-t border-border"
+                        className="block p-2.5 text-center text-xs text-blue-600 hover:bg-accent border-t border-border cursor-pointer"
                       >
                         Xem tất cả thông báo →
                       </Link>
@@ -569,7 +569,7 @@ export function Layout() {
               {userMenuOpen && (
                 <>
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-40 cursor-pointer"
                     onClick={() => setUserMenuOpen(false)}
                   />
                   <div className="absolute right-0 top-10 z-50 w-56 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
@@ -583,7 +583,7 @@ export function Layout() {
                       <Link
                         to="/profile"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors cursor-pointer"
                       >
                         <User size={14} className="text-muted-foreground" /> Hồ
                         sơ cá nhân
@@ -591,7 +591,7 @@ export function Layout() {
                       <Link
                         to="/notifications"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors cursor-pointer"
                       >
                         <Bell size={14} className="text-muted-foreground" />{" "}
                         Thông báo
@@ -604,7 +604,7 @@ export function Layout() {
                       <Link
                         to="/change-password"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors cursor-pointer"
                       >
                         <Lock size={14} className="text-muted-foreground" /> Đổi
                         mật khẩu
@@ -612,7 +612,7 @@ export function Layout() {
                       <Link
                         to="/security/two-factor"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors cursor-pointer"
                       >
                         <Shield size={14} className="text-muted-foreground" />{" "}
                         Bảo mật 2 lớp

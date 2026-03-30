@@ -572,7 +572,7 @@ function ProjectCard({
             </span>
           )}
           <span
-            className="ml-1 flex items-center gap-0.5 text-blue-600 hover:underline"
+            className="ml-1 flex items-center gap-0.5 text-blue-600 hover:underline cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
             }}
@@ -706,7 +706,7 @@ function ProjectFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">{title}</h3>
@@ -1328,7 +1328,7 @@ function ExpenseDetailDialog({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">Chi tiết chi phí</h3>

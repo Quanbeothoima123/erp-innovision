@@ -170,6 +170,13 @@
     line-height: 1.5;
   }
 
+  button,
+  a,
+  select,
+  [role="button"] {
+    cursor: pointer;
+  }
+
   button {
     font-size: var(--text-base);
     font-weight: var(--font-weight-medium);

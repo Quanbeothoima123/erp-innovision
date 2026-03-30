@@ -517,7 +517,7 @@ function ApproveTab({
       {rejectDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 cursor-pointer"
             onClick={() => setRejectDialog(null)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">
@@ -789,7 +789,7 @@ function AdjustTab({
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 cursor-pointer"
             onClick={() => setCreateOpen(false)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">
@@ -943,7 +943,7 @@ function AdjustTab({
       {editRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 cursor-pointer"
             onClick={() => setEditRecord(null)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">

@@ -541,7 +541,7 @@ function CompensationFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-[480px] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
           <h3 className="text-base flex items-center gap-2">
@@ -606,7 +606,7 @@ function CompensationFormDialog({
                   {empDropdownOpen && empList.length > 0 && (
                     <>
                       <div
-                        className="fixed inset-0 z-40"
+                        className="fixed inset-0 z-40 cursor-pointer"
                         onClick={() => setEmpDropdownOpen(false)}
                       />
                       <div className="absolute top-full mt-1 w-full z-50 bg-card border border-border rounded-xl shadow-xl max-h-48 overflow-y-auto">
@@ -839,7 +839,7 @@ function SalaryHistoryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base flex items-center gap-2">

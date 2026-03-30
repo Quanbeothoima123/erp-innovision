@@ -358,7 +358,7 @@ export function ProfilePage() {
                   src={user.avatarUrl}
                   alt={user.fullName}
                   onClick={() => setAvatarLightboxOpen(true)}
-                  className="w-20 h-20 rounded-2xl border-4 border-card shadow-lg object-cover cursor-zoom-in"
+                  className="w-20 h-20 rounded-2xl border-4 border-card shadow-lg object-cover cursor-zoom-in cursor-pointer"
                 />
               ) : (
                 <div
@@ -392,13 +392,13 @@ export function ProfilePage() {
             {/* Avatar lightbox */}
             {avatarLightboxOpen && user.avatarUrl && (
               <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-pointer"
                 onClick={() => setAvatarLightboxOpen(false)}
               >
                 <img
                   src={user.avatarUrl}
                   alt={user.fullName}
-                  className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain select-none"
+                  className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain select-none cursor-pointer"
                   style={{ maxWidth: "480px", maxHeight: "80vh" }}
                   onClick={(e) => e.stopPropagation()}
                 />

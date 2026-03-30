@@ -54,7 +54,7 @@ function Overlay({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {children}
       </div>
@@ -408,7 +408,7 @@ export function DepartmentsPage() {
                   </div>
                   {isAdmin && (
                     <div
-                      className="flex items-center gap-0.5"
+                      className="flex items-center gap-0.5 cursor-pointer"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
@@ -556,7 +556,7 @@ export function DepartmentsPage() {
         <div className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/40 cursor-pointer"
             onClick={() => setSelectedDept(null)}
           />
           {/* Panel */}
@@ -972,7 +972,7 @@ export function JobTitlesPage() {
                 {/* Thao tác */}
                 {isAdmin ? (
                   <div
-                    className="flex items-center gap-0.5"
+                    className="flex items-center gap-0.5 cursor-pointer"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -1122,7 +1122,7 @@ export function JobTitlesPage() {
         <div className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/40 cursor-pointer"
             onClick={() => setSelectedJob(null)}
           />
           {/* Panel */}

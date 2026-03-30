@@ -259,7 +259,7 @@ function Column({
               <TaskCard
                 key={task.id}
                 task={task}
-                onClick={() => onTaskClick(task.id)}
+                onClick={() => onTaskClick(task.id)} className="cursor-pointer"
               />
             ))
           )}

@@ -571,7 +571,7 @@ export function ProjectDetailPage() {
                   {showMoreMenu && (
                     <>
                       <div
-                        className="fixed inset-0 z-40"
+                        className="fixed inset-0 z-40 cursor-pointer"
                         onClick={() => setShowMoreMenu(false)}
                       />
                       <div className="absolute right-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-xl py-1 w-44">
@@ -1468,7 +1468,7 @@ function UpdateHealthDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">Cập nhật tiến độ</h3>
@@ -1645,7 +1645,7 @@ function AddMemberDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">Thêm thành viên</h3>
@@ -1691,7 +1691,7 @@ function AddMemberDialog({
                 (searchText.length >= 2 && !searchLoading)) && (
                 <>
                   <div
-                    className="fixed inset-0 z-40"
+                    className="fixed inset-0 z-40 cursor-pointer"
                     onClick={() => setShowDropdown(false)}
                   />
                   <div className="absolute top-full mt-1 w-full z-50 bg-card border border-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
@@ -1845,7 +1845,7 @@ function MilestoneFormDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">{title}</h3>
@@ -1984,7 +1984,7 @@ function AddExpenseDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="text-base">Gửi chi phí</h3>
@@ -2170,7 +2170,7 @@ function EditProjectDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 cursor-pointer" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
           <h3 className="text-base flex items-center gap-2">
