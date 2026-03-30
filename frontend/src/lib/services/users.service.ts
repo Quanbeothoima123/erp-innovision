@@ -311,3 +311,20 @@ export async function getUserAuditLogs(
     params: params as Record<string, string>,
   });
 }
+
+// ─── My Team ─────────────────────────────────────────────────
+
+export interface TeamMember {
+  id: string;
+  userCode: string;
+  fullName: string;
+  avatarUrl?: string | null;
+  department?: { id: string; name: string } | null;
+  jobTitle?: { id: string; name: string } | null;
+  employmentStatus: string;
+}
+
+/** GET /api/users/my-team — danh sách nhân viên do mình quản lý */
+export async function getMyTeam(): Promise<TeamMember[]> {
+  return api.get<TeamMember[]>("/users/my-team");
+}

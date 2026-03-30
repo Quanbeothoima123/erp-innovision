@@ -298,6 +298,81 @@ export function MyAttendancePage() {
     <div className="space-y-4">
       <h1 className="text-[20px] font-semibold">Chấm công của tôi</h1>
 
+      {/* Monthly summary bar */}
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (calMonth === 0) {
+                  setCalMonth(11);
+                  setCalYear((y) => y - 1);
+                } else setCalMonth((m) => m - 1);
+              }}
+              className="p-1.5 rounded-lg border border-border hover:bg-accent transition"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <span className="text-[14px] font-medium">
+              {monthNames[calMonth]} {calYear}
+            </span>
+            <button
+              onClick={() => {
+                if (calMonth === 11) {
+                  setCalMonth(0);
+                  setCalYear((y) => y + 1);
+                } else setCalMonth((m) => m + 1);
+              }}
+              className="p-1.5 rounded-lg border border-border hover:bg-accent transition"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+        {loadingData ? (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="h-[58px] rounded-lg border animate-pulse bg-muted/30"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <MiniStat
+              label="Số ngày đi làm"
+              value={monthStats?.presentDays ?? 0}
+              color="green"
+            />
+            <MiniStat
+              label="Vắng mặt"
+              value={monthStats?.absentDays ?? 0}
+              color="red"
+            />
+            <MiniStat
+              label="Nghỉ phép"
+              value={monthStats?.leaveDays ?? 0}
+              color="blue"
+            />
+            <div className="rounded-lg border p-2 text-center bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
+              <div className="text-[18px] font-semibold">
+                {Math.floor((monthStats?.totalLateMinutes ?? 0) / 60) > 0
+                  ? `${Math.floor((monthStats?.totalLateMinutes ?? 0) / 60)}h${(monthStats?.totalLateMinutes ?? 0) % 60}p`
+                  : `${monthStats?.totalLateMinutes ?? 0}p`}
+              </div>
+              <div className="text-[10px] opacity-70">Đi trễ</div>
+            </div>
+            <div className="rounded-lg border p-2 text-center bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800">
+              <div className="text-[18px] font-semibold">
+                {((monthStats?.totalWorkMinutes ?? 0) / 60).toFixed(1)}h
+              </div>
+              <div className="text-[10px] opacity-70">Tổng giờ làm</div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Tabs */}
       <div className="flex border-b border-border gap-1 overflow-x-auto">
         {[

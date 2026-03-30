@@ -11,6 +11,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import {
   User,
+  Users,
   Mail,
   Phone,
   Building2,
@@ -39,7 +40,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import * as usersService from "../../lib/services/users.service";
-import type { UserProfile } from "../../lib/services/users.service";
+import type { UserProfile, TeamMember } from "../../lib/services/users.service";
 import type { ApiUser } from "../../lib/services/auth.service";
 import { ApiError } from "../../lib/apiClient";
 
@@ -97,7 +98,7 @@ const roleLabels: Record<string, string> = {
   ACCOUNTANT: "Kế toán",
 };
 
-type TabKey = "work" | "personal" | "bank" | "education" | "emergency";
+type TabKey = "work" | "personal" | "bank" | "education" | "emergency" | "team";
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("vi-VN") : "—";
@@ -159,6 +160,10 @@ export function ProfilePage() {
   const [profileForm, setProfileForm] =
     useState<Partial<UserProfile>>(emptyProfile());
 
+  // My team
+  const [myTeam, setMyTeam] = useState<TeamMember[]>([]);
+  const [teamLoading, setTeamLoading] = useState(true);
+
   // ─── Fetch data ──────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -183,6 +188,16 @@ export function ProfilePage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Fetch team data
+  useEffect(() => {
+    setTeamLoading(true);
+    usersService
+      .getMyTeam()
+      .then(setMyTeam)
+      .catch(() => {})
+      .finally(() => setTeamLoading(false));
+  }, []);
 
   // ─── Sync form khi bắt đầu edit ──────────────────────────────────
   const startEditing = () => {
@@ -248,6 +263,15 @@ export function ProfilePage() {
     { key: "personal", label: "Cá nhân", icon: <UserCircle size={14} /> },
     { key: "bank", label: "Ngân hàng & BH", icon: <Landmark size={14} /> },
     { key: "education", label: "Học vấn", icon: <GraduationCap size={14} /> },
+    ...(myTeam.length > 0
+      ? [
+          {
+            key: "team" as TabKey,
+            label: "Nhân viên của tôi",
+            icon: <Users size={14} />,
+          },
+        ]
+      : []),
     { key: "emergency", label: "Liên hệ KC", icon: <Heart size={14} /> },
   ];
 
@@ -1241,6 +1265,69 @@ export function ProfilePage() {
                   }
                 />
               </div>
+            </div>
+          )}
+
+          {/* ── TEAM TAB ── */}
+          {activeTab === "team" && (
+            <div>
+              {teamLoading ? (
+                <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+                  <Loader2 size={16} className="animate-spin" />
+                  <span className="text-[13px]">Đang tải...</span>
+                </div>
+              ) : myTeam.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Users size={28} className="opacity-20 mb-2" />
+                  <p className="text-[13px]">Không có nhân viên trực thuộc</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-[12px] text-muted-foreground mb-3">
+                    {myTeam.length} nhân viên trực thuộc
+                  </div>
+                  {myTeam.map((m) => {
+                    const mInitials =
+                      m.fullName?.split(" ").slice(-1)[0]?.[0]?.toUpperCase() ??
+                      "?";
+                    const mEmpStatus =
+                      empStatusMap[m.employmentStatus ?? "ACTIVE"] ??
+                      empStatusMap["ACTIVE"];
+                    return (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition"
+                      >
+                        {m.avatarUrl ? (
+                          <img
+                            src={m.avatarUrl}
+                            alt={m.fullName}
+                            className="w-9 h-9 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-[13px] shrink-0">
+                            {mInitials}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] truncate">
+                            {m.fullName}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {m.jobTitle?.name ?? "—"} ·{" "}
+                            {m.department?.name ?? "—"}
+                          </div>
+                        </div>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${mEmpStatus.color}`}
+                        >
+                          {mEmpStatus.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
