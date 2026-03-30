@@ -113,7 +113,7 @@ function Avatar({
     );
   return (
     <div
-      className={`w-8 h-8 rounded-full ${color} flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0`}
+      className={`w-8 h-8 rounded-full ${color} flex items-center justify-center text-white text-[0.6875rem] font-semibold flex-shrink-0`}
     >
       {initials}
     </div>
@@ -131,8 +131,8 @@ function StatCard({
 }) {
   return (
     <div className={`rounded-xl border p-3 ${colorClass}`}>
-      <div className="text-[11px] opacity-70">{label}</div>
-      <div className="text-[24px] font-semibold mt-0.5 leading-tight">
+      <div className="text-[0.6875rem] opacity-70">{label}</div>
+      <div className="text-2xl font-semibold mt-0.5 leading-tight">
         {value}
       </div>
     </div>
@@ -157,7 +157,7 @@ function SortHeader({
   const active = currentKey === sortKey;
   return (
     <th
-      className={`text-left px-4 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide ${className}`}
+      className={`text-left px-4 py-3 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide ${className}`}
     >
       <button
         onClick={() => onSort(sortKey)}
@@ -193,7 +193,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-[12px] text-muted-foreground mb-1">
+      <label className="block text-xs text-muted-foreground mb-1">
         {label}
       </label>
       <input
@@ -201,7 +201,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
   );
@@ -222,13 +222,13 @@ function Sel({
 }) {
   return (
     <div>
-      <label className="block text-[12px] text-muted-foreground mb-1">
+      <label className="block text-xs text-muted-foreground mb-1">
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((o) => (
@@ -512,8 +512,8 @@ export function EmployeesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-semibold">Danh sách nhân viên</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <h1 className="text-xl font-semibold">Danh sách nhân viên</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Quản lý thông tin và tài khoản nhân viên
           </p>
         </div>
@@ -539,7 +539,7 @@ export function EmployeesPage() {
                 setCreateStep(1);
                 setCreateForm(emptyCreateForm);
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition"
             >
               <Plus size={15} /> Thêm nhân viên
             </button>
@@ -583,16 +583,16 @@ export function EmployeesPage() {
             placeholder="Tìm theo tên, email, mã nhân viên..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <button
           onClick={() => setShowFilters((p) => !p)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[13px] transition ${showFilters || activeFilters > 0 ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "border-border text-muted-foreground hover:bg-accent"}`}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[0.8125rem] transition ${showFilters || activeFilters > 0 ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "border-border text-muted-foreground hover:bg-accent"}`}
         >
           <SlidersHorizontal size={14} /> Nâng cao
           {activeFilters > 0 && (
-            <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] flex items-center justify-center">
+            <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[0.5625rem] flex items-center justify-center">
               {activeFilters}
             </span>
           )}
@@ -608,7 +608,7 @@ export function EmployeesPage() {
               setHireDateFrom("");
               setHireDateTo("");
             }}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-border text-[12px] text-muted-foreground hover:bg-accent transition"
+            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-border text-xs text-muted-foreground hover:bg-accent transition"
           >
             <X size={13} /> Xoá lọc
           </button>
@@ -618,13 +618,13 @@ export function EmployeesPage() {
       {showFilters && (
         <div className="bg-card border border-border rounded-xl p-3 grid sm:grid-cols-3 gap-3">
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Phòng ban
             </label>
             <select
               value={deptFilter}
               onChange={(e) => setDeptFilter(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[13px]"
+              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
             >
               <option value="">Tất cả</option>
               {deptOptions.map((d) => (
@@ -635,13 +635,13 @@ export function EmployeesPage() {
             </select>
           </div>
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Trạng thái làm việc
             </label>
             <select
               value={empStatusFilter}
               onChange={(e) => setEmpStatusFilter(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[13px]"
+              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
             >
               <option value="">Tất cả</option>
               {Object.entries(empStatusLabels).map(([v, l]) => (
@@ -652,13 +652,13 @@ export function EmployeesPage() {
             </select>
           </div>
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Trạng thái tài khoản
             </label>
             <select
               value={accStatusFilter}
               onChange={(e) => setAccStatusFilter(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[13px]"
+              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
             >
               <option value="">Tất cả</option>
               {Object.entries(accStatusLabels).map(([v, l]) => (
@@ -669,13 +669,13 @@ export function EmployeesPage() {
             </select>
           </div>
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Vai trò
             </label>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[13px]"
+              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
             >
               <option value="">Tất cả vai trò</option>
               {ALL_ROLES.map((r) => (
@@ -686,25 +686,25 @@ export function EmployeesPage() {
             </select>
           </div>
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Ngày vào từ
             </label>
             <input
               type="date"
               value={hireDateFrom}
               onChange={(e) => setHireDateFrom(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[13px]"
+              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
             />
           </div>
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Ngày vào đến
             </label>
             <input
               type="date"
               value={hireDateTo}
               onChange={(e) => setHireDateTo(e.target.value)}
-              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[13px]"
+              className="w-full px-2.5 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
             />
           </div>
         </div>
@@ -715,15 +715,15 @@ export function EmployeesPage() {
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
             <Loader2 size={18} className="animate-spin" />
-            <span className="text-[13px]">Đang tải...</span>
+            <span className="text-[0.8125rem]">Đang tải...</span>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
             <AlertCircle size={24} className="text-red-400" />
-            <p className="text-[13px]">{error}</p>
+            <p className="text-[0.8125rem]">{error}</p>
             <button
               onClick={fetchUsers}
-              className="text-[12px] text-blue-600 hover:underline"
+              className="text-xs text-blue-600 hover:underline"
             >
               Thử lại
             </button>
@@ -731,7 +731,7 @@ export function EmployeesPage() {
         ) : users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
             <Users size={32} className="opacity-30" />
-            <p className="text-[13px]">Không có nhân viên nào phù hợp</p>
+            <p className="text-[0.8125rem]">Không có nhân viên nào phù hợp</p>
           </div>
         ) : (
           <>
@@ -754,10 +754,10 @@ export function EmployeesPage() {
                       onSort={toggleSort}
                       className="hidden md:table-cell"
                     />
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
+                    <th className="text-left px-4 py-3 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide hidden lg:table-cell">
                       Chức danh
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide hidden xl:table-cell">
+                    <th className="text-left px-4 py-3 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide hidden xl:table-cell">
                       Quản lý
                     </th>
                     <SortHeader
@@ -768,7 +768,7 @@ export function EmployeesPage() {
                       onSort={toggleSort}
                       className="hidden lg:table-cell"
                     />
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
+                    <th className="text-left px-4 py-3 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
                       Roles
                     </th>
                     <SortHeader
@@ -778,7 +778,7 @@ export function EmployeesPage() {
                       asc={sortAsc}
                       onSort={toggleSort}
                     />
-                    <th className="text-left px-4 py-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
+                    <th className="text-left px-4 py-3 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide hidden sm:table-cell">
                       Tài khoản
                     </th>
                     <th className="w-8" />
@@ -795,25 +795,25 @@ export function EmployeesPage() {
                         <div className="flex items-center gap-2.5">
                           <Avatar name={u.fullName} avatarUrl={u.avatarUrl} />
                           <div className="min-w-0">
-                            <div className="text-[13px] font-medium truncate">
+                            <div className="text-[0.8125rem] font-medium truncate">
                               {u.fullName}
                             </div>
-                            <div className="text-[11px] text-muted-foreground truncate">
+                            <div className="text-[0.6875rem] text-muted-foreground truncate">
                               {u.userCode} · {u.email}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[13px] hidden md:table-cell">
+                      <td className="px-4 py-3 text-[0.8125rem] hidden md:table-cell">
                         {getDeptName(u)}
                       </td>
-                      <td className="px-4 py-3 text-[13px] hidden lg:table-cell text-muted-foreground">
+                      <td className="px-4 py-3 text-[0.8125rem] hidden lg:table-cell text-muted-foreground">
                         {getJobName(u)}
                       </td>
-                      <td className="px-4 py-3 text-[13px] hidden xl:table-cell text-muted-foreground">
+                      <td className="px-4 py-3 text-[0.8125rem] hidden xl:table-cell text-muted-foreground">
                         {getMgrName(u)}
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                         {new Date(u.hireDate).toLocaleDateString("vi-VN")}
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">
@@ -821,7 +821,7 @@ export function EmployeesPage() {
                           {(u.roles as string[]).map((r) => (
                             <span
                               key={r}
-                              className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium"
+                              className="text-[0.5625rem] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium"
                             >
                               {r}
                             </span>
@@ -830,7 +830,7 @@ export function EmployeesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${empStatusColors[u.employmentStatus] ?? ""}`}
+                          className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-medium ${empStatusColors[u.employmentStatus] ?? ""}`}
                         >
                           {empStatusLabels[u.employmentStatus] ??
                             u.employmentStatus}
@@ -838,7 +838,7 @@ export function EmployeesPage() {
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <span
-                          className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${accStatusColors[u.accountStatus] ?? ""}`}
+                          className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-medium ${accStatusColors[u.accountStatus] ?? ""}`}
                         >
                           {accStatusLabels[u.accountStatus] ?? u.accountStatus}
                         </span>
@@ -854,7 +854,7 @@ export function EmployeesPage() {
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border text-[12px]">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-border text-xs">
               <span className="text-muted-foreground">
                 Hiển thị {Math.min((page - 1) * PAGE_SIZE + 1, totalCount)}–
                 {Math.min(page * PAGE_SIZE, totalCount)} / {totalCount} nhân
@@ -903,24 +903,24 @@ export function EmployeesPage() {
           <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
               <div>
-                <h3 className="text-[16px] font-semibold">
+                <h3 className="text-base font-semibold">
                   Thêm nhân viên mới
                 </h3>
                 <div className="flex items-center gap-1.5 mt-1">
                   <span
-                    className={`text-[11px] px-2 py-0.5 rounded-full ${createStep === 1 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
+                    className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${createStep === 1 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
                   >
                     1. Thông tin
                   </span>
-                  <span className="text-muted-foreground text-[10px]">›</span>
+                  <span className="text-muted-foreground text-[0.625rem]">›</span>
                   <span
-                    className={`text-[11px] px-2 py-0.5 rounded-full ${createStep === 2 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
+                    className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${createStep === 2 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
                   >
                     2. Ca &amp; Lương
                   </span>
-                  <span className="text-muted-foreground text-[10px]">›</span>
+                  <span className="text-muted-foreground text-[0.625rem]">›</span>
                   <span
-                    className={`text-[11px] px-2 py-0.5 rounded-full ${createStep === 3 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
+                    className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${createStep === 3 ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-muted text-muted-foreground"}`}
                   >
                     3. Xác nhận
                   </span>
@@ -1027,7 +1027,7 @@ export function EmployeesPage() {
                       setShowCreate(false);
                       setCreateStep(1);
                     }}
-                    className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+                    className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent transition"
                   >
                     Huỷ
                   </button>
@@ -1045,7 +1045,7 @@ export function EmployeesPage() {
                       }
                       setCreateStep(2);
                     }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 transition"
                   >
                     Tiếp theo →
                   </button>
@@ -1059,15 +1059,15 @@ export function EmployeesPage() {
                 <div className="p-5 space-y-4">
                   {/* Ca làm việc */}
                   <div>
-                    <div className="text-[13px] font-medium mb-3 flex items-center gap-2">
+                    <div className="text-[0.8125rem] font-medium mb-3 flex items-center gap-2">
                       🕐 Gán ca làm việc
-                      <span className="text-[11px] text-muted-foreground font-normal">
+                      <span className="text-[0.6875rem] text-muted-foreground font-normal">
                         (tuỳ chọn)
                       </span>
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[12px] text-muted-foreground block mb-1">
+                        <label className="text-xs text-muted-foreground block mb-1">
                           Ca làm việc
                         </label>
                         <select
@@ -1078,7 +1078,7 @@ export function EmployeesPage() {
                               shiftId: e.target.value,
                             }))
                           }
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">-- Bỏ qua, gán sau --</option>
                           {shiftOptions.map((s) => (
@@ -1090,7 +1090,7 @@ export function EmployeesPage() {
                       </div>
                       {createExtras.shiftId && (
                         <div>
-                          <label className="text-[12px] text-muted-foreground block mb-1">
+                          <label className="text-xs text-muted-foreground block mb-1">
                             Hiệu lực từ
                           </label>
                           <input
@@ -1102,7 +1102,7 @@ export function EmployeesPage() {
                                 shiftEffectiveFrom: e.target.value,
                               }))
                             }
-                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                       )}
@@ -1113,16 +1113,16 @@ export function EmployeesPage() {
 
                   {/* Cấu hình lương cơ bản — UserCompensation */}
                   <div>
-                    <div className="text-[13px] font-medium mb-3 flex items-center gap-2">
+                    <div className="text-[0.8125rem] font-medium mb-3 flex items-center gap-2">
                       💰 Lương cơ bản ban đầu
-                      <span className="text-[11px] text-muted-foreground font-normal">
+                      <span className="text-[0.6875rem] text-muted-foreground font-normal">
                         (tuỳ chọn — có thể cấu hình sau)
                       </span>
                     </div>
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[12px] text-muted-foreground block mb-1">
+                          <label className="text-xs text-muted-foreground block mb-1">
                             Loại lương
                           </label>
                           <select
@@ -1136,7 +1136,7 @@ export function EmployeesPage() {
                                   | "HOURLY",
                               }))
                             }
-                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="MONTHLY">Theo tháng</option>
                             <option value="DAILY">Theo ngày</option>
@@ -1144,7 +1144,7 @@ export function EmployeesPage() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-[12px] text-muted-foreground block mb-1">
+                          <label className="text-xs text-muted-foreground block mb-1">
                             Mức lương (VNĐ)
                           </label>
                           <input
@@ -1157,12 +1157,12 @@ export function EmployeesPage() {
                               }))
                             }
                             placeholder="VD: 15000000"
-                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                       </div>
                       {createExtras.baseSalary && (
-                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-[12px] text-blue-700 dark:text-blue-300">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300">
                           ✓ Sẽ tạo cấu hình lương:{" "}
                           <strong>
                             {Number(createExtras.baseSalary).toLocaleString(
@@ -1181,7 +1181,7 @@ export function EmployeesPage() {
                         </div>
                       )}
                       {!createExtras.baseSalary && (
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-[0.6875rem] text-muted-foreground">
                           Để trống nếu muốn cấu hình lương sau tại{" "}
                           <strong>Cấu hình lương NV</strong>.
                         </p>
@@ -1192,13 +1192,13 @@ export function EmployeesPage() {
                 <div className="flex items-center justify-between gap-2 p-5 border-t border-border">
                   <button
                     onClick={() => setCreateStep(1)}
-                    className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+                    className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent transition"
                   >
                     ← Quay lại
                   </button>
                   <button
                     onClick={() => setCreateStep(3)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 transition"
                   >
                     Tiếp theo →
                   </button>
@@ -1210,7 +1210,7 @@ export function EmployeesPage() {
             {createStep === 3 && (
               <>
                 <div className="p-5 space-y-3">
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 text-[13px]">
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 text-[0.8125rem]">
                     <div className="font-medium mb-2">Xác nhận thông tin</div>
                     {(
                       [
@@ -1261,7 +1261,7 @@ export function EmployeesPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-[12px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     Sau khi tạo, email kích hoạt sẽ gửi đến{" "}
                     <strong>{createForm.email}</strong>.
                   </p>
@@ -1269,14 +1269,14 @@ export function EmployeesPage() {
                 <div className="flex items-center justify-between gap-2 p-5 border-t border-border">
                   <button
                     onClick={() => setCreateStep(2)}
-                    className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+                    className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent transition"
                   >
                     ← Quay lại
                   </button>
                   <button
                     onClick={handleCreate}
                     disabled={loadingCreate}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition disabled:opacity-50"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition disabled:opacity-50"
                   >
                     {loadingCreate ? (
                       <Loader2 size={14} className="animate-spin" />

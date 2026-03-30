@@ -146,12 +146,12 @@ export function ChangePasswordPage() {
                     <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full transition-all duration-300 ${strengthColor}`} style={{ width: `${strength}%` }} />
                     </div>
-                    <span className={`text-[10px] font-medium ${strengthTextColor}`}>{strengthLabel}</span>
+                    <span className={`text-[0.625rem] font-medium ${strengthTextColor}`}>{strengthLabel}</span>
                   </div>
                   {/* Check list */}
                   <div className="grid grid-cols-1 gap-0.5">
                     {checks.map((c, i) => (
-                      <div key={i} className={`flex items-center gap-1.5 text-[11px] ${passedChecks[i] ? 'text-emerald-400' : 'text-slate-500'}`}>
+                      <div key={i} className={`flex items-center gap-1.5 text-[0.6875rem] ${passedChecks[i] ? 'text-emerald-400' : 'text-slate-500'}`}>
                         {passedChecks[i] ? <Check size={11} /> : <X size={11} />}
                         {c.label}
                       </div>
@@ -178,7 +178,7 @@ export function ChangePasswordPage() {
                 </button>
               </div>
               {confirm && newPw && confirm !== newPw && (
-                <p className="text-red-400 text-[10px] mt-1">Mật khẩu không khớp</p>
+                <p className="text-red-400 text-[0.625rem] mt-1">Mật khẩu không khớp</p>
               )}
             </div>
 

@@ -284,17 +284,17 @@ function HRPayrollView() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-[20px]">Quản lý kỳ lương</h1>
+        <h1 className="text-xl">Quản lý kỳ lương</h1>
         <div className="flex gap-2">
           <button
             onClick={fetchPeriods}
-            className="px-3 py-2 border border-border rounded-lg text-[13px] hover:bg-accent flex items-center gap-1"
+            className="px-3 py-2 border border-border rounded-lg text-[0.8125rem] hover:bg-accent flex items-center gap-1"
           >
             <RefreshCw size={14} /> Làm mới
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
           >
             <Plus size={16} /> Tạo kỳ lương
           </button>
@@ -302,7 +302,7 @@ function HRPayrollView() {
       </div>
 
       {/* Flow guide */}
-      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2 text-[12px] text-blue-700 dark:text-blue-400">
+      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center gap-2 text-xs text-blue-700 dark:text-blue-400">
         <Info size={14} className="shrink-0" />
         <span>
           Quy trình: <strong>Bản nháp</strong> → <strong>Tính lương</strong> →{" "}
@@ -313,14 +313,14 @@ function HRPayrollView() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <>
           {/* Chart */}
           {chartData.length > 0 && (
             <div className="bg-card border border-border rounded-xl p-4">
-              <div className="text-[13px] text-muted-foreground mb-3">
+              <div className="text-[0.8125rem] text-muted-foreground mb-3">
                 Số nhân viên theo kỳ lương
               </div>
               <ResponsiveContainer width="100%" height={160}>
@@ -360,11 +360,11 @@ function HRPayrollView() {
                 className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[16px]">
+                  <span className="text-base">
                     T{p.month}/{p.year}
                   </span>
                   <span
-                    className={`text-[11px] px-2 py-0.5 rounded-full ${periodStatusColors[p.status]}`}
+                    className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${periodStatusColors[p.status]}`}
                   >
                     {p.status === "CALCULATING" && (
                       <Loader2 size={10} className="inline mr-1 animate-spin" />
@@ -372,12 +372,12 @@ function HRPayrollView() {
                     {periodStatusLabels[p.status]}
                   </span>
                 </div>
-                <div className="text-[12px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   {p.recordCount} nhân viên • {p.workingDaysInPeriod ?? "—"}{" "}
                   ngày • {p.periodCode}
                 </div>
                 {p.payDate && (
-                  <div className="text-[11px] text-muted-foreground mt-1">
+                  <div className="text-[0.6875rem] text-muted-foreground mt-1">
                     Ngày trả: {fmtDate(p.payDate)}
                   </div>
                 )}
@@ -397,7 +397,7 @@ function HRPayrollView() {
             {periods.length === 0 && (
               <div className="col-span-3 text-center py-12 text-muted-foreground">
                 <Receipt size={40} className="mx-auto mb-2 opacity-30" />
-                <div className="text-[14px]">Chưa có kỳ lương nào</div>
+                <div className="text-sm">Chưa có kỳ lương nào</div>
               </div>
             )}
           </div>
@@ -468,53 +468,53 @@ function EmployeePayslipView() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[20px]">Phiếu lương của tôi</h1>
+      <h1 className="text-xl">Phiếu lương của tôi</h1>
 
       {/* My salary summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1 text-[0.625rem] text-muted-foreground">
             <DollarSign size={12} /> Lương cơ bản
           </div>
-          <div className="text-[18px] mt-1">
+          <div className="text-lg mt-1">
             {compensation ? fmtVND(compensation.baseSalary) : "—"}
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1 text-[0.625rem] text-muted-foreground">
             <Clock size={12} /> Ngày nhận lương
           </div>
-          <div className="text-[18px] mt-1">
+          <div className="text-lg mt-1">
             {compensation?.payDayOfMonth
               ? `Ngày ${compensation.payDayOfMonth}`
               : "Theo lịch"}
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1 text-[0.625rem] text-muted-foreground">
             <Shield size={12} /> Loại lương
           </div>
-          <div className="text-[18px] mt-1">
+          <div className="text-lg mt-1">
             {compensation?.salaryType === "MONTHLY"
               ? "Tháng"
               : (compensation?.salaryType ?? "—")}
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1 text-[0.625rem] text-muted-foreground">
             <Receipt size={12} /> Tổng phiếu
           </div>
-          <div className="text-[18px] mt-1">{records.length}</div>
+          <div className="text-lg mt-1">{records.length}</div>
         </div>
       </div>
 
       {/* Compensation info */}
       {compensation && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[12px] text-muted-foreground mb-2">
+          <div className="text-xs text-muted-foreground mb-2">
             Cấu hình lương hiện tại
           </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px]">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[0.8125rem]">
             <span>
               Lương CB: <strong>{fmtVND(compensation.baseSalary)}</strong>
             </span>
@@ -533,7 +533,7 @@ function EmployeePayslipView() {
             </span>
           </div>
           {compensation.changeReason && (
-            <div className="text-[12px] text-muted-foreground mt-1">
+            <div className="text-xs text-muted-foreground mt-1">
               Lý do: {compensation.changeReason}
             </div>
           )}
@@ -543,12 +543,12 @@ function EmployeePayslipView() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : sorted.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground">
           <Receipt size={40} className="mx-auto mb-2 opacity-30" />
-          <div className="text-[14px]">Chưa có phiếu lương</div>
+          <div className="text-sm">Chưa có phiếu lương</div>
         </div>
       ) : (
         <div className="space-y-3">
@@ -569,19 +569,19 @@ function EmployeePayslipView() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-[15px]">
+                    <div className="text-[0.9375rem]">
                       Kỳ lương T{p?.month}/{p?.year}
                     </div>
-                    <div className="text-[12px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       {r.workingDays ?? "—"} ngày công
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[18px] text-green-600">
+                    <div className="text-lg text-green-600">
                       {fmtVND(r.netSalary)}
                     </div>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full ${r.status === "PAID" ? periodStatusColors["PAID"] : r.status === "APPROVED" ? periodStatusColors["APPROVED"] : periodStatusColors["DRAFT"]}`}
+                      className={`text-[0.625rem] px-2 py-0.5 rounded-full ${r.status === "PAID" ? periodStatusColors["PAID"] : r.status === "APPROVED" ? periodStatusColors["APPROVED"] : periodStatusColors["DRAFT"]}`}
                     >
                       {r.status === "PAID"
                         ? "Đã chi trả"
@@ -591,7 +591,7 @@ function EmployeePayslipView() {
                     </span>
                   </div>
                 </div>
-                <div className="mt-2 grid grid-cols-5 gap-2 text-[11px] text-muted-foreground">
+                <div className="mt-2 grid grid-cols-5 gap-2 text-[0.6875rem] text-muted-foreground">
                   <div>CB: {fmtVNDShort(r.baseSalary)}</div>
                   <div>PC: {fmtVNDShort(r.totalAllowances)}</div>
                   <div>
@@ -749,16 +749,16 @@ function PeriodDetailModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
           <div>
-            <h2 className="text-[18px]">
+            <h2 className="text-lg">
               Kỳ lương T{period.month}/{period.year}
             </h2>
             <div className="flex items-center gap-2 mt-0.5">
               <span
-                className={`text-[11px] px-2 py-0.5 rounded-full ${periodStatusColors[period.status]}`}
+                className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${periodStatusColors[period.status]}`}
               >
                 {periodStatusLabels[period.status]}
               </span>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[0.6875rem] text-muted-foreground">
                 {period.workingDaysInPeriod ?? "—"} ngày • {period.recordCount}{" "}
                 nhân viên • {period.periodCode}
               </span>
@@ -812,10 +812,10 @@ function PeriodDetailModal({
                   key={s.label}
                   className="bg-muted/30 rounded-lg p-2.5 text-center"
                 >
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-[0.625rem] text-muted-foreground">
                     {s.label}
                   </div>
-                  <div className={`text-[14px] ${s.color}`}>{s.value}</div>
+                  <div className={`text-sm ${s.color}`}>{s.value}</div>
                 </div>
               ))}
             </div>
@@ -862,7 +862,7 @@ function PeriodDetailModal({
                 placeholder="Tìm nhân viên..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
@@ -872,7 +872,7 @@ function PeriodDetailModal({
         {loading ? (
           <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
             <Loader2 size={18} className="animate-spin" />{" "}
-            <span className="text-[13px]">Đang tải phiếu lương...</span>
+            <span className="text-[0.8125rem]">Đang tải phiếu lương...</span>
           </div>
         ) : records.length > 0 ? (
           <div className="overflow-x-auto">
@@ -880,37 +880,37 @@ function PeriodDetailModal({
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th
-                    className="text-left px-4 py-2 text-[11px] text-muted-foreground cursor-pointer"
+                    className="text-left px-4 py-2 text-[0.6875rem] text-muted-foreground cursor-pointer"
                     onClick={() => toggleSort("name")}
                   >
                     Nhân viên <SortIcon k="name" />
                   </th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                  <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground">
                     Ngày
                   </th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                  <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground">
                     Lương CB
                   </th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Phụ cấp
                   </th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     OT
                   </th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Thưởng
                   </th>
                   <th
-                    className="text-right px-3 py-2 text-[11px] text-muted-foreground cursor-pointer"
+                    className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground cursor-pointer"
                     onClick={() => toggleSort("gross")}
                   >
                     Gross <SortIcon k="gross" />
                   </th>
-                  <th className="text-right px-3 py-2 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Khấu trừ
                   </th>
                   <th
-                    className="text-right px-3 py-2 text-[11px] text-muted-foreground cursor-pointer"
+                    className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground cursor-pointer"
                     onClick={() => toggleSort("net")}
                   >
                     NET <SortIcon k="net" />
@@ -926,12 +926,12 @@ function PeriodDetailModal({
                   >
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                           {r.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                         </div>
                         <div>
-                          <div className="text-[12px]">{r.user?.fullName}</div>
-                          <div className="text-[9px] text-muted-foreground">
+                          <div className="text-xs">{r.user?.fullName}</div>
+                          <div className="text-[0.5625rem] text-muted-foreground">
                             {(
                               r.user as { department?: { name: string } } | null
                             )?.department?.name ?? "—"}
@@ -939,30 +939,30 @@ function PeriodDetailModal({
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-[12px] text-right">
+                    <td className="px-3 py-2 text-xs text-right">
                       {r.workingDays ?? "—"}
                     </td>
-                    <td className="px-3 py-2 text-[12px] text-right">
+                    <td className="px-3 py-2 text-xs text-right">
                       {fmtVND(r.baseSalary)}
                     </td>
-                    <td className="px-3 py-2 text-[12px] text-right hidden md:table-cell">
+                    <td className="px-3 py-2 text-xs text-right hidden md:table-cell">
                       {fmtVND(r.totalAllowances)}
                     </td>
-                    <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                    <td className="px-3 py-2 text-xs text-right hidden lg:table-cell">
                       {r.totalOvertimePay > 0
                         ? fmtVND(r.totalOvertimePay)
                         : "—"}
                     </td>
-                    <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                    <td className="px-3 py-2 text-xs text-right hidden lg:table-cell">
                       {r.totalBonus > 0 ? fmtVND(r.totalBonus) : "—"}
                     </td>
-                    <td className="px-3 py-2 text-[12px] text-right">
+                    <td className="px-3 py-2 text-xs text-right">
                       {fmtVND(r.grossSalary)}
                     </td>
-                    <td className="px-3 py-2 text-[12px] text-right text-red-500 hidden md:table-cell">
+                    <td className="px-3 py-2 text-xs text-right text-red-500 hidden md:table-cell">
                       -{fmtVND(r.totalDeductions)}
                     </td>
-                    <td className="px-3 py-2 text-[13px] text-right text-green-600">
+                    <td className="px-3 py-2 text-[0.8125rem] text-right text-green-600">
                       {fmtVND(r.netSalary)}
                     </td>
                     <td className="px-2 py-2 text-center">
@@ -987,29 +987,29 @@ function PeriodDetailModal({
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-border bg-muted/30">
-                  <td className="px-4 py-2 text-[12px] font-medium">
+                  <td className="px-4 py-2 text-xs font-medium">
                     Tổng cộng
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-right">—</td>
-                  <td className="px-3 py-2 text-[12px] text-right">
+                  <td className="px-3 py-2 text-xs text-right">—</td>
+                  <td className="px-3 py-2 text-xs text-right">
                     {fmtVND(totals.base)}
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-right hidden md:table-cell">
+                  <td className="px-3 py-2 text-xs text-right hidden md:table-cell">
                     {fmtVND(totals.allowances)}
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                  <td className="px-3 py-2 text-xs text-right hidden lg:table-cell">
                     {fmtVND(totals.ot)}
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-right hidden lg:table-cell">
+                  <td className="px-3 py-2 text-xs text-right hidden lg:table-cell">
                     {fmtVND(totals.bonus)}
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-right font-medium">
+                  <td className="px-3 py-2 text-xs text-right font-medium">
                     {fmtVND(totals.gross)}
                   </td>
-                  <td className="px-3 py-2 text-[12px] text-right text-red-500 hidden md:table-cell">
+                  <td className="px-3 py-2 text-xs text-right text-red-500 hidden md:table-cell">
                     -{fmtVND(totals.deductions)}
                   </td>
-                  <td className="px-3 py-2 text-[13px] text-right text-green-600 font-medium">
+                  <td className="px-3 py-2 text-[0.8125rem] text-right text-green-600 font-medium">
                     {fmtVND(totals.net)}
                   </td>
                   <td />
@@ -1018,7 +1018,7 @@ function PeriodDetailModal({
             </table>
           </div>
         ) : (
-          <div className="p-8 text-center text-muted-foreground text-[13px] space-y-3">
+          <div className="p-8 text-center text-muted-foreground text-[0.8125rem] space-y-3">
             <Calculator size={40} className="mx-auto opacity-30" />
             <div className="font-medium text-foreground">
               {period.status === "CANCELLED"
@@ -1026,11 +1026,11 @@ function PeriodDetailModal({
                 : 'Chưa có dữ liệu — nhấn "Tính lương" để bắt đầu tính cho kỳ này'}
             </div>
             {period.status !== "CANCELLED" && (
-              <div className="max-w-sm mx-auto text-[12px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-700 dark:text-amber-400 text-left space-y-1">
+              <div className="max-w-sm mx-auto text-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-700 dark:text-amber-400 text-left space-y-1">
                 <div className="font-medium">
                   ⚠️ Nhân viên không xuất hiện nếu:
                 </div>
-                <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                <ul className="list-disc list-inside space-y-0.5 text-[0.6875rem]">
                   <li>
                     Chưa có cấu hình lương (vào{" "}
                     <strong>Cấu hình lương NV</strong> để tạo)
@@ -1045,7 +1045,7 @@ function PeriodDetailModal({
 
         {/* Actions */}
         <div className="p-4 border-t border-border flex flex-wrap justify-between items-center gap-2 sticky bottom-0 bg-card">
-          <div className="text-[11px] text-muted-foreground">
+          <div className="text-[0.6875rem] text-muted-foreground">
             {period.paidAt && <span>Đã chi trả: {fmtDate(period.paidAt)}</span>}
             {period.approvedBy && (
               <span className="ml-2">
@@ -1058,7 +1058,7 @@ function PeriodDetailModal({
             {isAdmin && period.status === "CANCELLED" && (
               <button
                 onClick={() => onDelete(period.id)}
-                className="px-3 py-2 border border-red-400 text-red-600 rounded-lg text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
+                className="px-3 py-2 border border-red-400 text-red-600 rounded-lg text-[0.8125rem] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
               >
                 <Trash2 size={14} /> Xóa kỳ
               </button>
@@ -1067,7 +1067,7 @@ function PeriodDetailModal({
             {isAdmin && ["DRAFT", "CALCULATING"].includes(period.status) && (
               <button
                 onClick={() => onCancel(period.id)}
-                className="px-3 py-2 border border-orange-300 text-orange-600 rounded-lg text-[13px] hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center gap-1"
+                className="px-3 py-2 border border-orange-300 text-orange-600 rounded-lg text-[0.8125rem] hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center gap-1"
               >
                 <Ban size={14} /> Huỷ kỳ
               </button>
@@ -1077,7 +1077,7 @@ function PeriodDetailModal({
               <button
                 onClick={handleCalculateClick}
                 disabled={calculating}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700 disabled:opacity-50"
               >
                 {calculating ? (
                   <Loader2 size={14} className="animate-spin" />
@@ -1092,7 +1092,7 @@ function PeriodDetailModal({
               <button
                 onClick={handleCalculateClick}
                 disabled={calculating}
-                className="px-3 py-2 border border-blue-300 text-blue-600 rounded-lg text-[13px] hover:bg-blue-50 flex items-center gap-1 disabled:opacity-50"
+                className="px-3 py-2 border border-blue-300 text-blue-600 rounded-lg text-[0.8125rem] hover:bg-blue-50 flex items-center gap-1 disabled:opacity-50"
               >
                 {calculating ? (
                   <Loader2 size={13} className="animate-spin" />
@@ -1106,7 +1106,7 @@ function PeriodDetailModal({
             {period.status === "CALCULATING" && (
               <button
                 onClick={() => onApprove(period.id)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-green-700"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-green-700"
               >
                 <Check size={14} /> Duyệt kỳ lương
               </button>
@@ -1115,7 +1115,7 @@ function PeriodDetailModal({
             {period.status === "APPROVED" && (
               <button
                 onClick={() => onMarkPaid(period.id)}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-emerald-700"
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-emerald-700"
               >
                 <Wallet size={14} /> Đánh dấu đã chi trả
               </button>
@@ -1158,10 +1158,10 @@ function PayslipDialog({
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="text-[11px] text-muted-foreground tracking-wider uppercase">
+              <div className="text-[0.6875rem] text-muted-foreground tracking-wider uppercase">
                 Phiếu lương
               </div>
-              <div className="text-[18px] mt-0.5">
+              <div className="text-lg mt-0.5">
                 T{p?.month}/{p?.year} — {p?.periodCode}
               </div>
             </div>
@@ -1172,19 +1172,19 @@ function PayslipDialog({
 
           {/* Employee info */}
           <div className="flex items-center gap-3 mb-4 p-3 bg-muted/30 rounded-xl">
-            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-[14px]">
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm">
               {u?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
             </div>
             <div>
-              <div className="text-[14px]">{u?.fullName}</div>
-              <div className="text-[12px] text-muted-foreground">
+              <div className="text-sm">{u?.fullName}</div>
+              <div className="text-xs text-muted-foreground">
                 {u?.userCode} •{" "}
                 {(u as { department?: { name: string } } | null)?.department
                   ?.name ?? "—"}
               </div>
             </div>
             <span
-              className={`ml-auto text-[11px] px-2 py-0.5 rounded-full ${record.status === "PAID" ? periodStatusColors["PAID"] : record.status === "APPROVED" ? periodStatusColors["APPROVED"] : periodStatusColors["DRAFT"]}`}
+              className={`ml-auto text-[0.6875rem] px-2 py-0.5 rounded-full ${record.status === "PAID" ? periodStatusColors["PAID"] : record.status === "APPROVED" ? periodStatusColors["APPROVED"] : periodStatusColors["DRAFT"]}`}
             >
               {record.status === "PAID"
                 ? "Đã chi trả"
@@ -1196,16 +1196,16 @@ function PayslipDialog({
 
           {/* Earnings */}
           <div className="space-y-1 mb-3">
-            <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2">
+            <div className="text-[0.6875rem] text-muted-foreground uppercase tracking-wider mb-2">
               Thu nhập
             </div>
             {earnings.map((item, i) => (
-              <div key={i} className="flex justify-between text-[13px]">
+              <div key={i} className="flex justify-between text-[0.8125rem]">
                 <span>{item.itemName}</span>
                 <span className="text-green-600">{fmtVND(item.amount)}</span>
               </div>
             ))}
-            <div className="flex justify-between text-[13px] pt-1 border-t border-border font-medium">
+            <div className="flex justify-between text-[0.8125rem] pt-1 border-t border-border font-medium">
               <span>Tổng thu nhập (Gross)</span>
               <span>{fmtVND(record.grossSalary)}</span>
             </div>
@@ -1213,22 +1213,22 @@ function PayslipDialog({
 
           {/* Deductions — đọc từ items (engine mới lưu BHXH/BHYT/BHTN vào items) */}
           <div className="space-y-1 mb-3">
-            <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-2">
+            <div className="text-[0.6875rem] text-muted-foreground uppercase tracking-wider mb-2">
               Khấu trừ
             </div>
             {deductions.length === 0 ? (
-              <div className="text-[12px] text-muted-foreground italic">
+              <div className="text-xs text-muted-foreground italic">
                 Không có khấu trừ
               </div>
             ) : (
               deductions.map((item, i) => (
-                <div key={i} className="flex justify-between text-[13px]">
+                <div key={i} className="flex justify-between text-[0.8125rem]">
                   <span className="text-muted-foreground">{item.itemName}</span>
                   <span className="text-red-500">-{fmtVND(item.amount)}</span>
                 </div>
               ))
             )}
-            <div className="flex justify-between text-[13px] pt-1 border-t border-border font-medium text-red-500">
+            <div className="flex justify-between text-[0.8125rem] pt-1 border-t border-border font-medium text-red-500">
               <span>Tổng khấu trừ</span>
               <span>-{fmtVND(record.totalDeductions)}</span>
             </div>
@@ -1236,15 +1236,15 @@ function PayslipDialog({
 
           {/* Net */}
           <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
-            <span className="text-[14px] font-medium">Thực nhận (NET)</span>
-            <span className="text-[20px] text-green-600 font-semibold">
+            <span className="text-sm font-medium">Thực nhận (NET)</span>
+            <span className="text-xl text-green-600 font-semibold">
               {fmtVND(record.netSalary)}
             </span>
           </div>
 
           {/* Tax info */}
           {record.taxableIncome > 0 && (
-            <div className="mt-3 text-[11px] text-muted-foreground grid grid-cols-2 gap-1">
+            <div className="mt-3 text-[0.6875rem] text-muted-foreground grid grid-cols-2 gap-1">
               <span>Thu nhập tính thuế:</span>
               <span>{fmtVND(record.taxableIncome)}</span>
               <span>Ngày công:</span>
@@ -1259,7 +1259,7 @@ function PayslipDialog({
           )}
 
           {/* Download placeholder */}
-          <button className="mt-4 w-full py-2 border border-border rounded-lg text-[13px] hover:bg-accent flex items-center justify-center gap-2">
+          <button className="mt-4 w-full py-2 border border-border rounded-lg text-[0.8125rem] hover:bg-accent flex items-center justify-center gap-2">
             <Download size={14} /> Tải phiếu lương (PDF)
           </button>
         </div>
@@ -1316,7 +1316,7 @@ function CreatePeriodDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Tạo kỳ lương mới</h3>
+          <h3 className="text-base">Tạo kỳ lương mới</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -1324,13 +1324,13 @@ function CreatePeriodDialog({
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Tháng *
               </label>
               <select
                 value={month}
                 onChange={(e) => setMonth(+e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {Array.from({ length: 12 }, (_, i) => (
                   <option key={i + 1} value={i + 1}>
@@ -1340,7 +1340,7 @@ function CreatePeriodDialog({
               </select>
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Năm *
               </label>
               <input
@@ -1349,12 +1349,12 @@ function CreatePeriodDialog({
                 onChange={(e) => setYear(+e.target.value)}
                 min={2020}
                 max={2030}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ngày công chuẩn *
             </label>
             <input
@@ -1363,10 +1363,10 @@ function CreatePeriodDialog({
               onChange={(e) => setWorkingDays(+e.target.value)}
               min={1}
               max={31}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
-          <div className="bg-muted/30 rounded-lg p-3 text-[12px]">
+          <div className="bg-muted/30 rounded-lg p-3 text-xs">
             <div className="text-muted-foreground mb-1">Kỳ tính</div>
             <div>
               {startDate} → {endDate}
@@ -1376,14 +1376,14 @@ function CreatePeriodDialog({
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -1513,11 +1513,11 @@ export function PayrollAdjustmentsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[18px]">Điều chỉnh lương</h2>
+        <h2 className="text-lg">Điều chỉnh lương</h2>
         {isAdminHR && (
           <button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
           >
             <Plus size={14} /> Tạo điều chỉnh
           </button>
@@ -1553,8 +1553,8 @@ export function PayrollAdjustmentsPage() {
           },
         ].map((s) => (
           <div key={s.label} className={`${s.bg} rounded-xl p-3 text-center`}>
-            <div className={`text-[16px] ${s.color}`}>{s.value}</div>
-            <div className="text-[10px] text-muted-foreground">{s.label}</div>
+            <div className={`text-base ${s.color}`}>{s.value}</div>
+            <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
           </div>
         ))}
       </div>
@@ -1571,13 +1571,13 @@ export function PayrollAdjustmentsPage() {
             placeholder="Tìm nhân viên, lý do..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả loại</option>
           {Object.entries(adjustTypeLabels).map(([k, v]) => (
@@ -1589,7 +1589,7 @@ export function PayrollAdjustmentsPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả trạng thái</option>
           {Object.entries(adjustStatusLabels).map(([k, v]) => (
@@ -1604,7 +1604,7 @@ export function PayrollAdjustmentsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
           <Loader2 size={18} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -1612,22 +1612,22 @@ export function PayrollAdjustmentsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                     Nhân viên
                   </th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                     Loại
                   </th>
-                  <th className="text-right px-4 py-3 text-[12px] text-muted-foreground">
+                  <th className="text-right px-4 py-3 text-xs text-muted-foreground">
                     Số tiền
                   </th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
                     Lý do
                   </th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                     Trạng thái
                   </th>
-                  <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-left px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                     Ngày tạo
                   </th>
                   {isAdminHR && <th className="px-4 py-3 w-32" />}
@@ -1641,12 +1641,12 @@ export function PayrollAdjustmentsPage() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                           {a.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                         </div>
                         <div>
-                          <div className="text-[13px]">{a.user?.fullName}</div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[0.8125rem]">{a.user?.fullName}</div>
+                          <div className="text-[0.625rem] text-muted-foreground">
                             {a.user?.userCode}
                           </div>
                         </div>
@@ -1654,12 +1654,12 @@ export function PayrollAdjustmentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full ${adjustTypeColors[a.adjustmentType]}`}
+                        className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${adjustTypeColors[a.adjustmentType]}`}
                       >
                         {adjustTypeLabels[a.adjustmentType]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-right">
+                    <td className="px-4 py-3 text-[0.8125rem] text-right">
                       <span
                         className={
                           a.adjustmentType === "DEDUCTION"
@@ -1671,17 +1671,17 @@ export function PayrollAdjustmentsPage() {
                         {fmtVND(a.amount)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
                       {a.reason ?? "—"}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full ${adjustStatusColors[a.status]}`}
+                        className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${adjustStatusColors[a.status]}`}
                       >
                         {adjustStatusLabels[a.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                       {fmtDate(a.createdAt)}
                     </td>
                     {isAdminHR && (
@@ -1697,11 +1697,11 @@ export function PayrollAdjustmentsPage() {
                                   setRejectReason(e.target.value)
                                 }
                                 autoFocus
-                                className="w-28 px-2 py-1 rounded border border-red-300 text-[11px] bg-input-background"
+                                className="w-28 px-2 py-1 rounded border border-red-300 text-[0.6875rem] bg-input-background"
                               />
                               <button
                                 onClick={() => handleReject(a.id)}
-                                className="px-2 py-1 bg-red-600 text-white rounded text-[11px]"
+                                className="px-2 py-1 bg-red-600 text-white rounded text-[0.6875rem]"
                               >
                                 <Check size={10} />
                               </button>
@@ -1710,7 +1710,7 @@ export function PayrollAdjustmentsPage() {
                                   setRejectingId(null);
                                   setRejectReason("");
                                 }}
-                                className="px-2 py-1 border border-border rounded text-[11px]"
+                                className="px-2 py-1 border border-border rounded text-[0.6875rem]"
                               >
                                 <X size={10} />
                               </button>
@@ -1719,13 +1719,13 @@ export function PayrollAdjustmentsPage() {
                             <div className="flex gap-1">
                               <button
                                 onClick={() => handleApprove(a.id)}
-                                className="px-3 py-1 bg-green-100 text-green-700 rounded text-[11px] hover:bg-green-200"
+                                className="px-3 py-1 bg-green-100 text-green-700 rounded text-[0.6875rem] hover:bg-green-200"
                               >
                                 Duyệt
                               </button>
                               <button
                                 onClick={() => setRejectingId(a.id)}
-                                className="px-3 py-1 bg-red-100 text-red-600 rounded text-[11px] hover:bg-red-200"
+                                className="px-3 py-1 bg-red-100 text-red-600 rounded text-[0.6875rem] hover:bg-red-200"
                               >
                                 Từ chối
                               </button>
@@ -1739,7 +1739,7 @@ export function PayrollAdjustmentsPage() {
                   <tr>
                     <td
                       colSpan={7}
-                      className="text-center py-8 text-muted-foreground text-[13px]"
+                      className="text-center py-8 text-muted-foreground text-[0.8125rem]"
                     >
                       Không có dữ liệu
                     </td>
@@ -1748,7 +1748,7 @@ export function PayrollAdjustmentsPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
             {filtered.length} / {adjustments.length} điều chỉnh
           </div>
         </div>
@@ -1837,11 +1837,11 @@ export function PayrollConfigPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px]">Cấu hình bảng lương</h1>
+        <h1 className="text-xl">Cấu hình bảng lương</h1>
         {activeSection === "components" && (
           <button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
           >
             <Plus size={14} /> Thêm thành phần
           </button>
@@ -1868,7 +1868,7 @@ export function PayrollConfigPage() {
           <button
             key={t.key}
             onClick={() => setActiveSection(t.key)}
-            className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors
+            className={`px-3 py-2.5 text-[0.8125rem] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors
               ${activeSection === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             {t.icon} {t.label}
@@ -1879,7 +1879,7 @@ export function PayrollConfigPage() {
       {/* ── Salary Components ── */}
       {activeSection === "components" && (
         <div className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-[12px] text-blue-700 dark:text-blue-400">
+          <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-700 dark:text-blue-400">
             <Info size={14} className="shrink-0 mt-0.5" />
             <span>
               Thành phần lương được gán cho từng nhân viên riêng lẻ. Loại{" "}
@@ -1891,7 +1891,7 @@ export function PayrollConfigPage() {
           {loading ? (
             <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
               <Loader2 size={18} className="animate-spin" />{" "}
-              <span className="text-[13px]">Đang tải...</span>
+              <span className="text-[0.8125rem]">Đang tải...</span>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
@@ -1899,7 +1899,7 @@ export function PayrollConfigPage() {
               <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-border bg-green-50 dark:bg-green-900/10 flex items-center gap-2">
                   <TrendingUp size={14} className="text-green-600" />
-                  <span className="text-[13px] text-green-700 dark:text-green-400">
+                  <span className="text-[0.8125rem] text-green-700 dark:text-green-400">
                     Thu nhập ({earningComponents.length})
                   </span>
                 </div>
@@ -1911,28 +1911,28 @@ export function PayrollConfigPage() {
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px]">{c.name}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded font-mono">
+                          <span className="text-[0.8125rem]">{c.name}</span>
+                          <span className="text-[0.625rem] px-1.5 py-0.5 bg-muted rounded font-mono">
                             {c.code}
                           </span>
                           {!c.isActive && (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[0.625rem] text-muted-foreground">
                               (ẩn)
                             </span>
                           )}
                         </div>
                         <div className="flex gap-2 mt-0.5">
                           {c.isTaxable && (
-                            <span className="text-[10px] text-orange-600">
+                            <span className="text-[0.625rem] text-orange-600">
                               Chịu thuế
                             </span>
                           )}
                           {c.isInsurable && (
-                            <span className="text-[10px] text-blue-600">
+                            <span className="text-[0.625rem] text-blue-600">
                               Tính BH
                             </span>
                           )}
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[0.625rem] text-muted-foreground">
                             {c.calculationType}
                           </span>
                         </div>
@@ -1943,7 +1943,7 @@ export function PayrollConfigPage() {
                     </div>
                   ))}
                   {earningComponents.length === 0 && (
-                    <div className="px-4 py-6 text-center text-muted-foreground text-[13px]">
+                    <div className="px-4 py-6 text-center text-muted-foreground text-[0.8125rem]">
                       Chưa có thành phần thu nhập
                     </div>
                   )}
@@ -1954,7 +1954,7 @@ export function PayrollConfigPage() {
               <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-4 py-3 border-b border-border bg-red-50 dark:bg-red-900/10 flex items-center gap-2">
                   <Ban size={14} className="text-red-500" />
-                  <span className="text-[13px] text-red-600 dark:text-red-400">
+                  <span className="text-[0.8125rem] text-red-600 dark:text-red-400">
                     Khấu trừ ({deductionComponents.length})
                   </span>
                 </div>
@@ -1966,23 +1966,23 @@ export function PayrollConfigPage() {
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px]">{c.name}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 bg-muted rounded font-mono">
+                          <span className="text-[0.8125rem]">{c.name}</span>
+                          <span className="text-[0.625rem] px-1.5 py-0.5 bg-muted rounded font-mono">
                             {c.code}
                           </span>
                           {!c.isActive && (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[0.625rem] text-muted-foreground">
                               (ẩn)
                             </span>
                           )}
                         </div>
                         <div className="flex gap-2 mt-0.5">
                           {c.isTaxable && (
-                            <span className="text-[10px] text-orange-600">
+                            <span className="text-[0.625rem] text-orange-600">
                               Chịu thuế
                             </span>
                           )}
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[0.625rem] text-muted-foreground">
                             {c.calculationType}
                           </span>
                         </div>
@@ -1993,7 +1993,7 @@ export function PayrollConfigPage() {
                     </div>
                   ))}
                   {deductionComponents.length === 0 && (
-                    <div className="px-4 py-6 text-center text-muted-foreground text-[13px]">
+                    <div className="px-4 py-6 text-center text-muted-foreground text-[0.8125rem]">
                       Chưa có thành phần khấu trừ
                     </div>
                   )}
@@ -2007,7 +2007,7 @@ export function PayrollConfigPage() {
       {/* ── Insurance Section (static reference rates) ── */}
       {activeSection === "insurance" && (
         <div className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-[12px] text-blue-700 dark:text-blue-400 flex items-start gap-2">
+          <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-xs text-blue-700 dark:text-blue-400 flex items-start gap-2">
             <Info size={14} className="shrink-0 mt-0.5" />
             <div>
               Tỷ lệ BHXH/BHYT/BHTN theo quy định hiện hành. Mức trần lương đóng
@@ -2049,12 +2049,12 @@ export function PayrollConfigPage() {
                   className="bg-card border border-border rounded-xl p-4"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <div className="text-[13px]">{ins.name}</div>
-                    <span className="text-[10px] px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full">
+                    <div className="text-[0.8125rem]">{ins.name}</div>
+                    <span className="text-[0.625rem] px-2 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full">
                       Đang áp dụng
                     </span>
                   </div>
-                  <div className="space-y-2 text-[12px]">
+                  <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">NV đóng:</span>
                       <span className="text-red-500">
@@ -2094,7 +2094,7 @@ export function PayrollConfigPage() {
                       style={{ width: `${(ins.employerRate / total) * 100}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-[9px] text-muted-foreground mt-0.5">
+                  <div className="flex justify-between text-[0.5625rem] text-muted-foreground mt-0.5">
                     <span className="text-red-500">
                       NV {(ins.employeeRate * 100).toFixed(1)}%
                     </span>
@@ -2109,25 +2109,25 @@ export function PayrollConfigPage() {
 
           {/* Summary */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <div className="text-[13px] mb-3">
+            <div className="text-[0.8125rem] mb-3">
               Tổng hợp — Nhân viên đóng hàng tháng (tính trên mức trần BHXH)
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px] text-center">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-center">
               <div>
                 <div className="text-muted-foreground">NV đóng tổng</div>
-                <div className="text-[16px] text-red-500">10.5%</div>
+                <div className="text-base text-red-500">10.5%</div>
               </div>
               <div>
                 <div className="text-muted-foreground">DN đóng tổng</div>
-                <div className="text-[16px] text-blue-600">22.5%</div>
+                <div className="text-base text-blue-600">22.5%</div>
               </div>
               <div>
                 <div className="text-muted-foreground">NV max/tháng</div>
-                <div className="text-[16px]">{fmtVND(36000000 * 0.105)}</div>
+                <div className="text-base">{fmtVND(36000000 * 0.105)}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">DN max/tháng</div>
-                <div className="text-[16px]">{fmtVND(36000000 * 0.225)}</div>
+                <div className="text-base">{fmtVND(36000000 * 0.225)}</div>
               </div>
             </div>
           </div>
@@ -2140,10 +2140,10 @@ export function PayrollConfigPage() {
           {/* Biểu thuế */}
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="p-4 border-b border-border">
-              <div className="text-[14px]">
+              <div className="text-sm">
                 Biểu thuế TNCN lũy tiến từng phần (2024)
               </div>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-[0.6875rem] text-muted-foreground">
                 Giảm trừ bản thân: 11.000.000đ/tháng | Người phụ thuộc:
                 4.400.000đ/người/tháng
               </div>
@@ -2152,19 +2152,19 @@ export function PayrollConfigPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="text-center px-4 py-3 text-[11px] text-muted-foreground w-12">
+                    <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground w-12">
                       Bậc
                     </th>
-                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Thu nhập chịu thuế từ
                     </th>
-                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Đến
                     </th>
-                    <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Thuế suất
                     </th>
-                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Giảm trừ nhanh
                     </th>
                   </tr>
@@ -2175,23 +2175,23 @@ export function PayrollConfigPage() {
                       key={b.level}
                       className="border-b border-border last:border-0 hover:bg-accent/30"
                     >
-                      <td className="px-4 py-3 text-[13px] text-center">
+                      <td className="px-4 py-3 text-[0.8125rem] text-center">
                         {b.level}
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-right">
+                      <td className="px-4 py-3 text-xs text-right">
                         {fmtVND(b.from)}
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-right">
+                      <td className="px-4 py-3 text-xs text-right">
                         {b.to ? fmtVND(b.to) : "∞"}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span
-                          className={`text-[12px] px-2 py-0.5 rounded ${b.rate <= 0.1 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : b.rate <= 0.2 ? "bg-yellow-100 text-yellow-700" : b.rate <= 0.3 ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"}`}
+                          className={`text-xs px-2 py-0.5 rounded ${b.rate <= 0.1 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : b.rate <= 0.2 ? "bg-yellow-100 text-yellow-700" : b.rate <= 0.3 ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"}`}
                         >
                           {(b.rate * 100).toFixed(0)}%
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-right">
+                      <td className="px-4 py-3 text-xs text-right">
                         {fmtVND(b.quickDeduction)}
                       </td>
                     </tr>
@@ -2314,12 +2314,12 @@ function TaxCalculator() {
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <div className="text-[14px] mb-3 flex items-center gap-1">
+      <div className="text-sm mb-3 flex items-center gap-1">
         <Calculator size={16} /> Tính thử thuế TNCN
       </div>
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div>
-          <label className="block text-[12px] text-muted-foreground mb-1">
+          <label className="block text-xs text-muted-foreground mb-1">
             Thu nhập Gross (₫)
           </label>
           <input
@@ -2327,11 +2327,11 @@ function TaxCalculator() {
             value={grossInput}
             onChange={(e) => setGrossInput(e.target.value)}
             placeholder="VD: 30000000"
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <div>
-          <label className="block text-[12px] text-muted-foreground mb-1">
+          <label className="block text-xs text-muted-foreground mb-1">
             Số người phụ thuộc
           </label>
           <input
@@ -2340,13 +2340,13 @@ function TaxCalculator() {
             onChange={(e) => setDependents(Number(e.target.value))}
             min={0}
             max={10}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
       </div>
 
       {result && (
-        <div className="space-y-1.5 text-[12px] bg-muted/20 rounded-xl p-4">
+        <div className="space-y-1.5 text-xs bg-muted/20 rounded-xl p-4">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Thu nhập Gross:</span>
             <span>{fmtVND(result.gross)}</span>
@@ -2378,7 +2378,7 @@ function TaxCalculator() {
             <span>{fmtVND(result.taxableIncome)}</span>
           </div>
           {result.appliedLevel > 0 && (
-            <div className="text-[10px] text-muted-foreground">
+            <div className="text-[0.625rem] text-muted-foreground">
               Áp dụng bậc {result.appliedLevel} (
               {(TAX_BRACKETS[result.appliedLevel - 1].rate * 100).toFixed(0)}%)
             </div>
@@ -2387,11 +2387,11 @@ function TaxCalculator() {
             <span>Thuế TNCN:</span>
             <span>-{fmtVND(result.tax)}</span>
           </div>
-          <div className="flex justify-between text-[14px] font-medium pt-1.5 border-t-2 border-border">
+          <div className="flex justify-between text-sm font-medium pt-1.5 border-t-2 border-border">
             <span>THỰC NHẬN (NET):</span>
             <span className="text-green-600">{fmtVND(result.net)}</span>
           </div>
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[0.625rem] text-muted-foreground">
             Thuế / Gross: {((result.tax / result.gross) * 100).toFixed(2)}% |
             Tổng khấu trừ:{" "}
             {(((result.totalIns + result.tax) / result.gross) * 100).toFixed(2)}
@@ -2445,7 +2445,7 @@ function CreateSalaryComponentDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Thêm thành phần lương</h3>
+          <h3 className="text-base">Thêm thành phần lương</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -2453,7 +2453,7 @@ function CreateSalaryComponentDialog({
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Mã * (tự động UPPERCASE)
               </label>
               <input
@@ -2462,11 +2462,11 @@ function CreateSalaryComponentDialog({
                   setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))
                 }
                 placeholder="VD: PHU_CAP_XANG"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] font-mono"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] font-mono"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Loại *
               </label>
               <select
@@ -2478,7 +2478,7 @@ function CreateSalaryComponentDialog({
                       .value as payrollService.ComponentType,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 <option value="EARNING">Thu nhập</option>
                 <option value="DEDUCTION">Khấu trừ</option>
@@ -2486,18 +2486,18 @@ function CreateSalaryComponentDialog({
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Tên thành phần *
             </label>
             <input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="VD: Phụ cấp xăng xe"
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Cách tính
             </label>
             <select
@@ -2509,7 +2509,7 @@ function CreateSalaryComponentDialog({
                     .value as payrollService.CalculationType,
                 }))
               }
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             >
               <option value="FIXED">Cố định (FIXED)</option>
               <option value="FORMULA">Công thức (FORMULA)</option>
@@ -2517,7 +2517,7 @@ function CreateSalaryComponentDialog({
             </select>
           </div>
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+            <label className="flex items-center gap-2 text-[0.8125rem] cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.isTaxable}
@@ -2527,7 +2527,7 @@ function CreateSalaryComponentDialog({
               />
               Chịu thuế TNCN
             </label>
-            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+            <label className="flex items-center gap-2 text-[0.8125rem] cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.isInsurable}
@@ -2539,7 +2539,7 @@ function CreateSalaryComponentDialog({
             </label>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Mô tả
             </label>
             <textarea
@@ -2548,21 +2548,21 @@ function CreateSalaryComponentDialog({
                 setForm((f) => ({ ...f, description: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -2706,7 +2706,7 @@ function CreateAdjustmentDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-[480px]">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Tạo điều chỉnh lương</h3>
+          <h3 className="text-base">Tạo điều chỉnh lương</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -2714,20 +2714,20 @@ function CreateAdjustmentDialog({
         <div className="p-4 space-y-3">
           {/* Searchable employee combobox */}
           <div className="relative">
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Nhân viên *{" "}
               {selectedUser && <span className="text-green-600">✓</span>}
             </label>
             {selectedUser ? (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-500 bg-input-background">
-                <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+                <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.5625rem] shrink-0">
                   {selectedUser.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12px] truncate">
+                  <div className="text-xs truncate">
                     {selectedUser.fullName}
                   </div>
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-[0.625rem] text-muted-foreground">
                     {selectedUser.departmentName &&
                       `${selectedUser.departmentName} • `}
                     {selectedUser.userCode}
@@ -2738,7 +2738,7 @@ function CreateAdjustmentDialog({
                     setSelectedUser(null);
                     setEmpDropdownOpen(true);
                   }}
-                  className="text-[11px] text-blue-600 hover:underline shrink-0"
+                  className="text-[0.6875rem] text-blue-600 hover:underline shrink-0"
                 >
                   Đổi
                 </button>
@@ -2763,7 +2763,7 @@ function CreateAdjustmentDialog({
                   onFocus={() =>
                     empSearch.length >= 2 && setEmpDropdownOpen(true)
                   }
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                 />
                 {empDropdownOpen && empList.length > 0 && (
                   <>
@@ -2780,14 +2780,14 @@ function CreateAdjustmentDialog({
                             setEmpDropdownOpen(false);
                             setEmpSearch("");
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent text-[12px]"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent text-xs"
                         >
-                          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.5625rem] shrink-0">
                             {u.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="truncate">{u.fullName}</div>
-                            <div className="text-[10px] text-muted-foreground">
+                            <div className="text-[0.625rem] text-muted-foreground">
                               {u.departmentName && `${u.departmentName} • `}
                               {u.userCode}
                             </div>
@@ -2795,7 +2795,7 @@ function CreateAdjustmentDialog({
                         </button>
                       ))}
                       {empList.length === 0 && (
-                        <div className="px-3 py-2 text-[12px] text-muted-foreground">
+                        <div className="px-3 py-2 text-xs text-muted-foreground">
                           Không tìm thấy
                         </div>
                       )}
@@ -2808,7 +2808,7 @@ function CreateAdjustmentDialog({
 
           {/* Adjustment type */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Loại điều chỉnh *
             </label>
             <div className="flex gap-2">
@@ -2818,7 +2818,7 @@ function CreateAdjustmentDialog({
                 <button
                   key={t}
                   onClick={() => setType(t)}
-                  className={`flex-1 py-2 rounded-lg text-[11px] border transition-colors ${type === t ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600" : "border-border text-muted-foreground hover:bg-accent"}`}
+                  className={`flex-1 py-2 rounded-lg text-[0.6875rem] border transition-colors ${type === t ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600" : "border-border text-muted-foreground hover:bg-accent"}`}
                 >
                   {adjustTypeLabels[t]}
                 </button>
@@ -2828,7 +2828,7 @@ function CreateAdjustmentDialog({
 
           {/* Amount */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Số tiền (VND) *
             </label>
             <input
@@ -2837,22 +2837,22 @@ function CreateAdjustmentDialog({
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
               min={1}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
 
           {/* Payroll period selector */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Kỳ lương áp dụng{" "}
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[0.625rem] text-muted-foreground">
                 — tuỳ chọn
               </span>
             </label>
             <select
               value={payrollPeriodId}
               onChange={(e) => setPayrollPeriodId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             >
               <option value="">Áp dụng vào kỳ gần nhất</option>
               {draftPeriods.map((p) => (
@@ -2866,7 +2866,7 @@ function CreateAdjustmentDialog({
 
           {/* Reason */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Lý do *
             </label>
             <textarea
@@ -2874,21 +2874,21 @@ function CreateAdjustmentDialog({
               onChange={(e) => setReason(e.target.value)}
               rows={3}
               placeholder="Nhập lý do điều chỉnh lương..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />

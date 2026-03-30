@@ -205,7 +205,7 @@ export function InvoicesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <Receipt size={22} className="text-blue-600" /> Hóa đơn
         </h1>
         <div className="flex gap-2">
@@ -219,7 +219,7 @@ export function InvoicesPage() {
           {canManage && (
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
             >
               <Plus size={16} /> Tạo hóa đơn
             </button>
@@ -263,8 +263,8 @@ export function InvoicesPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">{s.label}</div>
-              <div className={`text-[16px] ${s.color}`}>{s.value}</div>
+              <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
+              <div className={`text-base ${s.color}`}>{s.value}</div>
             </div>
           </div>
         ))}
@@ -282,13 +282,13 @@ export function InvoicesPage() {
             placeholder="Tìm mã, khách hàng..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả trạng thái</option>
           {Object.entries(invoiceStatusLabels).map(([k, v]) => (
@@ -299,7 +299,7 @@ export function InvoicesPage() {
         </select>
         <button
           onClick={() => setOverdueOnly(!overdueOnly)}
-          className={`px-3 py-2 rounded-lg border text-[13px] flex items-center gap-1 ${overdueOnly ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-900/20" : "border-border hover:bg-accent"}`}
+          className={`px-3 py-2 rounded-lg border text-[0.8125rem] flex items-center gap-1 ${overdueOnly ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-900/20" : "border-border hover:bg-accent"}`}
         >
           <AlertTriangle size={13} /> Quá hạn
         </button>
@@ -309,30 +309,30 @@ export function InvoicesPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Hóa đơn
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Khách hàng
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Trạng thái
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Tổng tiền
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Còn lại
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground hidden xl:table-cell">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground hidden xl:table-cell">
                     Hạn
                   </th>
                   <th className="px-4 py-3 w-10" />
@@ -349,22 +349,22 @@ export function InvoicesPage() {
                       <div className="font-medium">
                         {inv.invoiceCode ?? "—"}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {fmtDate(inv.issuedDate)}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[12px] hidden md:table-cell">
+                    <td className="px-4 py-3 text-xs hidden md:table-cell">
                       {inv.client?.shortName ?? inv.client?.companyName ?? "—"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full w-fit ${invoiceStatusColors[inv.status]}`}
+                          className={`text-[0.625rem] px-2 py-0.5 rounded-full w-fit ${invoiceStatusColors[inv.status]}`}
                         >
                           {invoiceStatusLabels[inv.status]}
                         </span>
                         {inv.isOverdue && inv.daysOverdue != null && (
-                          <span className="text-[10px] text-red-500">
+                          <span className="text-[0.625rem] text-red-500">
                             Quá {inv.daysOverdue} ngày
                           </span>
                         )}
@@ -384,7 +384,7 @@ export function InvoicesPage() {
                         {fmtVND(inv.outstandingAmount)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-[12px] text-muted-foreground hidden xl:table-cell">
+                    <td className="px-4 py-3 text-center text-xs text-muted-foreground hidden xl:table-cell">
                       {fmtDate(inv.dueDate)}
                     </td>
                     <td className="px-4 py-3">
@@ -408,24 +408,24 @@ export function InvoicesPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border flex items-center justify-between">
             <span>{total} hóa đơn</span>
             {totalPages > 1 && (
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchInvoices(page - 1)}
                   disabled={page <= 1}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Trước
                 </button>
-                <span className="px-2 py-1 text-[11px]">
+                <span className="px-2 py-1 text-[0.6875rem]">
                   {page}/{totalPages}
                 </span>
                 <button
                   onClick={() => fetchInvoices(page + 1)}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Sau
                 </button>
@@ -492,22 +492,22 @@ function InvoiceDetailModal({
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[13px] font-mono font-medium">
+                <span className="text-[0.8125rem] font-mono font-medium">
                   {inv.invoiceCode ?? "—"}
                 </span>
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full ${invoiceStatusColors[inv.status]}`}
+                  className={`text-[0.625rem] px-2 py-0.5 rounded-full ${invoiceStatusColors[inv.status]}`}
                 >
                   {invoiceStatusLabels[inv.status]}
                 </span>
                 {inv.isOverdue && (
-                  <span className="text-[10px] text-red-500 flex items-center gap-0.5">
+                  <span className="text-[0.625rem] text-red-500 flex items-center gap-0.5">
                     <AlertTriangle size={9} />
                     Quá hạn {inv.daysOverdue} ngày
                   </span>
                 )}
               </div>
-              <div className="text-[14px] mt-1">
+              <div className="text-sm mt-1">
                 {inv.client?.companyName ?? "—"}
               </div>
             </div>
@@ -544,31 +544,31 @@ function InvoiceDetailModal({
                 key={s.label}
                 className="bg-muted/30 rounded-lg p-2.5 text-center"
               >
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-[0.625rem] text-muted-foreground">
                   {s.label}
                 </div>
-                <div className={`text-[14px] ${s.color}`}>{s.value}</div>
+                <div className={`text-sm ${s.color}`}>{s.value}</div>
               </div>
             ))}
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-3 text-[13px]">
+          <div className="grid grid-cols-2 gap-3 text-[0.8125rem]">
             <div>
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Ngày phát hành
               </div>
               {fmtDate(inv.issuedDate)}
             </div>
             <div>
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Hạn thanh toán
               </div>
               {fmtDate(inv.dueDate)}
             </div>
             {inv.contract && (
               <div>
-                <div className="text-[11px] text-muted-foreground mb-0.5">
+                <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                   Hợp đồng
                 </div>
                 {inv.contract.title}
@@ -576,7 +576,7 @@ function InvoiceDetailModal({
             )}
             {inv.project && (
               <div>
-                <div className="text-[11px] text-muted-foreground mb-0.5">
+                <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                   Dự án
                 </div>
                 {inv.project.projectName}
@@ -587,23 +587,23 @@ function InvoiceDetailModal({
           {/* Line items */}
           {inv.items && inv.items.length > 0 && (
             <div>
-              <div className="text-[12px] text-muted-foreground mb-2">
+              <div className="text-xs text-muted-foreground mb-2">
                 Chi tiết dòng hàng
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px]">
+                <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-muted/50">
-                      <th className="text-left px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-left px-3 py-2 text-[0.6875rem] text-muted-foreground">
                         Mô tả
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground">
                         SL
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground">
                         Đơn giá
                       </th>
-                      <th className="text-right px-3 py-2 text-[11px] text-muted-foreground">
+                      <th className="text-right px-3 py-2 text-[0.6875rem] text-muted-foreground">
                         Thành tiền
                       </th>
                     </tr>
@@ -657,7 +657,7 @@ function InvoiceDetailModal({
 
           {/* Notes */}
           {inv.notes && (
-            <div className="bg-muted/30 rounded-lg p-3 text-[12px] text-muted-foreground">
+            <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground">
               {inv.notes}
             </div>
           )}
@@ -670,19 +670,19 @@ function InvoiceDetailModal({
                 onChange={(e) => setDisputeReason(e.target.value)}
                 placeholder="Lý do tranh chấp (ít nhất 10 ký tự)..."
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-orange-300 bg-input-background text-[13px] resize-none"
+                className="w-full px-3 py-2 rounded-lg border border-orange-300 bg-input-background text-[0.8125rem] resize-none"
                 autoFocus
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => setDisputeMode(false)}
-                  className="flex-1 py-2 border border-border rounded-lg text-[13px]"
+                  className="flex-1 py-2 border border-border rounded-lg text-[0.8125rem]"
                 >
                   Huỷ
                 </button>
                 <button
                   onClick={handleDispute}
-                  className="flex-1 py-2 bg-orange-600 text-white rounded-lg text-[13px]"
+                  className="flex-1 py-2 bg-orange-600 text-white rounded-lg text-[0.8125rem]"
                 >
                   Ghi nhận tranh chấp
                 </button>
@@ -696,7 +696,7 @@ function InvoiceDetailModal({
               {inv.status === "DRAFT" && (
                 <button
                   onClick={() => onAction(inv.id, "send")}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-blue-700"
+                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-blue-700"
                 >
                   <Send size={12} /> Gửi hóa đơn
                 </button>
@@ -704,7 +704,7 @@ function InvoiceDetailModal({
               {!["CANCELLED", "PAID", "DISPUTED"].includes(inv.status) && (
                 <button
                   onClick={() => setDisputeMode(true)}
-                  className="px-3 py-1.5 bg-orange-100 text-orange-700 dark:bg-orange-900/30 rounded-lg text-[12px] flex items-center gap-1"
+                  className="px-3 py-1.5 bg-orange-100 text-orange-700 dark:bg-orange-900/30 rounded-lg text-xs flex items-center gap-1"
                 >
                   <MessageSquare size={12} /> Tranh chấp
                 </button>
@@ -712,7 +712,7 @@ function InvoiceDetailModal({
               {!["CANCELLED", "PAID"].includes(inv.status) && (
                 <button
                   onClick={() => onAction(inv.id, "cancel")}
-                  className="px-3 py-1.5 bg-red-100 text-red-700 dark:bg-red-900/30 rounded-lg text-[12px] flex items-center gap-1"
+                  className="px-3 py-1.5 bg-red-100 text-red-700 dark:bg-red-900/30 rounded-lg text-xs flex items-center gap-1"
                 >
                   <Ban size={12} /> Huỷ
                 </button>
@@ -796,7 +796,7 @@ function InvoiceFormDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Tạo hóa đơn mới</h3>
+          <h3 className="text-base">Tạo hóa đơn mới</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -804,7 +804,7 @@ function InvoiceFormDialog({
         <div className="p-4 space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 ID Khách hàng *
               </label>
               <input
@@ -813,11 +813,11 @@ function InvoiceFormDialog({
                   setForm((f) => ({ ...f, clientId: e.target.value }))
                 }
                 placeholder="Client ID"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] font-mono"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] font-mono"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày phát hành *
               </label>
               <input
@@ -826,11 +826,11 @@ function InvoiceFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, issuedDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Hạn thanh toán *
               </label>
               <input
@@ -839,7 +839,7 @@ function InvoiceFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, dueDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
@@ -847,10 +847,10 @@ function InvoiceFormDialog({
           {/* Line items */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <div className="text-[13px] font-medium">Dòng hàng</div>
+              <div className="text-[0.8125rem] font-medium">Dòng hàng</div>
               <button
                 onClick={addItem}
-                className="px-2 py-1 text-[11px] border border-border rounded hover:bg-accent flex items-center gap-1"
+                className="px-2 py-1 text-[0.6875rem] border border-border rounded hover:bg-accent flex items-center gap-1"
               >
                 <Plus size={11} /> Thêm dòng
               </button>
@@ -868,7 +868,7 @@ function InvoiceFormDialog({
                       )
                     }
                     placeholder="Mô tả dịch vụ/hàng hoá *"
-                    className="col-span-5 px-3 py-2 rounded-lg border border-border bg-input-background text-[12px]"
+                    className="col-span-5 px-3 py-2 rounded-lg border border-border bg-input-background text-xs"
                   />
                   <input
                     type="number"
@@ -881,7 +881,7 @@ function InvoiceFormDialog({
                       )
                     }
                     placeholder="SL"
-                    className="col-span-2 px-3 py-2 rounded-lg border border-border bg-input-background text-[12px]"
+                    className="col-span-2 px-3 py-2 rounded-lg border border-border bg-input-background text-xs"
                   />
                   <input
                     type="number"
@@ -894,7 +894,7 @@ function InvoiceFormDialog({
                       )
                     }
                     placeholder="Đơn giá *"
-                    className="col-span-3 px-3 py-2 rounded-lg border border-border bg-input-background text-[12px]"
+                    className="col-span-3 px-3 py-2 rounded-lg border border-border bg-input-background text-xs"
                   />
                   <input
                     type="number"
@@ -908,7 +908,7 @@ function InvoiceFormDialog({
                     }
                     placeholder="Thuế"
                     step={0.01}
-                    className="col-span-1 px-2 py-2 rounded-lg border border-border bg-input-background text-[12px]"
+                    className="col-span-1 px-2 py-2 rounded-lg border border-border bg-input-background text-xs"
                   />
                   <button
                     onClick={() => removeItem(i)}
@@ -923,7 +923,7 @@ function InvoiceFormDialog({
           </div>
 
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ghi chú
             </label>
             <textarea
@@ -932,21 +932,21 @@ function InvoiceFormDialog({
                 setForm((f) => ({ ...f, notes: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -1045,7 +1045,7 @@ export function PaymentsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <CreditCard size={22} className="text-blue-600" /> Thanh toán
         </h1>
         <div className="flex gap-2">
@@ -1059,7 +1059,7 @@ export function PaymentsPage() {
           {canManage && (
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
             >
               <Plus size={16} /> Ghi nhận TT
             </button>
@@ -1097,8 +1097,8 @@ export function PaymentsPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">{s.label}</div>
-              <div className={`text-[16px] ${s.color}`}>{s.value}</div>
+              <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
+              <div className={`text-base ${s.color}`}>{s.value}</div>
             </div>
           </div>
         ))}
@@ -1109,7 +1109,7 @@ export function PaymentsPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả trạng thái</option>
           {Object.entries(paymentStatusLabels).map(([k, v]) => (
@@ -1121,7 +1121,7 @@ export function PaymentsPage() {
         <select
           value={methodFilter}
           onChange={(e) => setMethodFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả phương thức</option>
           {Object.entries(paymentMethodLabels).map(([k, v]) => (
@@ -1136,33 +1136,33 @@ export function PaymentsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Mã TT
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Khách hàng
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Số tiền
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Phương thức
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Hóa đơn
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground hidden xl:table-cell">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground hidden xl:table-cell">
                     Ngày
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Trạng thái
                   </th>
                   {canManage && <th className="px-4 py-3 w-20" />}
@@ -1175,16 +1175,16 @@ export function PaymentsPage() {
                     className="border-t border-border hover:bg-accent/50"
                   >
                     <td className="px-4 py-3">
-                      <div className="font-mono text-[12px]">
+                      <div className="font-mono text-xs">
                         {p.paymentCode ?? "—"}
                       </div>
                       {p.referenceNumber && (
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-[0.625rem] text-muted-foreground">
                           {p.referenceNumber}
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[12px] hidden md:table-cell">
+                    <td className="px-4 py-3 text-xs hidden md:table-cell">
                       {p.client?.shortName ?? p.client?.companyName ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -1192,26 +1192,26 @@ export function PaymentsPage() {
                         {fmtVND(p.amountInVnd)}
                       </div>
                       {p.currency !== "VND" && (
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-[0.625rem] text-muted-foreground">
                           {p.amount} {p.currency}
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[12px] hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs hidden lg:table-cell">
                       <div className="flex items-center gap-1">
                         <Banknote size={12} className="text-muted-foreground" />
                         {paymentMethodLabels[p.paymentMethod]}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                       {p.invoice?.invoiceCode ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-center text-[12px] text-muted-foreground hidden xl:table-cell">
+                    <td className="px-4 py-3 text-center text-xs text-muted-foreground hidden xl:table-cell">
                       {fmtDate(p.paymentDate)}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${paymentStatusColors[p.status]}`}
+                        className={`text-[0.625rem] px-2 py-0.5 rounded-full ${paymentStatusColors[p.status]}`}
                       >
                         {paymentStatusLabels[p.status]}
                       </span>
@@ -1221,7 +1221,7 @@ export function PaymentsPage() {
                         {p.status === "COMPLETED" && (
                           <button
                             onClick={() => handleRefund(p.id)}
-                            className="text-[11px] px-2 py-1 rounded bg-orange-100 text-orange-700 dark:bg-orange-900/30 hover:bg-orange-200"
+                            className="text-[0.6875rem] px-2 py-1 rounded bg-orange-100 text-orange-700 dark:bg-orange-900/30 hover:bg-orange-200"
                           >
                             Hoàn tiền
                           </button>
@@ -1243,24 +1243,24 @@ export function PaymentsPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border flex items-center justify-between">
             <span>{total} thanh toán</span>
             {totalPages > 1 && (
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchPayments(page - 1)}
                   disabled={page <= 1}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Trước
                 </button>
-                <span className="px-2 py-1 text-[11px]">
+                <span className="px-2 py-1 text-[0.6875rem]">
                   {page}/{totalPages}
                 </span>
                 <button
                   onClick={() => fetchPayments(page + 1)}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Sau
                 </button>
@@ -1335,7 +1335,7 @@ function AddPaymentDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Ghi nhận thanh toán</h3>
+          <h3 className="text-base">Ghi nhận thanh toán</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -1343,7 +1343,7 @@ function AddPaymentDialog({
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 ID Khách hàng *
               </label>
               <input
@@ -1352,11 +1352,11 @@ function AddPaymentDialog({
                   setForm((f) => ({ ...f, clientId: e.target.value }))
                 }
                 placeholder="Client ID"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[12px] font-mono"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-xs font-mono"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 ID Hóa đơn
               </label>
               <input
@@ -1365,13 +1365,13 @@ function AddPaymentDialog({
                   setForm((f) => ({ ...f, invoiceId: e.target.value }))
                 }
                 placeholder="Invoice ID (tuỳ chọn)"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[12px] font-mono"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-xs font-mono"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Số tiền *
               </label>
               <input
@@ -1381,11 +1381,11 @@ function AddPaymentDialog({
                   setForm((f) => ({ ...f, amount: e.target.value }))
                 }
                 placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày thanh toán *
               </label>
               <input
@@ -1394,12 +1394,12 @@ function AddPaymentDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, paymentDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Phương thức *
             </label>
             <select
@@ -1410,7 +1410,7 @@ function AddPaymentDialog({
                   paymentMethod: e.target.value as PaymentMethod,
                 }))
               }
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             >
               {Object.entries(paymentMethodLabels).map(([k, v]) => (
                 <option key={k} value={k}>
@@ -1421,7 +1421,7 @@ function AddPaymentDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Số tham chiếu
               </label>
               <input
@@ -1430,11 +1430,11 @@ function AddPaymentDialog({
                   setForm((f) => ({ ...f, referenceNumber: e.target.value }))
                 }
                 placeholder="Mã GD ngân hàng..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngân hàng nhận
               </label>
               <input
@@ -1443,12 +1443,12 @@ function AddPaymentDialog({
                   setForm((f) => ({ ...f, receivedBankName: e.target.value }))
                 }
                 placeholder="Vietcombank..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ghi chú
             </label>
             <textarea
@@ -1457,21 +1457,21 @@ function AddPaymentDialog({
                 setForm((f) => ({ ...f, notes: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />

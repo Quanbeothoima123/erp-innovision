@@ -125,8 +125,8 @@ function MiniStat({
   };
   return (
     <div className={`rounded-lg border p-2 text-center ${c[color] ?? ""}`}>
-      <div className="text-[18px] font-semibold">{value}</div>
-      <div className="text-[10px] opacity-70">{label}</div>
+      <div className="text-lg font-semibold">{value}</div>
+      <div className="text-[0.625rem] opacity-70">{label}</div>
     </div>
   );
 }
@@ -300,7 +300,7 @@ export function MyAttendancePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[20px] font-semibold">Chấm công của tôi</h1>
+      <h1 className="text-xl font-semibold">Chấm công của tôi</h1>
 
       {/* Monthly summary bar */}
       <div className="bg-card border border-border rounded-xl p-4">
@@ -317,7 +317,7 @@ export function MyAttendancePage() {
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="text-[14px] font-medium">
+            <span className="text-sm font-medium">
               {monthNames[calMonth]} {calYear}
             </span>
             <button
@@ -360,18 +360,18 @@ export function MyAttendancePage() {
               color="blue"
             />
             <div className="rounded-lg border p-2 text-center bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
-              <div className="text-[18px] font-semibold">
+              <div className="text-lg font-semibold">
                 {Math.floor((monthStats?.totalLateMinutes ?? 0) / 60) > 0
                   ? `${Math.floor((monthStats?.totalLateMinutes ?? 0) / 60)}h${(monthStats?.totalLateMinutes ?? 0) % 60}p`
                   : `${monthStats?.totalLateMinutes ?? 0}p`}
               </div>
-              <div className="text-[10px] opacity-70">Đi trễ</div>
+              <div className="text-[0.625rem] opacity-70">Đi trễ</div>
             </div>
             <div className="rounded-lg border p-2 text-center bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800">
-              <div className="text-[18px] font-semibold">
+              <div className="text-lg font-semibold">
                 {((monthStats?.totalWorkMinutes ?? 0) / 60).toFixed(1)}h
               </div>
-              <div className="text-[10px] opacity-70">Tổng giờ làm</div>
+              <div className="text-[0.625rem] opacity-70">Tổng giờ làm</div>
             </div>
           </div>
         )}
@@ -399,7 +399,7 @@ export function MyAttendancePage() {
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key as typeof activeTab)}
-            className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-3 py-2.5 text-[0.8125rem] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             {t.icon}
             {t.label}
@@ -411,7 +411,7 @@ export function MyAttendancePage() {
       {activeTab === "checkin" && (
         <div className="bg-card border border-border rounded-xl p-5 space-y-4">
           <div>
-            <h2 className="text-[16px] font-medium">
+            <h2 className="text-base font-medium">
               Hôm nay —{" "}
               {new Date(TODAY).toLocaleDateString("vi-VN", {
                 weekday: "long",
@@ -422,12 +422,12 @@ export function MyAttendancePage() {
             </h2>
             <div className="flex gap-2 mt-2 flex-wrap">
               {hasCheckin && (
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                <span className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                   ✓ Đã gửi check-in
                 </span>
               )}
               {hasCheckout && (
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                <span className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                   ✓ Đã gửi check-out
                 </span>
               )}
@@ -455,18 +455,18 @@ export function MyAttendancePage() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <div className="text-[13px]">
+                      <div className="text-[0.8125rem]">
                         {rType === "CHECK_IN" ? "Check-in" : "Check-out"} —{" "}
                         {fmtTime(rTime)}
                       </div>
                       {r.note && (
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-[0.6875rem] text-muted-foreground">
                           {r.note}
                         </div>
                       )}
                     </div>
                     <span
-                      className={`text-[11px] px-2 py-0.5 rounded-full ${reqStatusColors[r.status] ?? ""}`}
+                      className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${reqStatusColors[r.status] ?? ""}`}
                     >
                       {reqStatusLabels[r.status] ?? r.status}
                     </span>
@@ -479,13 +479,13 @@ export function MyAttendancePage() {
           {/* Ca làm */}
           {shifts.length > 0 && (
             <div>
-              <label className="text-[11px] text-muted-foreground block mb-1">
+              <label className="text-[0.6875rem] text-muted-foreground block mb-1">
                 Ca làm việc
               </label>
               <select
                 value={selectedShift}
                 onChange={(e) => setSelectedShift(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                className="px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
               >
                 {shifts.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -497,7 +497,7 @@ export function MyAttendancePage() {
           )}
 
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Ghi chú (tuỳ chọn)
             </label>
             <input
@@ -505,7 +505,7 @@ export function MyAttendancePage() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="VD: Làm việc remote..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -513,7 +513,7 @@ export function MyAttendancePage() {
             <button
               onClick={() => sendRequest("CHECK_IN")}
               disabled={sending || hasCheckin}
-              className="flex-1 min-w-[140px] py-3 bg-emerald-600 text-white rounded-xl text-[14px] font-medium flex items-center justify-center gap-2 hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 min-w-[140px] py-3 bg-emerald-600 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sending ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -525,7 +525,7 @@ export function MyAttendancePage() {
             <button
               onClick={() => sendRequest("CHECK_OUT")}
               disabled={sending || hasCheckout}
-              className="flex-1 min-w-[140px] py-3 bg-blue-600 text-white rounded-xl text-[14px] font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 min-w-[140px] py-3 bg-blue-600 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sending ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -544,16 +544,16 @@ export function MyAttendancePage() {
           {loadingData ? (
             <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
               <Loader2 size={16} className="animate-spin" />
-              <span className="text-[13px]">Đang tải...</span>
+              <span className="text-[0.8125rem]">Đang tải...</span>
             </div>
           ) : myReqs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <ListChecks size={28} className="opacity-20 mb-2" />
-              <p className="text-[13px]">Chưa có yêu cầu chấm công nào</p>
+              <p className="text-[0.8125rem]">Chưa có yêu cầu chấm công nào</p>
             </div>
           ) : (
             <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <div className="hidden sm:grid grid-cols-[100px_120px_1fr_100px_100px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+              <div className="hidden sm:grid grid-cols-[100px_120px_1fr_100px_100px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide">
                 <span>Loại</span>
                 <span>Thời gian</span>
                 <span>Ghi chú</span>
@@ -570,7 +570,7 @@ export function MyAttendancePage() {
                       className="grid sm:grid-cols-[100px_120px_1fr_100px_100px] gap-3 px-4 py-3 items-center"
                     >
                       <div
-                        className={`flex items-center gap-1.5 text-[12px] ${rType === "CHECK_IN" ? "text-emerald-600" : "text-blue-600"}`}
+                        className={`flex items-center gap-1.5 text-xs ${rType === "CHECK_IN" ? "text-emerald-600" : "text-blue-600"}`}
                       >
                         {rType === "CHECK_IN" ? (
                           <LogIn size={13} />
@@ -579,17 +579,17 @@ export function MyAttendancePage() {
                         )}
                         {rType === "CHECK_IN" ? "Check-in" : "Check-out"}
                       </div>
-                      <div className="text-[12px]">{fmtTime(rTime)}</div>
-                      <div className="text-[12px] text-muted-foreground">
+                      <div className="text-xs">{fmtTime(rTime)}</div>
+                      <div className="text-xs text-muted-foreground">
                         {r.note || "—"}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {rTime
                           ? new Date(rTime).toLocaleDateString("vi-VN")
                           : "—"}
                       </div>
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full ${reqStatusColors[r.status] ?? ""}`}
+                        className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${reqStatusColors[r.status] ?? ""}`}
                       >
                         {reqStatusLabels[r.status] ?? r.status}
                       </span>
@@ -619,7 +619,7 @@ export function MyAttendancePage() {
               >
                 <ChevronLeft size={14} />
               </button>
-              <span className="text-[14px] font-medium">
+              <span className="text-sm font-medium">
                 {monthNames[calMonth]} {calYear}
               </span>
               <button
@@ -659,7 +659,7 @@ export function MyAttendancePage() {
               {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map((d) => (
                 <div
                   key={d}
-                  className="py-2 text-center text-[11px] text-muted-foreground font-medium"
+                  className="py-2 text-center text-[0.6875rem] text-muted-foreground font-medium"
                 >
                   {d}
                 </div>
@@ -686,19 +686,19 @@ export function MyAttendancePage() {
                       className={`border-b border-r border-border min-h-[60px] p-1.5 cursor-pointer transition ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : isToday ? "bg-blue-50/50 dark:bg-blue-900/10" : record?.status === "MANUAL_ADJUSTED" ? "bg-amber-50 dark:bg-amber-900/10" : isWeekend || isHoliday ? "bg-muted/30" : "hover:bg-muted/30"}`}
                     >
                       <div
-                        className={`text-[12px] font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : isWeekend || isHoliday ? "text-muted-foreground" : ""}`}
+                        className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-600 text-white" : isWeekend || isHoliday ? "text-muted-foreground" : ""}`}
                       >
                         {day}
                       </div>
                       {record && (
                         <span
-                          className={`text-[9px] px-1 py-0.5 rounded ${attStatusBg[record.status] ?? ""}`}
+                          className={`text-[0.5625rem] px-1 py-0.5 rounded ${attStatusBg[record.status] ?? ""}`}
                         >
                           {attStatusLabels[record.status] ?? record.status}
                         </span>
                       )}
                       {isHoliday && !record && (
-                        <span className="text-[9px] px-1 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                        <span className="text-[0.5625rem] px-1 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                           Lễ
                         </span>
                       )}
@@ -710,7 +710,7 @@ export function MyAttendancePage() {
           </div>
 
           {/* Calendar legend */}
-          <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap gap-3 text-[0.6875rem] text-muted-foreground">
             {[
               {
                 color: "bg-emerald-100 dark:bg-emerald-900/30",
@@ -740,13 +740,13 @@ export function MyAttendancePage() {
           {/* Selected day detail */}
           {selectedDay && selectedDayRecord && (
             <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-              <h3 className="text-[14px] font-medium">
+              <h3 className="text-sm font-medium">
                 Chi tiết ngày{" "}
                 {new Date(selectedDay).toLocaleDateString("vi-VN")}
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[12px]">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">
+                  <span className="text-muted-foreground block text-[0.6875rem]">
                     Trạng thái
                   </span>
                   <span
@@ -756,19 +756,19 @@ export function MyAttendancePage() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">
+                  <span className="text-muted-foreground block text-[0.6875rem]">
                     Check-in
                   </span>
                   {fmtTime(selectedDayRecord.checkInAt)}
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">
+                  <span className="text-muted-foreground block text-[0.6875rem]">
                     Check-out
                   </span>
                   {fmtTime(selectedDayRecord.checkOutAt)}
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">
+                  <span className="text-muted-foreground block text-[0.6875rem]">
                     Giờ làm
                   </span>
                   {Math.floor((selectedDayRecord.totalWorkMinutes ?? 0) / 60)}h
@@ -776,7 +776,7 @@ export function MyAttendancePage() {
                 </div>
                 {(selectedDayRecord.lateMinutes ?? 0) > 0 && (
                   <div>
-                    <span className="text-muted-foreground block text-[11px]">
+                    <span className="text-muted-foreground block text-[0.6875rem]">
                       Phút trễ
                     </span>
                     <span className="text-amber-600">
@@ -786,7 +786,7 @@ export function MyAttendancePage() {
                 )}
                 {selectedDayRecord.note && (
                   <div className="col-span-2">
-                    <span className="text-muted-foreground block text-[11px]">
+                    <span className="text-muted-foreground block text-[0.6875rem]">
                       Ghi chú
                     </span>
                     {selectedDayRecord.note}
@@ -923,11 +923,11 @@ export function ShiftsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] font-semibold">Ca làm việc</h1>
+        <h1 className="text-xl font-semibold">Ca làm việc</h1>
         {isAdmin && (
           <button
             onClick={openCreate}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition"
           >
             <Plus size={14} /> Thêm ca
           </button>
@@ -937,7 +937,7 @@ export function ShiftsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
           <Loader2 size={16} className="animate-spin" />
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -949,18 +949,18 @@ export function ShiftsPage() {
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <div className="text-[14px] font-medium">{s.name}</div>
-                  <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                  <div className="text-sm font-medium">{s.name}</div>
+                  <span className="font-mono text-[0.625rem] bg-muted px-1.5 py-0.5 rounded">
                     {s.code}
                   </span>
                 </div>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${s.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-slate-100 text-slate-500"}`}
+                  className={`text-[0.625rem] px-1.5 py-0.5 rounded-full ${s.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-slate-100 text-slate-500"}`}
                 >
                   {s.isActive ? "Hoạt động" : "Vô hiệu"}
                 </span>
               </div>
-              <div className="text-[13px] text-muted-foreground space-y-0.5">
+              <div className="text-[0.8125rem] text-muted-foreground space-y-0.5">
                 <div className="flex items-center gap-1.5">
                   <Clock size={11} /> {s.startTime} — {s.endTime}
                 </div>
@@ -979,13 +979,13 @@ export function ShiftsPage() {
                 >
                   <button
                     onClick={() => openEdit(s)}
-                    className="p-1.5 rounded-lg border border-border hover:bg-accent transition text-[12px] flex items-center gap-1"
+                    className="p-1.5 rounded-lg border border-border hover:bg-accent transition text-xs flex items-center gap-1"
                   >
                     ✏️ Sửa
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(s.id)}
-                    className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition text-[12px]"
+                    className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition text-xs"
                   >
                     🗑
                   </button>
@@ -1004,7 +1004,7 @@ export function ShiftsPage() {
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-[15px] font-medium">
+              <h3 className="text-[0.9375rem] font-medium">
                 {editShift ? "Sửa ca làm việc" : "Thêm ca làm việc"}
               </h3>
               <button
@@ -1048,7 +1048,7 @@ export function ShiftsPage() {
                 },
               ].map((f) => (
                 <div key={f.key}>
-                  <label className="text-[12px] text-muted-foreground block mb-1">
+                  <label className="text-xs text-muted-foreground block mb-1">
                     {f.label}
                   </label>
                   <input
@@ -1064,12 +1064,12 @@ export function ShiftsPage() {
                       }))
                     }
                     placeholder={f.placeholder}
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               ))}
               <div>
-                <label className="text-[12px] text-muted-foreground block mb-1">
+                <label className="text-xs text-muted-foreground block mb-1">
                   Loại ca
                 </label>
                 <select
@@ -1077,7 +1077,7 @@ export function ShiftsPage() {
                   onChange={(e) =>
                     setForm((p) => ({ ...p, shiftType: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
                 >
                   {["MORNING", "AFTERNOON", "NIGHT", "FLEXIBLE", "SPLIT"].map(
                     (t) => (
@@ -1100,7 +1100,7 @@ export function ShiftsPage() {
                 />
                 <label
                   htmlFor="shiftActive"
-                  className="text-[13px] cursor-pointer"
+                  className="text-[0.8125rem] cursor-pointer"
                 >
                   Kích hoạt
                 </label>
@@ -1109,14 +1109,14 @@ export function ShiftsPage() {
             <div className="flex justify-end gap-2 p-4 border-t border-border">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 disabled:opacity-50"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 disabled:opacity-50"
               >
                 {saving && <Loader2 size={13} className="animate-spin" />}{" "}
                 {editShift ? "Lưu" : "Tạo ca"}
@@ -1133,11 +1133,11 @@ export function ShiftsPage() {
             onClick={() => setDeleteConfirm(null)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
-            <p className="text-[14px] font-medium">Xác nhận xoá ca làm việc?</p>
+            <p className="text-sm font-medium">Xác nhận xoá ca làm việc?</p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-3 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-3 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
@@ -1157,7 +1157,7 @@ export function ShiftsPage() {
                   }
                   setDeleteConfirm(null);
                 }}
-                className="px-3 py-2 bg-red-600 text-white rounded-lg text-[13px] hover:bg-red-700"
+                className="px-3 py-2 bg-red-600 text-white rounded-lg text-[0.8125rem] hover:bg-red-700"
               >
                 Xoá
               </button>
@@ -1181,10 +1181,10 @@ export function ShiftsPage() {
                   <Clock size={15} />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold leading-tight">
+                  <h3 className="text-[0.9375rem] font-semibold leading-tight">
                     {selectedShift.name}
                   </h3>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[0.6875rem] text-muted-foreground">
                     {membersLoading
                       ? "Đang tải..."
                       : `${shiftMembers.length} nhân viên`}
@@ -1200,7 +1200,7 @@ export function ShiftsPage() {
             </div>
 
             {/* Shift info bar */}
-            <div className="px-5 py-2 border-b border-border bg-muted/30 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+            <div className="px-5 py-2 border-b border-border bg-muted/30 flex flex-wrap gap-3 text-[0.6875rem] text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Clock size={10} /> {selectedShift.startTime} —{" "}
                 {selectedShift.endTime}
@@ -1216,12 +1216,12 @@ export function ShiftsPage() {
               {membersLoading ? (
                 <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
                   <Loader2 size={18} className="animate-spin" />
-                  <span className="text-[13px]">Đang tải nhân viên...</span>
+                  <span className="text-[0.8125rem]">Đang tải nhân viên...</span>
                 </div>
               ) : shiftMembers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                   <Users size={32} className="opacity-20 mb-2" />
-                  <p className="text-[13px]">
+                  <p className="text-[0.8125rem]">
                     Chưa có nhân viên nào trong ca này
                   </p>
                 </div>
@@ -1242,7 +1242,7 @@ export function ShiftsPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-[13px] font-semibold text-blue-600 dark:text-blue-400">
+                          <span className="text-[0.8125rem] font-semibold text-blue-600 dark:text-blue-400">
                             {m.fullName
                               .split(" ")
                               .slice(-2)
@@ -1253,10 +1253,10 @@ export function ShiftsPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium truncate group-hover:text-blue-600 transition">
+                        <div className="text-[0.8125rem] font-medium truncate group-hover:text-blue-600 transition">
                           {m.fullName}
                         </div>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-2">
+                        <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-2">
                           <span className="flex items-center gap-1">
                             <Building2 size={10} />
                             {m.department?.name ?? "—"}
@@ -1269,7 +1269,7 @@ export function ShiftsPage() {
                       </div>
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                          className={`text-[0.625rem] px-1.5 py-0.5 rounded-full font-medium ${
                             m.employmentStatus === "ACTIVE"
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                               : m.employmentStatus === "PROBATION"
@@ -1296,7 +1296,7 @@ export function ShiftsPage() {
 
             {/* Footer */}
             {!membersLoading && shiftMembers.length > 0 && (
-              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[11px] text-muted-foreground">
+              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[0.6875rem] text-muted-foreground">
                 {shiftMembers.length} nhân viên đang trong ca này
               </div>
             )}
@@ -1397,12 +1397,12 @@ export function HolidaysPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] font-semibold">Ngày lễ</h1>
+        <h1 className="text-xl font-semibold">Ngày lễ</h1>
         <div className="flex items-center gap-2">
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           >
             {[2023, 2024, 2025, 2026].map((y) => (
               <option key={y} value={y}>
@@ -1413,7 +1413,7 @@ export function HolidaysPage() {
           {isAdmin && (
             <button
               onClick={openCreate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700"
             >
               <Plus size={14} /> Thêm
             </button>
@@ -1424,11 +1424,11 @@ export function HolidaysPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
           <Loader2 size={16} className="animate-spin" />
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="grid grid-cols-[120px_1fr_2fr_80px_80px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="grid grid-cols-[120px_1fr_2fr_80px_80px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide">
             <span>Ngày</span>
             <span>Tên ngày lễ</span>
             <span>Mô tả</span>
@@ -1437,7 +1437,7 @@ export function HolidaysPage() {
           </div>
           <div className="divide-y divide-border">
             {holidays.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground text-[13px]">
+              <div className="text-center py-12 text-muted-foreground text-[0.8125rem]">
                 Không có ngày lễ nào trong năm {year}
               </div>
             )}
@@ -1448,21 +1448,21 @@ export function HolidaysPage() {
                   key={h.id}
                   className="grid grid-cols-[120px_1fr_2fr_80px_80px] gap-3 px-4 py-3 items-center hover:bg-muted/20 transition"
                 >
-                  <span className="text-[12px] font-mono">
+                  <span className="text-xs font-mono">
                     {new Date(h.date).toLocaleDateString("vi-VN")}
                   </span>
-                  <span className="text-[13px] font-medium">{h.name}</span>
-                  <span className="text-[12px] text-muted-foreground">
+                  <span className="text-[0.8125rem] font-medium">{h.name}</span>
+                  <span className="text-xs text-muted-foreground">
                     {h.description || "—"}
                   </span>
-                  <span className="text-[11px]">
+                  <span className="text-[0.6875rem]">
                     {h.isRecurring ? "✓ Có" : "Không"}
                   </span>
                   {isAdmin && (
                     <div className="flex gap-1">
                       <button
                         onClick={() => openEdit(h)}
-                        className="p-1 rounded hover:bg-accent text-[12px]"
+                        className="p-1 rounded hover:bg-accent text-xs"
                       >
                         ✏️
                       </button>
@@ -1482,7 +1482,7 @@ export function HolidaysPage() {
                             );
                           }
                         }}
-                        className="p-1 rounded hover:bg-accent text-[12px] text-red-500"
+                        className="p-1 rounded hover:bg-accent text-xs text-red-500"
                       >
                         🗑
                       </button>
@@ -1502,7 +1502,7 @@ export function HolidaysPage() {
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[15px] font-medium">
+              <h3 className="text-[0.9375rem] font-medium">
                 {editH ? "Sửa ngày lễ" : "Thêm ngày lễ"}
               </h3>
               <button
@@ -1518,7 +1518,7 @@ export function HolidaysPage() {
               { label: "Mô tả", key: "description", type: "text" },
             ].map((f) => (
               <div key={f.key}>
-                <label className="text-[12px] text-muted-foreground block mb-1">
+                <label className="text-xs text-muted-foreground block mb-1">
                   {f.label}
                 </label>
                 <input
@@ -1527,7 +1527,7 @@ export function HolidaysPage() {
                   onChange={(e) =>
                     setForm((p) => ({ ...p, [f.key]: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
                 />
               </div>
             ))}
@@ -1543,7 +1543,7 @@ export function HolidaysPage() {
               />
               <label
                 htmlFor="isRecurring"
-                className="text-[13px] cursor-pointer"
+                className="text-[0.8125rem] cursor-pointer"
               >
                 Lặp lại hàng năm
               </label>
@@ -1551,14 +1551,14 @@ export function HolidaysPage() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 disabled:opacity-50"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 disabled:opacity-50"
               >
                 {saving && <Loader2 size={13} className="animate-spin" />}{" "}
                 {editH ? "Lưu" : "Thêm"}

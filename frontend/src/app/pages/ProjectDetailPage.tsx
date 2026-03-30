@@ -420,7 +420,7 @@ export function ProjectDetailPage() {
     return (
       <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
         <Loader2 size={20} className="animate-spin" />
-        <span className="text-[13px]">Đang tải dự án...</span>
+        <span className="text-[0.8125rem]">Đang tải dự án...</span>
       </div>
     );
   }
@@ -431,12 +431,12 @@ export function ProjectDetailPage() {
           size={40}
           className="mx-auto mb-2 opacity-30 text-muted-foreground"
         />
-        <div className="text-[14px] text-muted-foreground">
+        <div className="text-sm text-muted-foreground">
           Không tìm thấy dự án
         </div>
         <button
           onClick={() => navigate("/projects")}
-          className="mt-4 px-4 py-2 border border-border rounded-lg text-[13px] hover:bg-accent flex items-center gap-1 mx-auto"
+          className="mt-4 px-4 py-2 border border-border rounded-lg text-[0.8125rem] hover:bg-accent flex items-center gap-1 mx-auto"
         >
           <ArrowLeft size={14} /> Quay lại
         </button>
@@ -482,7 +482,7 @@ export function ProjectDetailPage() {
   return (
     <div className="space-y-4 max-w-6xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <button
           onClick={() => navigate("/projects")}
           className="hover:text-foreground flex items-center gap-1"
@@ -501,27 +501,27 @@ export function ProjectDetailPage() {
             <div className="flex items-center gap-2 flex-wrap mb-1">
               {project.healthStatus && (
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full ${healthColors[project.healthStatus]}`}
+                  className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${healthColors[project.healthStatus]}`}
                 >
                   {healthEmoji[project.healthStatus]}{" "}
                   {healthLabels[project.healthStatus]}
                 </span>
               )}
               <span
-                className={`text-[11px] px-2 py-0.5 rounded-full ${statusColors[project.status]}`}
+                className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${statusColors[project.status]}`}
               >
                 {statusLabels[project.status]}
               </span>
               {project.priority && (
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded ${priorityColors[project.priority]}`}
+                  className={`text-[0.6875rem] px-2 py-0.5 rounded ${priorityColors[project.priority]}`}
                 >
                   {priorityLabels[project.priority]}
                 </span>
               )}
             </div>
-            <h1 className="text-[22px] mt-1">{project.projectName}</h1>
-            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 text-[12px] text-muted-foreground">
+            <h1 className="text-[1.375rem] mt-1">{project.projectName}</h1>
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
               {project.projectCode && (
                 <span className="font-mono">{project.projectCode}</span>
               )}
@@ -557,7 +557,7 @@ export function ProjectDetailPage() {
               <>
                 <button
                   onClick={() => setShowHealthEdit(true)}
-                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[12px] hover:bg-blue-700 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-700 flex items-center gap-1"
                 >
                   <Edit2 size={12} /> Cập nhật tiến độ
                 </button>
@@ -584,7 +584,7 @@ export function ProjectDetailPage() {
                                 handleCloseProject("COMPLETED");
                                 setShowMoreMenu(false);
                               }}
-                              className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-[0.8125rem] hover:bg-accent flex items-center gap-2"
                             >
                               <CheckCircle2
                                 size={14}
@@ -597,7 +597,7 @@ export function ProjectDetailPage() {
                                 handleCloseProject("CANCELLED");
                                 setShowMoreMenu(false);
                               }}
-                              className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent text-red-600 flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-[0.8125rem] hover:bg-accent text-red-600 flex items-center gap-2"
                             >
                               <X size={14} /> Huỷ dự án
                             </button>
@@ -606,7 +606,7 @@ export function ProjectDetailPage() {
                                 handleCloseProject("ARCHIVED");
                                 setShowMoreMenu(false);
                               }}
-                              className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent text-muted-foreground flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-[0.8125rem] hover:bg-accent text-muted-foreground flex items-center gap-2"
                             >
                               <FileText size={14} /> Lưu trữ
                             </button>
@@ -620,7 +620,7 @@ export function ProjectDetailPage() {
                               handleReopenProject();
                               setShowMoreMenu(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-[13px] hover:bg-accent flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-[0.8125rem] hover:bg-accent flex items-center gap-2"
                           >
                             <Activity size={14} className="text-blue-600" /> Mở
                             lại dự án
@@ -637,7 +637,7 @@ export function ProjectDetailPage() {
 
         {/* Progress bar */}
         <div className="mt-4">
-          <div className="flex justify-between text-[12px] text-muted-foreground mb-1">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
             <span>Tiến độ hoàn thành</span>
             <span className="font-medium text-foreground">
               {project.progressPercent}%
@@ -653,13 +653,13 @@ export function ProjectDetailPage() {
 
         {/* Financial summary */}
         {project.budgetAmount && (
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px]">
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             <div className="bg-muted/30 rounded-lg p-2.5 text-center">
-              <div className="text-[10px] text-muted-foreground">Ngân sách</div>
+              <div className="text-[0.625rem] text-muted-foreground">Ngân sách</div>
               <div className="font-medium">{fmtVND(project.budgetAmount)}</div>
             </div>
             <div className="bg-muted/30 rounded-lg p-2.5 text-center">
-              <div className="text-[10px] text-muted-foreground">Đã chi</div>
+              <div className="text-[0.625rem] text-muted-foreground">Đã chi</div>
               <div
                 className={`font-medium ${budgetPct > 90 ? "text-red-500" : ""}`}
               >
@@ -667,7 +667,7 @@ export function ProjectDetailPage() {
               </div>
             </div>
             <div className="bg-muted/30 rounded-lg p-2.5 text-center">
-              <div className="text-[10px] text-muted-foreground">Còn lại</div>
+              <div className="text-[0.625rem] text-muted-foreground">Còn lại</div>
               <div
                 className={`font-medium ${remaining && remaining < 0 ? "text-red-500" : "text-green-600"}`}
               >
@@ -675,7 +675,7 @@ export function ProjectDetailPage() {
               </div>
             </div>
             <div className="bg-muted/30 rounded-lg p-2.5 text-center">
-              <div className="text-[10px] text-muted-foreground">% đã dùng</div>
+              <div className="text-[0.625rem] text-muted-foreground">% đã dùng</div>
               <div
                 className={`font-medium ${budgetPct > 90 ? "text-red-500" : budgetPct > 70 ? "text-yellow-600" : "text-green-600"}`}
               >
@@ -716,7 +716,7 @@ export function ProjectDetailPage() {
             <button
               key={t.key}
               onClick={() => setActiveTab(t.key as TabKey)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-[13px] border-b-2 whitespace-nowrap transition-colors
+              className={`flex items-center gap-1.5 px-4 py-3 text-[0.8125rem] border-b-2 whitespace-nowrap transition-colors
                 ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
               {t.icon} {t.label}
@@ -733,7 +733,7 @@ export function ProjectDetailPage() {
                 <div className="flex justify-end">
                   <button
                     onClick={() => setShowEditProject(true)}
-                    className="px-3 py-1.5 border border-border rounded-lg text-[12px] hover:bg-accent flex items-center gap-1"
+                    className="px-3 py-1.5 border border-border rounded-lg text-xs hover:bg-accent flex items-center gap-1"
                   >
                     <Edit2 size={12} /> Sửa thông tin dự án
                   </button>
@@ -744,22 +744,22 @@ export function ProjectDetailPage() {
                 <div className="space-y-4">
                   {project.description ? (
                     <div>
-                      <div className="text-[12px] text-muted-foreground mb-1">
+                      <div className="text-xs text-muted-foreground mb-1">
                         Mô tả dự án
                       </div>
-                      <div className="text-[13px] leading-relaxed">
+                      <div className="text-[0.8125rem] leading-relaxed">
                         {project.description}
                       </div>
                     </div>
                   ) : isAdminMgr ? (
                     <button
                       onClick={() => setShowEditProject(true)}
-                      className="text-[13px] text-muted-foreground italic hover:text-blue-600 text-left"
+                      className="text-[0.8125rem] text-muted-foreground italic hover:text-blue-600 text-left"
                     >
                       + Thêm mô tả dự án...
                     </button>
                   ) : null}
-                  <div className="grid grid-cols-2 gap-3 text-[13px]">
+                  <div className="grid grid-cols-2 gap-3 text-[0.8125rem]">
                     {[
                       { label: "Bắt đầu", value: fmtDate(project.startDate) },
                       { label: "Kết thúc DK", value: fmtDate(project.endDate) },
@@ -773,13 +773,13 @@ export function ProjectDetailPage() {
                       },
                     ].map((f) => (
                       <div key={f.label}>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-[0.6875rem] text-muted-foreground">
                           {f.label}
                         </div>
                         <div
                           className={
                             f.value === "—"
-                              ? "text-muted-foreground text-[12px] italic"
+                              ? "text-muted-foreground text-xs italic"
                               : ""
                           }
                         >
@@ -789,8 +789,8 @@ export function ProjectDetailPage() {
                     ))}
                   </div>
                   {project.contract && (
-                    <div className="bg-muted/30 rounded-lg p-3 text-[12px]">
-                      <div className="text-[11px] text-muted-foreground mb-1">
+                    <div className="bg-muted/30 rounded-lg p-3 text-xs">
+                      <div className="text-[0.6875rem] text-muted-foreground mb-1">
                         Hợp đồng liên kết
                       </div>
                       <div>
@@ -804,7 +804,7 @@ export function ProjectDetailPage() {
 
                 {/* Right: Health snapshot */}
                 <div className="bg-muted/20 rounded-xl p-4 space-y-3">
-                  <div className="text-[13px] flex items-center gap-1">
+                  <div className="text-[0.8125rem] flex items-center gap-1">
                     <Gauge size={14} /> Health Snapshot
                   </div>
                   <div className="space-y-2">
@@ -839,7 +839,7 @@ export function ProjectDetailPage() {
                       },
                     ].map((s) => (
                       <div key={s.label}>
-                        <div className="flex justify-between text-[12px] mb-1">
+                        <div className="flex justify-between text-xs mb-1">
                           <span className="text-muted-foreground">
                             {s.label}
                           </span>
@@ -855,7 +855,7 @@ export function ProjectDetailPage() {
                     ))}
                   </div>
                   {overdueMilestones > 0 && (
-                    <div className="flex items-center gap-2 text-[12px] text-red-600 bg-red-50 dark:bg-red-900/10 rounded-lg p-2">
+                    <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 dark:bg-red-900/10 rounded-lg p-2">
                       <AlertTriangle size={14} /> {overdueMilestones} milestone
                       quá hạn
                     </div>
@@ -866,7 +866,7 @@ export function ProjectDetailPage() {
               {/* Expense by category chart */}
               {expensePieData.length > 0 && (
                 <div className="bg-card border border-border rounded-xl p-4">
-                  <div className="text-[13px] mb-3">
+                  <div className="text-[0.8125rem] mb-3">
                     Chi phí theo danh mục (đã duyệt)
                   </div>
                   <ResponsiveContainer width="100%" height={180}>
@@ -915,32 +915,32 @@ export function ProjectDetailPage() {
                 <div className="flex justify-end">
                   <button
                     onClick={() => setShowAddMember(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
                   >
                     <UserPlus size={14} /> Thêm thành viên
                   </button>
                 </div>
               )}
               <div className="overflow-x-auto">
-                <table className="w-full text-[13px]">
+                <table className="w-full text-[0.8125rem]">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                      <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                         Thành viên
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                         Vai trò
                       </th>
-                      <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                      <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                         Phân bổ
                       </th>
-                      <th className="text-center px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                         Billable
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                      <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                         Ngày vào
                       </th>
-                      <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                      <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                         Trạng thái
                       </th>
                       {isAdminMgr && <th className="px-4 py-3 w-20" />}
@@ -954,45 +954,45 @@ export function ProjectDetailPage() {
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                               {a.user?.fullName.split(" ").slice(-1)[0]?.[0] ??
                                 "?"}
                             </div>
                             <div>
-                              <div className="text-[13px]">
+                              <div className="text-[0.8125rem]">
                                 {a.user?.fullName ?? "—"}
                               </div>
-                              <div className="text-[10px] text-muted-foreground">
+                              <div className="text-[0.625rem] text-muted-foreground">
                                 {a.user?.userCode}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
                           {a.roleInProject ?? "—"}
                         </td>
-                        <td className="px-4 py-3 text-[12px] text-right hidden lg:table-cell">
+                        <td className="px-4 py-3 text-xs text-right hidden lg:table-cell">
                           {a.allocationPercent != null
                             ? `${a.allocationPercent}%`
                             : "—"}
                         </td>
                         <td className="px-4 py-3 text-center hidden md:table-cell">
                           {a.isBillable ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                               Billable
                             </span>
                           ) : (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[0.625rem] text-muted-foreground">
                               —
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                        <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                           {fmtDate(a.joinedAt)}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full ${a.status === "ACTIVE" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500"}`}
+                            className={`text-[0.625rem] px-2 py-0.5 rounded-full ${a.status === "ACTIVE" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500"}`}
                           >
                             {a.status === "ACTIVE" ? "Đang tham gia" : "Đã rời"}
                           </span>
@@ -1002,7 +1002,7 @@ export function ProjectDetailPage() {
                             {a.status === "ACTIVE" && (
                               <button
                                 onClick={() => handleEndAssignment(a.id)}
-                                className="text-[11px] text-red-500 hover:underline"
+                                className="text-[0.6875rem] text-red-500 hover:underline"
                               >
                                 Kết thúc
                               </button>
@@ -1038,7 +1038,7 @@ export function ProjectDetailPage() {
                     <button
                       key={s}
                       onClick={() => setMsStatusFilter(s)}
-                      className={`px-2.5 py-1 rounded-lg text-[12px] transition-colors ${msStatusFilter === s ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
+                      className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${msStatusFilter === s ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
                     >
                       {s === "" ? "Tất cả" : msStatusLabels[s]}
                     </button>
@@ -1047,7 +1047,7 @@ export function ProjectDetailPage() {
                 {isAdminMgr && (
                   <button
                     onClick={() => setShowAddMilestone(true)}
-                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-blue-700"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-blue-700"
                   >
                     <Plus size={13} /> Thêm milestone
                   </button>
@@ -1063,21 +1063,21 @@ export function ProjectDetailPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[13px] font-medium">
+                          <span className="text-[0.8125rem] font-medium">
                             {m.name}
                           </span>
                           {m.isOverdue && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-0.5">
+                            <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-0.5">
                               <AlertTriangle size={10} /> OVERDUE
                             </span>
                           )}
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full ${msStatusColors[m.status]}`}
+                            className={`text-[0.625rem] px-2 py-0.5 rounded-full ${msStatusColors[m.status]}`}
                           >
                             {msStatusLabels[m.status]}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-3 mt-1 text-[0.6875rem] text-muted-foreground">
                           {m.owner && (
                             <span className="flex items-center gap-1">
                               <Users size={10} /> {m.owner.fullName}
@@ -1096,7 +1096,7 @@ export function ProjectDetailPage() {
                           )}
                         </div>
                         {m.description && (
-                          <div className="text-[12px] text-muted-foreground mt-1.5">
+                          <div className="text-xs text-muted-foreground mt-1.5">
                             {m.description}
                           </div>
                         )}
@@ -1106,7 +1106,7 @@ export function ProjectDetailPage() {
                           {m.status !== "DONE" && (
                             <button
                               onClick={() => handleMarkDone(m.id)}
-                              className="px-2.5 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg text-[11px] hover:bg-green-200 flex items-center gap-1"
+                              className="px-2.5 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-lg text-[0.6875rem] hover:bg-green-200 flex items-center gap-1"
                             >
                               <CheckCircle2 size={12} /> Xong
                             </button>
@@ -1136,7 +1136,7 @@ export function ProjectDetailPage() {
                 {filteredMilestones.length === 0 && (
                   <div className="text-center py-10 text-muted-foreground">
                     <Target size={32} className="mx-auto mb-2 opacity-30" />
-                    <div className="text-[13px]">Chưa có milestone nào</div>
+                    <div className="text-[0.8125rem]">Chưa có milestone nào</div>
                   </div>
                 )}
               </div>
@@ -1169,10 +1169,10 @@ export function ProjectDetailPage() {
                     key={s.label}
                     className="bg-muted/30 rounded-xl p-3 text-center"
                   >
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-[0.625rem] text-muted-foreground">
                       {s.label}
                     </div>
-                    <div className={`text-[15px] ${s.color}`}>
+                    <div className={`text-[0.9375rem] ${s.color}`}>
                       {fmtVND(s.value)}
                     </div>
                   </div>
@@ -1193,7 +1193,7 @@ export function ProjectDetailPage() {
                     <button
                       key={s}
                       onClick={() => setExpStatusFilter(s)}
-                      className={`px-2.5 py-1 rounded-lg text-[12px] transition-colors ${expStatusFilter === s ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
+                      className={`px-2.5 py-1 rounded-lg text-xs transition-colors ${expStatusFilter === s ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
                     >
                       {s === "" ? "Tất cả" : expStatusLabels[s]}
                     </button>
@@ -1201,36 +1201,36 @@ export function ProjectDetailPage() {
                 </div>
                 <button
                   onClick={() => setShowAddExpense(true)}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-blue-700"
+                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-blue-700"
                 >
                   <Send size={13} /> Gửi chi phí
                 </button>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-[13px]">
+                <table className="w-full text-[0.8125rem]">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                      <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                         Tiêu đề
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                         Danh mục
                       </th>
-                      <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                      <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                         Số tiền
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                      <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                         Người gửi
                       </th>
-                      <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                      <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                         Ngày
                       </th>
-                      <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                      <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                         Trạng thái
                       </th>
                       {isAdminMgr && (
-                        <th className="px-4 py-3 text-[11px] text-muted-foreground">
+                        <th className="px-4 py-3 text-[0.6875rem] text-muted-foreground">
                           Thao tác
                         </th>
                       )}
@@ -1344,26 +1344,26 @@ function ExpenseRow({
       <td className="px-4 py-3">
         <div>{e.title}</div>
         {e.rejectReason && (
-          <div className="text-[11px] text-red-500 mt-0.5">
+          <div className="text-[0.6875rem] text-red-500 mt-0.5">
             ↳ {e.rejectReason}
           </div>
         )}
       </td>
       <td className="px-4 py-3 hidden md:table-cell">
-        <span className="text-[11px] px-2 py-0.5 rounded bg-muted">
+        <span className="text-[0.6875rem] px-2 py-0.5 rounded bg-muted">
           {expCategoryLabels[e.category]}
         </span>
       </td>
       <td className="px-4 py-3 text-right">{fmtVND(e.amount)}</td>
-      <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
         {e.submittedBy?.fullName ?? "—"}
       </td>
-      <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
         {fmtDate(e.expenseDate)}
       </td>
       <td className="px-4 py-3 text-center">
         <span
-          className={`text-[10px] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
+          className={`text-[0.625rem] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
         >
           {expStatusLabels[e.status]}
         </span>
@@ -1380,7 +1380,7 @@ function ExpenseRow({
                     onChange={(ev) => setReason(ev.target.value)}
                     placeholder="Lý do *"
                     autoFocus
-                    className="w-28 px-2 py-1 rounded border border-red-300 text-[11px] bg-input-background"
+                    className="w-28 px-2 py-1 rounded border border-red-300 text-[0.6875rem] bg-input-background"
                   />
                   <button
                     onClick={() => {
@@ -1388,7 +1388,7 @@ function ExpenseRow({
                       setRejecting(false);
                       setReason("");
                     }}
-                    className="p-1 bg-red-600 text-white rounded text-[10px]"
+                    className="p-1 bg-red-600 text-white rounded text-[0.625rem]"
                   >
                     ✓
                   </button>
@@ -1397,7 +1397,7 @@ function ExpenseRow({
                       setRejecting(false);
                       setReason("");
                     }}
-                    className="p-1 border border-border rounded text-[10px]"
+                    className="p-1 border border-border rounded text-[0.625rem]"
                   >
                     ✕
                   </button>
@@ -1423,7 +1423,7 @@ function ExpenseRow({
             {e.status === "APPROVED" && (
               <button
                 onClick={onReimburse}
-                className="text-[11px] px-2 py-0.5 rounded bg-teal-100 text-teal-700 hover:bg-teal-200"
+                className="text-[0.6875rem] px-2 py-0.5 rounded bg-teal-100 text-teal-700 hover:bg-teal-200"
               >
                 Hoàn tiền
               </button>
@@ -1471,20 +1471,20 @@ function UpdateHealthDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Cập nhật tiến độ</h3>
+          <h3 className="text-base">Cập nhật tiến độ</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Sức khoẻ dự án
             </label>
             <select
               value={health}
               onChange={(e) => setHealth(e.target.value as ProjectHealthStatus)}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             >
               <option value="">Chưa xác định</option>
               {Object.entries(healthLabels).map(([k, v]) => (
@@ -1495,7 +1495,7 @@ function UpdateHealthDialog({
             </select>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Tiến độ:{" "}
               <span className="font-medium text-foreground">{progress}%</span>
             </label>
@@ -1509,7 +1509,7 @@ function UpdateHealthDialog({
             />
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ghi chú
             </label>
             <textarea
@@ -1517,21 +1517,21 @@ function UpdateHealthDialog({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="Ghi chú cập nhật..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : null}{" "}
             Lưu
@@ -1648,7 +1648,7 @@ function AddMemberDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Thêm thành viên</h3>
+          <h3 className="text-base">Thêm thành viên</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -1656,7 +1656,7 @@ function AddMemberDialog({
         <div className="p-4 space-y-3">
           {/* User search */}
           <div className="relative" ref={dropdownRef}>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Nhân viên *{" "}
               {selectedUser && (
                 <span className="text-green-600">✓ Đã chọn</span>
@@ -1673,7 +1673,7 @@ function AddMemberDialog({
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={() => searchText.length >= 2 && setShowDropdown(true)}
                 placeholder="Tìm theo tên hoặc mã nhân viên..."
-                className={`w-full pl-9 pr-3 py-2 rounded-lg border bg-input-background text-[13px] ${
+                className={`w-full pl-9 pr-3 py-2 rounded-lg border bg-input-background text-[0.8125rem] ${
                   selectedUser ? "border-green-500" : "border-border"
                 }`}
               />
@@ -1696,7 +1696,7 @@ function AddMemberDialog({
                   />
                   <div className="absolute top-full mt-1 w-full z-50 bg-card border border-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
                     {searchResults.length === 0 ? (
-                      <div className="px-4 py-3 text-[12px] text-muted-foreground">
+                      <div className="px-4 py-3 text-xs text-muted-foreground">
                         Không tìm thấy nhân viên
                       </div>
                     ) : (
@@ -1706,14 +1706,14 @@ function AddMemberDialog({
                           onClick={() => selectUser(u)}
                           className="w-full text-left px-4 py-2.5 hover:bg-accent flex items-center gap-3 transition-colors"
                         >
-                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px] shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.6875rem] shrink-0">
                             {u.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                           </div>
                           <div className="min-w-0">
-                            <div className="text-[13px] truncate">
+                            <div className="text-[0.8125rem] truncate">
                               {u.fullName}
                             </div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-[0.6875rem] text-muted-foreground">
                               {u.userCode}
                               {u.department ? ` • ${u.department.name}` : ""}
                             </div>
@@ -1727,13 +1727,13 @@ function AddMemberDialog({
           </div>
 
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Vai trò trong dự án
             </label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             >
               <option value="">-- Chọn vai trò --</option>
               {PROJECT_ROLES.map((r) => (
@@ -1745,7 +1745,7 @@ function AddMemberDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Phân bổ (%)
               </label>
               <input
@@ -1754,22 +1754,22 @@ function AddMemberDialog({
                 max={100}
                 value={allocation}
                 onChange={(e) => setAllocation(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày tham gia *
               </label>
               <input
                 type="date"
                 value={joinedAt}
                 onChange={(e) => setJoinedAt(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
-          <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+          <label className="flex items-center gap-2 text-[0.8125rem] cursor-pointer">
             <input
               type="checkbox"
               checked={isBillable}
@@ -1781,14 +1781,14 @@ function AddMemberDialog({
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting || !selectedUser}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -1848,26 +1848,26 @@ function MilestoneFormDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">{title}</h3>
+          <h3 className="text-base">{title}</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Tên milestone *
             </label>
             <input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="Tên milestone..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Deadline
               </label>
               <input
@@ -1876,11 +1876,11 @@ function MilestoneFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, dueDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Trạng thái
               </label>
               <select
@@ -1891,7 +1891,7 @@ function MilestoneFormDialog({
                     status: e.target.value as MilestoneStatus,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {(["PENDING", "IN_PROGRESS", "DONE"] as const).map((s) => (
                   <option key={s} value={s}>
@@ -1906,7 +1906,7 @@ function MilestoneFormDialog({
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Mô tả
             </label>
             <textarea
@@ -1915,21 +1915,21 @@ function MilestoneFormDialog({
                 setForm((f) => ({ ...f, description: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -1987,14 +1987,14 @@ function AddExpenseDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Gửi chi phí</h3>
+          <h3 className="text-base">Gửi chi phí</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Tiêu đề *
             </label>
             <input
@@ -2003,12 +2003,12 @@ function AddExpenseDialog({
                 setForm((f) => ({ ...f, title: e.target.value }))
               }
               placeholder="Mô tả chi phí..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Danh mục *
               </label>
               <select
@@ -2019,7 +2019,7 @@ function AddExpenseDialog({
                     category: e.target.value as ExpenseCategory,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {Object.entries(expCategoryLabels).map(([k, v]) => (
                   <option key={k} value={k}>
@@ -2029,7 +2029,7 @@ function AddExpenseDialog({
               </select>
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày *
               </label>
               <input
@@ -2038,12 +2038,12 @@ function AddExpenseDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, expenseDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Số tiền (VND) *
             </label>
             <input
@@ -2054,11 +2054,11 @@ function AddExpenseDialog({
               }
               placeholder="0"
               min={1}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ghi chú
             </label>
             <textarea
@@ -2067,21 +2067,21 @@ function AddExpenseDialog({
                 setForm((f) => ({ ...f, description: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -2173,7 +2173,7 @@ function EditProjectDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-          <h3 className="text-[16px] flex items-center gap-2">
+          <h3 className="text-base flex items-center gap-2">
             <Edit2 size={15} /> Sửa thông tin dự án
           </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
@@ -2185,7 +2185,7 @@ function EditProjectDialog({
           {/* Tên + Mã */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Tên dự án *
               </label>
               <input
@@ -2194,11 +2194,11 @@ function EditProjectDialog({
                   setForm((f) => ({ ...f, projectName: e.target.value }))
                 }
                 placeholder="Tên dự án..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Mã dự án
               </label>
               <input
@@ -2210,7 +2210,7 @@ function EditProjectDialog({
                   }))
                 }
                 placeholder="DA-001"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] uppercase"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] uppercase"
               />
             </div>
           </div>
@@ -2218,7 +2218,7 @@ function EditProjectDialog({
           {/* Status + Priority */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Trạng thái
               </label>
               <select
@@ -2226,7 +2226,7 @@ function EditProjectDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, status: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {statusOpts.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -2236,7 +2236,7 @@ function EditProjectDialog({
               </select>
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ưu tiên
               </label>
               <select
@@ -2244,7 +2244,7 @@ function EditProjectDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, priority: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {priorityOpts.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -2258,7 +2258,7 @@ function EditProjectDialog({
           {/* Ngày bắt đầu + kết thúc */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày bắt đầu
                 {!form.startDate && (
                   <span className="ml-1 text-orange-500">— chưa có</span>
@@ -2270,11 +2270,11 @@ function EditProjectDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, startDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày kết thúc dự kiến
                 {!form.endDate && (
                   <span className="ml-1 text-orange-500">— chưa có</span>
@@ -2286,14 +2286,14 @@ function EditProjectDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, endDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
 
           {/* Date validation hint */}
           {form.startDate && form.endDate && form.endDate < form.startDate && (
-            <div className="flex items-center gap-2 text-[12px] text-red-600 bg-red-50 dark:bg-red-900/10 rounded-lg p-2">
+            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 dark:bg-red-900/10 rounded-lg p-2">
               <AlertTriangle size={13} /> Ngày kết thúc phải sau ngày bắt đầu
             </div>
           )}
@@ -2301,7 +2301,7 @@ function EditProjectDialog({
           {/* Budget + Contract value */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngân sách (VND)
               </label>
               <input
@@ -2311,11 +2311,11 @@ function EditProjectDialog({
                   setForm((f) => ({ ...f, budgetAmount: e.target.value }))
                 }
                 placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Giá trị hợp đồng (VND)
               </label>
               <input
@@ -2325,14 +2325,14 @@ function EditProjectDialog({
                   setForm((f) => ({ ...f, contractValue: e.target.value }))
                 }
                 placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Mô tả dự án
             </label>
             <textarea
@@ -2342,7 +2342,7 @@ function EditProjectDialog({
               }
               rows={4}
               placeholder="Mô tả mục tiêu, phạm vi dự án..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
@@ -2350,14 +2350,14 @@ function EditProjectDialog({
         <div className="flex justify-end gap-2 p-4 border-t border-border sticky bottom-0 bg-card">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />

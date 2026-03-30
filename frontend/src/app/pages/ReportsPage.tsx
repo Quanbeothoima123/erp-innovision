@@ -115,7 +115,7 @@ const fmtAxis = (v: number) => {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-popover border border-border rounded-lg p-2.5 shadow-lg text-[12px]">
+    <div className="bg-popover border border-border rounded-lg p-2.5 shadow-lg text-xs">
       <div className="text-muted-foreground mb-1">
         {typeof label === "number" && label >= 1 && label <= 12
           ? MONTHS_LABEL[label]
@@ -164,7 +164,7 @@ function StatCard({
         </div>
         {trend && (
           <div
-            className={`flex items-center gap-0.5 text-[11px] ${trend.up ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
+            className={`flex items-center gap-0.5 text-[0.6875rem] ${trend.up ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
           >
             {trend.up ? (
               <ArrowUpRight size={12} />
@@ -176,10 +176,10 @@ function StatCard({
         )}
       </div>
       <div className="mt-3">
-        <div className="text-[22px]">{value}</div>
-        <div className="text-[12px] text-muted-foreground">{label}</div>
+        <div className="text-[1.375rem]">{value}</div>
+        <div className="text-xs text-muted-foreground">{label}</div>
         {subValue && (
-          <div className="text-[11px] text-muted-foreground mt-0.5">
+          <div className="text-[0.6875rem] text-muted-foreground mt-0.5">
             {subValue}
           </div>
         )}
@@ -202,7 +202,7 @@ function ChartCard({
       className={`bg-card border border-border rounded-xl overflow-hidden ${className}`}
     >
       <div className="px-5 py-3.5 border-b border-border">
-        <h3 className="text-[14px]">{title}</h3>
+        <h3 className="text-sm">{title}</h3>
       </div>
       <div className="p-4">{children}</div>
     </div>
@@ -213,7 +213,7 @@ function LoadingState() {
   return (
     <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
       <Loader2 size={20} className="animate-spin" />
-      <span className="text-[13px]">Đang tải báo cáo...</span>
+      <span className="text-[0.8125rem]">Đang tải báo cáo...</span>
     </div>
   );
 }
@@ -228,10 +228,10 @@ function ErrorState({
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
       <AlertTriangle size={32} className="text-amber-500" />
-      <div className="text-[14px] text-center">{message}</div>
+      <div className="text-sm text-center">{message}</div>
       <button
         onClick={onRetry}
-        className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent flex items-center gap-1"
+        className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent flex items-center gap-1"
       >
         <RefreshCw size={14} /> Thử lại
       </button>
@@ -251,7 +251,7 @@ function YearSelect({
     <select
       value={year}
       onChange={(e) => onChange(+e.target.value)}
-      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
     >
       {years.map((y) => (
         <option key={y} value={y}>
@@ -273,7 +273,7 @@ function MonthSelect({
     <select
       value={month}
       onChange={(e) => onChange(+e.target.value)}
-      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
     >
       <option value={0}>Tất cả tháng</option>
       {Array.from({ length: 12 }, (_, i) => (
@@ -303,7 +303,7 @@ function DeptSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+      className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
     >
       <option value="">Tất cả phòng ban</option>
       {depts.map((d) => (
@@ -372,8 +372,8 @@ export function HRReportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px]">Báo cáo Nhân sự</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <h1 className="text-xl">Báo cáo Nhân sự</h1>
+          <p className="text-[0.8125rem] text-muted-foreground mt-1">
             Tổng quan về lực lượng lao động của công ty
           </p>
         </div>
@@ -562,19 +562,19 @@ export function HRReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Nhân viên
                       </th>
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground hidden md:table-cell">
                         Phòng ban
                       </th>
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground hidden md:table-cell">
                         Chức danh
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Thâm niên
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground hidden lg:table-cell">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground hidden lg:table-cell">
                         Ngày vào
                       </th>
                     </tr>
@@ -587,29 +587,29 @@ export function HRReportPage() {
                       >
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                            <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                               {i + 1}
                             </span>
                             <div>
-                              <div className="text-[13px]">{u.fullName}</div>
-                              <div className="text-[10px] text-muted-foreground">
+                              <div className="text-[0.8125rem]">{u.fullName}</div>
+                              <div className="text-[0.625rem] text-muted-foreground">
                                 {u.userCode}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
+                        <td className="px-4 py-2.5 text-xs hidden md:table-cell">
                           {u.department?.name ?? "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
+                        <td className="px-4 py-2.5 text-xs hidden md:table-cell">
                           {u.jobTitle?.name ?? "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-[13px] text-right text-blue-600">
+                        <td className="px-4 py-2.5 text-[0.8125rem] text-right text-blue-600">
                           {u.tenureYears
                             ? `${u.tenureYears.toFixed(1)} năm`
                             : "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-[12px] text-right text-muted-foreground hidden lg:table-cell">
+                        <td className="px-4 py-2.5 text-xs text-right text-muted-foreground hidden lg:table-cell">
                           {u.hireDate
                             ? new Date(u.hireDate).toLocaleDateString("vi-VN")
                             : "—"}
@@ -684,8 +684,8 @@ export function AttendanceReportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px]">Báo cáo Chấm công</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <h1 className="text-xl">Báo cáo Chấm công</h1>
+          <p className="text-[0.8125rem] text-muted-foreground mt-1">
             Thống kê chấm công, đi trễ và tỷ lệ có mặt
           </p>
         </div>
@@ -860,16 +860,16 @@ export function AttendanceReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Nhân viên
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Số lần
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tổng phút
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         TB phút/lần
                       </th>
                     </tr>
@@ -881,20 +881,20 @@ export function AttendanceReportPage() {
                         className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
                         <td className="px-4 py-2.5">
-                          <div className="text-[13px]">
+                          <div className="text-[0.8125rem]">
                             {t.user?.fullName ?? "—"}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[0.625rem] text-muted-foreground">
                             {t.user?.department?.name ?? ""}
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px] text-amber-600">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem] text-amber-600">
                           {t.lateCount}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem]">
                           {t.totalMinutes} phút
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[12px] text-muted-foreground">
+                        <td className="px-4 py-2.5 text-right text-xs text-muted-foreground">
                           {t.avgMinutes} phút
                         </td>
                       </tr>
@@ -970,8 +970,8 @@ export function FinanceReportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px]">Báo cáo Tài chính</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <h1 className="text-xl">Báo cáo Tài chính</h1>
+          <p className="text-[0.8125rem] text-muted-foreground mt-1">
             Doanh thu, thanh toán & công nợ khách hàng
           </p>
         </div>
@@ -1152,16 +1152,16 @@ export function FinanceReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Khách hàng
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tổng HĐ
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Đã thu
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Còn nợ
                       </th>
                     </tr>
@@ -1173,18 +1173,18 @@ export function FinanceReportPage() {
                         className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
                         <td className="px-4 py-2.5">
-                          <div className="text-[13px]">{d.companyName}</div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[0.8125rem]">{d.companyName}</div>
+                          <div className="text-[0.625rem] text-muted-foreground">
                             {d.clientCode}
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[12px]">
+                        <td className="px-4 py-2.5 text-right text-xs">
                           {fmtVND(d.totalContractValue)}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[12px] text-green-600">
+                        <td className="px-4 py-2.5 text-right text-xs text-green-600">
                           {fmtVND(d.totalReceivedAmount)}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px] text-red-500">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem] text-red-500">
                           {fmtVND(d.outstandingBalance)}
                         </td>
                       </tr>
@@ -1264,8 +1264,8 @@ export function ProjectReportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px]">Báo cáo Dự án</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <h1 className="text-xl">Báo cáo Dự án</h1>
+          <p className="text-[0.8125rem] text-muted-foreground mt-1">
             Tiến độ, ngân sách và sức khoẻ dự án
           </p>
         </div>
@@ -1399,22 +1399,22 @@ export function ProjectReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Dự án
                       </th>
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Trạng thái
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tiến độ
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Ngân sách
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Đã chi
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         % Ngân sách
                       </th>
                     </tr>
@@ -1426,29 +1426,29 @@ export function ProjectReportPage() {
                         className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
                         <td className="px-4 py-2.5">
-                          <div className="text-[13px]">{p.projectName}</div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[0.8125rem]">{p.projectName}</div>
+                          <div className="text-[0.625rem] text-muted-foreground">
                             {p.projectCode}
                           </div>
                         </td>
                         <td className="px-4 py-2.5">
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "ACTIVE" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400"}`}
+                            className={`text-[0.625rem] px-2 py-0.5 rounded-full ${p.status === "ACTIVE" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400"}`}
                           >
                             {statusLabels[p.status] ?? p.status}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem]">
                           {p.progressPercent}%
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[12px]">
+                        <td className="px-4 py-2.5 text-right text-xs">
                           {fmtVND(p.budgetAmount)}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[12px]">
+                        <td className="px-4 py-2.5 text-right text-xs">
                           {fmtVND(p.spentAmount)}
                         </td>
                         <td
-                          className={`px-4 py-2.5 text-right text-[13px] ${p.isOverBudget ? "text-red-500" : "text-green-600"}`}
+                          className={`px-4 py-2.5 text-right text-[0.8125rem] ${p.isOverBudget ? "text-red-500" : "text-green-600"}`}
                         >
                           {p.budgetUsedPct}%
                         </td>
@@ -1469,16 +1469,16 @@ export function ProjectReportPage() {
                     className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg"
                   >
                     <div>
-                      <div className="text-[13px]">{p.projectName}</div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.8125rem]">{p.projectName}</div>
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         PM: {p.projectManager?.fullName ?? "—"}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[12px] text-amber-600">
+                      <div className="text-xs text-amber-600">
                         {new Date(p.endDate).toLocaleDateString("vi-VN")}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {p.progressPercent}% tiến độ
                       </div>
                     </div>
@@ -1542,8 +1542,8 @@ export function LeaveReportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px]">Báo cáo Nghỉ phép</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <h1 className="text-xl">Báo cáo Nghỉ phép</h1>
+          <p className="text-[0.8125rem] text-muted-foreground mt-1">
             Tổng hợp đơn nghỉ phép và số dư phép năm
           </p>
         </div>
@@ -1627,10 +1627,10 @@ export function LeaveReportPage() {
                   key={c.label}
                   className="bg-card border border-border rounded-xl p-3 text-center"
                 >
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-[0.625rem] text-muted-foreground">
                     {c.label}
                   </div>
-                  <div className={`text-[18px] ${c.cls}`}>{c.value}</div>
+                  <div className={`text-lg ${c.cls}`}>{c.value}</div>
                 </div>
               ))}
             </div>
@@ -1717,22 +1717,22 @@ export function LeaveReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Nhân viên
                       </th>
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground hidden md:table-cell">
                         Loại phép
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Được cấp
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Đã dùng
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Còn lại
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tỷ lệ
                       </th>
                     </tr>
@@ -1744,26 +1744,26 @@ export function LeaveReportPage() {
                         className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
                         <td className="px-4 py-2.5">
-                          <div className="text-[13px]">
+                          <div className="text-[0.8125rem]">
                             {u.user?.fullName ?? "—"}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[0.625rem] text-muted-foreground">
                             {u.user?.department?.name ?? ""}
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
+                        <td className="px-4 py-2.5 text-xs hidden md:table-cell">
                           {u.leaveType?.name ?? "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[12px]">
+                        <td className="px-4 py-2.5 text-right text-xs">
                           {u.entitledDays}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px] text-amber-600">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem] text-amber-600">
                           {u.usedDays}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px] text-green-600">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem] text-green-600">
                           {u.remainingDays}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[12px] text-muted-foreground">
+                        <td className="px-4 py-2.5 text-right text-xs text-muted-foreground">
                           {u.usageRate}%
                         </td>
                       </tr>
@@ -1834,12 +1834,12 @@ export function PayrollReportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px]">Báo cáo Bảng lương</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <h1 className="text-xl">Báo cáo Bảng lương</h1>
+          <p className="text-[0.8125rem] text-muted-foreground mt-1">
             Tổng hợp chi phí lương, khấu trừ và cơ cấu thu nhập
           </p>
         </div>
-        <button className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition-colors">
+        <button className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 transition-colors">
           <Download size={14} /> Xuất báo cáo
         </button>
       </div>
@@ -1862,7 +1862,7 @@ export function PayrollReportPage() {
       ) : error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !stats ? (
-        <div className="text-center py-16 text-muted-foreground text-[14px]">
+        <div className="text-center py-16 text-muted-foreground text-sm">
           Chưa có dữ liệu lương cho kỳ này
         </div>
       ) : (
@@ -1961,7 +1961,7 @@ export function PayrollReportPage() {
                     {data!.payrollComposition.map((c, i) => (
                       <div
                         key={c.name}
-                        className="flex items-center gap-1.5 text-[11px]"
+                        className="flex items-center gap-1.5 text-[0.6875rem]"
                       >
                         <span
                           className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -1974,7 +1974,7 @@ export function PayrollReportPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center justify-center h-[240px] text-muted-foreground text-[13px]">
+                <div className="flex items-center justify-center h-[240px] text-muted-foreground text-[0.8125rem]">
                   Không có dữ liệu
                 </div>
               )}
@@ -2065,19 +2065,19 @@ export function PayrollReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Phòng ban
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Số NV
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Avg Gross
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tổng Gross
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tổng Net
                       </th>
                     </tr>
@@ -2088,33 +2088,33 @@ export function PayrollReportPage() {
                         key={d.name}
                         className="border-b border-border last:border-0 hover:bg-accent/50"
                       >
-                        <td className="px-4 py-2.5 text-[13px]">{d.name}</td>
-                        <td className="px-4 py-2.5 text-[13px] text-right">
+                        <td className="px-4 py-2.5 text-[0.8125rem]">{d.name}</td>
+                        <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                           {d.employeeCount}
                         </td>
-                        <td className="px-4 py-2.5 text-[13px] text-right">
+                        <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                           {fmtVND(d.avgGross)}
                         </td>
-                        <td className="px-4 py-2.5 text-[13px] text-right">
+                        <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                           {fmtVND(d.totalGross)}
                         </td>
-                        <td className="px-4 py-2.5 text-[13px] text-right">
+                        <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                           {fmtVND(d.totalNet)}
                         </td>
                       </tr>
                     ))}
                     <tr className="bg-accent/30 border-t-2 border-border">
-                      <td className="px-4 py-2.5 text-[13px]">Tổng cộng</td>
-                      <td className="px-4 py-2.5 text-[13px] text-right">
+                      <td className="px-4 py-2.5 text-[0.8125rem]">Tổng cộng</td>
+                      <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                         {stats.headcount}
                       </td>
-                      <td className="px-4 py-2.5 text-[13px] text-right">
+                      <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                         {fmtVND(stats.avgGross)}
                       </td>
-                      <td className="px-4 py-2.5 text-[13px] text-right">
+                      <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                         {fmtVND(stats.totalGross)}
                       </td>
-                      <td className="px-4 py-2.5 text-[13px] text-right">
+                      <td className="px-4 py-2.5 text-[0.8125rem] text-right">
                         {fmtVND(stats.totalNet)}
                       </td>
                     </tr>
@@ -2180,12 +2180,12 @@ export function OvertimeReportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px]">Báo cáo Tăng ca (OT)</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <h1 className="text-xl">Báo cáo Tăng ca (OT)</h1>
+          <p className="text-[0.8125rem] text-muted-foreground mt-1">
             Thống kê giờ làm thêm theo nhân viên và loại ngày
           </p>
         </div>
-        <button className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition-colors">
+        <button className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 transition-colors">
           <Download size={14} /> Xuất báo cáo
         </button>
       </div>
@@ -2281,7 +2281,7 @@ export function OvertimeReportPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-[280px] text-muted-foreground text-[13px]">
+                <div className="flex items-center justify-center h-[280px] text-muted-foreground text-[0.8125rem]">
                   Chưa có dữ liệu tháng
                 </div>
               )}
@@ -2316,7 +2316,7 @@ export function OvertimeReportPage() {
                     {dayTypeData.map((d) => (
                       <div
                         key={d.name}
-                        className="flex items-center gap-1.5 text-[11px]"
+                        className="flex items-center gap-1.5 text-[0.6875rem]"
                       >
                         <span
                           className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -2331,7 +2331,7 @@ export function OvertimeReportPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center justify-center h-[200px] text-muted-foreground text-[13px]">
+                <div className="flex items-center justify-center h-[200px] text-muted-foreground text-[0.8125rem]">
                   Chưa có dữ liệu
                 </div>
               )}
@@ -2344,19 +2344,19 @@ export function OvertimeReportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground">
                         Nhân viên
                       </th>
-                      <th className="text-left px-4 py-2 text-[12px] text-muted-foreground hidden md:table-cell">
+                      <th className="text-left px-4 py-2 text-xs text-muted-foreground hidden md:table-cell">
                         Phòng ban
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Số phiên
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tổng phút
                       </th>
-                      <th className="text-right px-4 py-2 text-[12px] text-muted-foreground">
+                      <th className="text-right px-4 py-2 text-xs text-muted-foreground">
                         Tổng giờ
                       </th>
                     </tr>
@@ -2369,29 +2369,29 @@ export function OvertimeReportPage() {
                       >
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                            <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                               {i + 1}
                             </span>
                             <div>
-                              <div className="text-[13px]">
+                              <div className="text-[0.8125rem]">
                                 {u.user?.fullName ?? "—"}
                               </div>
-                              <div className="text-[10px] text-muted-foreground">
+                              <div className="text-[0.625rem] text-muted-foreground">
                                 {u.user?.userCode}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-[12px] hidden md:table-cell">
+                        <td className="px-4 py-2.5 text-xs hidden md:table-cell">
                           {u.user?.department?.name ?? "—"}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem]">
                           {u.sessionCount}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px]">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem]">
                           {u.totalMinutes}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-[13px] text-blue-600">
+                        <td className="px-4 py-2.5 text-right text-[0.8125rem] text-blue-600">
                           {(u.totalMinutes / 60).toFixed(1)}h
                         </td>
                       </tr>

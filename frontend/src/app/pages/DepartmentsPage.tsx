@@ -64,7 +64,7 @@ function Overlay({
 function DlgHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between p-4 border-b border-border">
-      <h3 className="text-[15px] font-semibold">{title}</h3>
+      <h3 className="text-[0.9375rem] font-semibold">{title}</h3>
       <button
         onClick={onClose}
         className="p-1.5 rounded-lg hover:bg-accent transition"
@@ -91,14 +91,14 @@ function DlgFooter({
     <div className="flex justify-end gap-2 p-4 border-t border-border">
       <button
         onClick={onCancel}
-        className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+        className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent transition"
       >
         Huỷ
       </button>
       <button
         onClick={onConfirm}
         disabled={loading}
-        className={`px-4 py-2 text-white rounded-lg text-[13px] flex items-center gap-1.5 transition disabled:opacity-50 ${variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
+        className={`px-4 py-2 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 transition disabled:opacity-50 ${variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
       >
         {loading && <Loader2 size={13} className="animate-spin" />} {label}
       </button>
@@ -299,8 +299,8 @@ export function DepartmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-semibold">Phòng ban</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <h1 className="text-xl font-semibold">Phòng ban</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Quản lý các phòng ban trong tổ chức
           </p>
         </div>
@@ -317,7 +317,7 @@ export function DepartmentsPage() {
           {isAdmin && (
             <button
               onClick={openCreate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition"
             >
               <Plus size={15} /> Thêm phòng ban
             </button>
@@ -336,7 +336,7 @@ export function DepartmentsPage() {
           placeholder="Tìm phòng ban..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -344,12 +344,12 @@ export function DepartmentsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={18} className="animate-spin" />
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <Building size={32} className="opacity-20 mb-2" />
-          <p className="text-[13px]">Không có phòng ban nào</p>
+          <p className="text-[0.8125rem]">Không có phòng ban nào</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -368,11 +368,11 @@ export function DepartmentsPage() {
                       <Building size={16} />
                     </div>
                     <div>
-                      <div className="text-[14px] font-medium leading-tight">
+                      <div className="text-sm font-medium leading-tight">
                         {d.name}
                       </div>
                       <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                        className={`text-[0.625rem] px-1.5 py-0.5 rounded-full ${
                           d.isActive
                             ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                             : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
@@ -386,13 +386,13 @@ export function DepartmentsPage() {
 
                 {/* Description */}
                 {d.description && (
-                  <p className="text-[12px] text-muted-foreground mb-3 line-clamp-2">
+                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
                     {d.description}
                   </p>
                 )}
 
                 {/* Footer: stats + actions */}
-                <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-1">
                       <Users size={11} /> {d._count?.members ?? 0} nhân viên
@@ -455,7 +455,7 @@ export function DepartmentsPage() {
           />
           <div className="p-5 space-y-3">
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Tên phòng ban *
               </label>
               <input
@@ -465,11 +465,11 @@ export function DepartmentsPage() {
                   setForm((p) => ({ ...p, name: e.target.value }))
                 }
                 placeholder="VD: Phòng Kỹ Thuật"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Mô tả
               </label>
               <textarea
@@ -478,11 +478,11 @@ export function DepartmentsPage() {
                   setForm((p) => ({ ...p, description: e.target.value }))
                 }
                 rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Trưởng phòng
               </label>
               <select
@@ -490,7 +490,7 @@ export function DepartmentsPage() {
                 onChange={(e) =>
                   setForm((p) => ({ ...p, headUserId: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
               >
                 <option value="">-- Chưa gán --</option>
                 {headUserOptions.map((u) => (
@@ -512,7 +512,7 @@ export function DepartmentsPage() {
               />
               <label
                 htmlFor="deptIsActive"
-                className="text-[13px] cursor-pointer"
+                className="text-[0.8125rem] cursor-pointer"
               >
                 Kích hoạt
               </label>
@@ -535,7 +535,7 @@ export function DepartmentsPage() {
             onClose={() => setDeleteConfirm(null)}
           />
           <div className="p-5">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[0.8125rem] text-muted-foreground">
               Bạn có chắc muốn xoá phòng ban{" "}
               <strong>{depts.find((d) => d.id === deleteConfirm)?.name}</strong>
               ? Hành động này không thể hoàn tác.
@@ -568,10 +568,10 @@ export function DepartmentsPage() {
                   <Building size={15} />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold leading-tight">
+                  <h3 className="text-[0.9375rem] font-semibold leading-tight">
                     {selectedDept.name}
                   </h3>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[0.6875rem] text-muted-foreground">
                     {membersLoading
                       ? "Đang tải..."
                       : `${deptMembers.length} nhân viên`}
@@ -591,12 +591,12 @@ export function DepartmentsPage() {
               {membersLoading ? (
                 <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
                   <Loader2 size={18} className="animate-spin" />
-                  <span className="text-[13px]">Đang tải nhân viên...</span>
+                  <span className="text-[0.8125rem]">Đang tải nhân viên...</span>
                 </div>
               ) : deptMembers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                   <Users size={32} className="opacity-20 mb-2" />
-                  <p className="text-[13px]">Chưa có nhân viên nào</p>
+                  <p className="text-[0.8125rem]">Chưa có nhân viên nào</p>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
@@ -616,7 +616,7 @@ export function DepartmentsPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-[13px] font-semibold text-indigo-600 dark:text-indigo-400">
+                          <span className="text-[0.8125rem] font-semibold text-indigo-600 dark:text-indigo-400">
                             {m.fullName
                               .split(" ")
                               .slice(-2)
@@ -629,10 +629,10 @@ export function DepartmentsPage() {
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium truncate group-hover:text-blue-600 transition">
+                        <div className="text-[0.8125rem] font-medium truncate group-hover:text-blue-600 transition">
                           {m.fullName}
                         </div>
-                        <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                        <div className="text-[0.6875rem] text-muted-foreground truncate flex items-center gap-1">
                           <UserCircle2 size={10} />
                           {m.jobTitle?.name ?? "—"}
                         </div>
@@ -641,7 +641,7 @@ export function DepartmentsPage() {
                       {/* Status badges */}
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                          className={`text-[0.625rem] px-1.5 py-0.5 rounded-full font-medium ${
                             m.employmentStatus === "ACTIVE"
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                               : m.employmentStatus === "PROBATION"
@@ -656,7 +656,7 @@ export function DepartmentsPage() {
                               : m.employmentStatus}
                         </span>
                         {m.accountStatus !== "ACTIVE" && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium">
+                          <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium">
                             {m.accountStatus === "LOCKED"
                               ? "Bị khoá"
                               : "Vô hiệu"}
@@ -676,12 +676,12 @@ export function DepartmentsPage() {
 
             {/* Panel Footer */}
             {!membersLoading && deptMembers.length > 0 && (
-              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[11px] text-muted-foreground flex items-center justify-between">
+              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[0.6875rem] text-muted-foreground flex items-center justify-between">
                 <span>{deptMembers.length} nhân viên trong phòng ban</span>
                 <Link
                   to={`/employees?department=${selectedDept.id}`}
                   onClick={() => setSelectedDept(null)}
-                  className="text-blue-600 hover:underline text-[11px] flex items-center gap-1"
+                  className="text-blue-600 hover:underline text-[0.6875rem] flex items-center gap-1"
                 >
                   Xem tất cả <ChevronRight size={11} />
                 </Link>
@@ -868,8 +868,8 @@ export function JobTitlesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-semibold">Chức danh</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <h1 className="text-xl font-semibold">Chức danh</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Quản lý danh sách chức danh công việc
           </p>
         </div>
@@ -886,7 +886,7 @@ export function JobTitlesPage() {
           {isAdmin && (
             <button
               onClick={openCreate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition"
             >
               <Plus size={15} /> Thêm chức danh
             </button>
@@ -905,7 +905,7 @@ export function JobTitlesPage() {
           placeholder="Tìm chức danh..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -913,18 +913,18 @@ export function JobTitlesPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={18} className="animate-spin" />
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <Users size={32} className="opacity-20 mb-2" />
-          <p className="text-[13px]">Không có chức danh nào</p>
+          <p className="text-[0.8125rem]">Không có chức danh nào</p>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           {/* Table header */}
           <div
-            className="grid gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide"
+            className="grid gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide"
             style={{ gridTemplateColumns: "90px 1fr 2fr 80px 100px 120px" }}
           >
             <span>Mã</span>
@@ -945,23 +945,23 @@ export function JobTitlesPage() {
                 style={{ gridTemplateColumns: "90px 1fr 2fr 80px 100px 120px" }}
               >
                 {/* Mã */}
-                <span className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-center truncate">
+                <span className="font-mono text-[0.6875rem] bg-muted px-1.5 py-0.5 rounded text-center truncate">
                   {j.code}
                 </span>
                 {/* Tên */}
-                <span className="text-[13px] font-medium">{j.name}</span>
+                <span className="text-[0.8125rem] font-medium">{j.name}</span>
                 {/* Mô tả */}
-                <span className="text-[12px] text-muted-foreground truncate">
+                <span className="text-xs text-muted-foreground truncate">
                   {j.description || "—"}
                 </span>
                 {/* Nhân viên */}
-                <span className="text-[12px] text-muted-foreground flex items-center gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Users size={11} />
                   {j._count?.users ?? 0}
                 </span>
                 {/* Trạng thái */}
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full text-center font-medium w-fit ${
+                  className={`text-[0.6875rem] px-2 py-0.5 rounded-full text-center font-medium w-fit ${
                     j.isActive
                       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                       : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
@@ -1012,7 +1012,7 @@ export function JobTitlesPage() {
           </div>
 
           {/* Footer count */}
-          <div className="px-4 py-3 border-t border-border text-[12px] text-muted-foreground">
+          <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground">
             {filtered.length} / {jobs.length} chức danh
           </div>
         </div>
@@ -1027,7 +1027,7 @@ export function JobTitlesPage() {
           />
           <div className="p-5 space-y-3">
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Mã chức danh *
               </label>
               <input
@@ -1037,11 +1037,11 @@ export function JobTitlesPage() {
                   setForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))
                 }
                 placeholder="VD: SR_DEV"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Tên chức danh *
               </label>
               <input
@@ -1051,11 +1051,11 @@ export function JobTitlesPage() {
                   setForm((p) => ({ ...p, name: e.target.value }))
                 }
                 placeholder="VD: Senior Developer"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Mô tả
               </label>
               <textarea
@@ -1064,7 +1064,7 @@ export function JobTitlesPage() {
                   setForm((p) => ({ ...p, description: e.target.value }))
                 }
                 rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -1079,7 +1079,7 @@ export function JobTitlesPage() {
               />
               <label
                 htmlFor="jtIsActive"
-                className="text-[13px] cursor-pointer"
+                className="text-[0.8125rem] cursor-pointer"
               >
                 Kích hoạt
               </label>
@@ -1102,7 +1102,7 @@ export function JobTitlesPage() {
             onClose={() => setDeleteConfirm(null)}
           />
           <div className="p-5">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[0.8125rem] text-muted-foreground">
               Bạn có chắc muốn xoá chức danh{" "}
               <strong>{jobs.find((j) => j.id === deleteConfirm)?.name}</strong>?
             </p>
@@ -1134,10 +1134,10 @@ export function JobTitlesPage() {
                   <UserCircle2 size={15} />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold leading-tight">
+                  <h3 className="text-[0.9375rem] font-semibold leading-tight">
                     {selectedJob.name}
                   </h3>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[0.6875rem] text-muted-foreground">
                     {jobMembersLoading
                       ? "Đang tải..."
                       : `${jobMembers.length} nhân viên`}
@@ -1155,11 +1155,11 @@ export function JobTitlesPage() {
             {/* Code badge */}
             {selectedJob.code && (
               <div className="px-5 py-2 border-b border-border bg-muted/30 flex items-center gap-2">
-                <span className="font-mono text-[11px] bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                <span className="font-mono text-[0.6875rem] bg-muted px-2 py-0.5 rounded text-muted-foreground">
                   {selectedJob.code}
                 </span>
                 {selectedJob.description && (
-                  <span className="text-[11px] text-muted-foreground truncate">
+                  <span className="text-[0.6875rem] text-muted-foreground truncate">
                     {selectedJob.description}
                   </span>
                 )}
@@ -1171,12 +1171,12 @@ export function JobTitlesPage() {
               {jobMembersLoading ? (
                 <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
                   <Loader2 size={18} className="animate-spin" />
-                  <span className="text-[13px]">Đang tải nhân viên...</span>
+                  <span className="text-[0.8125rem]">Đang tải nhân viên...</span>
                 </div>
               ) : jobMembers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                   <Users size={32} className="opacity-20 mb-2" />
-                  <p className="text-[13px]">Chưa có nhân viên nào</p>
+                  <p className="text-[0.8125rem]">Chưa có nhân viên nào</p>
                 </div>
               ) : (
                 <div className="divide-y divide-border">
@@ -1196,7 +1196,7 @@ export function JobTitlesPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-[13px] font-semibold text-violet-600 dark:text-violet-400">
+                          <span className="text-[0.8125rem] font-semibold text-violet-600 dark:text-violet-400">
                             {m.fullName
                               .split(" ")
                               .slice(-2)
@@ -1209,10 +1209,10 @@ export function JobTitlesPage() {
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-medium truncate group-hover:text-blue-600 transition">
+                        <div className="text-[0.8125rem] font-medium truncate group-hover:text-blue-600 transition">
                           {m.fullName}
                         </div>
-                        <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                        <div className="text-[0.6875rem] text-muted-foreground truncate flex items-center gap-1">
                           <Building size={10} />
                           {m.department?.name ?? "—"}
                         </div>
@@ -1221,7 +1221,7 @@ export function JobTitlesPage() {
                       {/* Status badges */}
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                          className={`text-[0.625rem] px-1.5 py-0.5 rounded-full font-medium ${
                             m.employmentStatus === "ACTIVE"
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                               : m.employmentStatus === "PROBATION"
@@ -1236,7 +1236,7 @@ export function JobTitlesPage() {
                               : m.employmentStatus}
                         </span>
                         {m.accountStatus !== "ACTIVE" && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium">
+                          <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 font-medium">
                             {m.accountStatus === "LOCKED"
                               ? "Bị khoá"
                               : "Vô hiệu"}
@@ -1256,12 +1256,12 @@ export function JobTitlesPage() {
 
             {/* Footer */}
             {!jobMembersLoading && jobMembers.length > 0 && (
-              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[11px] text-muted-foreground flex items-center justify-between">
+              <div className="flex-shrink-0 px-5 py-3 border-t border-border text-[0.6875rem] text-muted-foreground flex items-center justify-between">
                 <span>{jobMembers.length} nhân viên giữ chức danh này</span>
                 <Link
                   to={`/employees?jobTitle=${selectedJob.id}`}
                   onClick={() => setSelectedJob(null)}
-                  className="text-blue-600 hover:underline text-[11px] flex items-center gap-1"
+                  className="text-blue-600 hover:underline text-[0.6875rem] flex items-center gap-1"
                 >
                   Xem tất cả <ChevronRight size={11} />
                 </Link>

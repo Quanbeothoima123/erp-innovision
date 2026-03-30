@@ -187,11 +187,11 @@ export function TaskCalendarView({
                               <AvatarImage
                                 src={assignee.avatarUrl ?? undefined}
                               />
-                              <AvatarFallback className="text-[8px]">
+                              <AvatarFallback className="text-[0.5rem]">
                                 {assignee.fullName[0]}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-[10px] text-muted-foreground truncate">
+                            <span className="text-[0.625rem] text-muted-foreground truncate">
                               {assignee.fullName}
                             </span>
                           </div>
@@ -246,7 +246,7 @@ export function TaskCalendarView({
                                               assignee.avatarUrl ?? undefined
                                             }
                                           />
-                                          <AvatarFallback className="text-[9px]">
+                                          <AvatarFallback className="text-[0.5625rem]">
                                             {assignee.fullName[0]}
                                           </AvatarFallback>
                                         </Avatar>

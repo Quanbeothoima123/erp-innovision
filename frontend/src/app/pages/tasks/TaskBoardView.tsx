@@ -130,13 +130,13 @@ function TaskCard({ task, onClick }: TaskCardProps) {
           {assignee ? (
             <Avatar className="h-5 w-5">
               <AvatarImage src={assignee.avatarUrl ?? undefined} />
-              <AvatarFallback className="text-[10px]">
+              <AvatarFallback className="text-[0.625rem]">
                 {assignee.fullName[0]}
               </AvatarFallback>
             </Avatar>
           ) : (
             <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-[10px] text-muted-foreground">?</span>
+              <span className="text-[0.625rem] text-muted-foreground">?</span>
             </div>
           )}
 

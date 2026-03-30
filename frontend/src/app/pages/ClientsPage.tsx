@@ -221,7 +221,7 @@ export function ClientsPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <Building2 size={22} className="text-blue-600" /> Khách hàng
         </h1>
         <div className="flex gap-2">
@@ -235,7 +235,7 @@ export function ClientsPage() {
           {canManage && (
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
             >
               <Plus size={16} /> Thêm khách hàng
             </button>
@@ -279,8 +279,8 @@ export function ClientsPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">{s.label}</div>
-              <div className={`text-[16px] ${s.color}`}>{s.value}</div>
+              <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
+              <div className={`text-base ${s.color}`}>{s.value}</div>
             </div>
           </div>
         ))}
@@ -298,13 +298,13 @@ export function ClientsPage() {
             placeholder="Tìm tên, mã, ngành..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả trạng thái</option>
           {Object.entries(statusLabels).map(([k, v]) => (
@@ -316,7 +316,7 @@ export function ClientsPage() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả loại</option>
           {Object.entries(typeLabels).map(([k, v]) => (
@@ -332,7 +332,7 @@ export function ClientsPage() {
               setStatusFilter("");
               setTypeFilter("");
             }}
-            className="px-3 py-2 rounded-lg border border-border text-[13px] text-muted-foreground hover:bg-accent"
+            className="px-3 py-2 rounded-lg border border-border text-[0.8125rem] text-muted-foreground hover:bg-accent"
           >
             Xoá lọc
           </button>
@@ -343,30 +343,30 @@ export function ClientsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Khách hàng
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Loại
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Trạng thái
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Tổng HĐ
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Còn nợ
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden xl:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden xl:table-cell">
                     Quản lý
                   </th>
                   <th className="px-4 py-3 w-10" />
@@ -384,12 +384,12 @@ export function ClientsPage() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-[12px] shrink-0 font-medium">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs shrink-0 font-medium">
                           {c.companyName[0]}
                         </div>
                         <div>
                           <div className="font-medium">{c.companyName}</div>
-                          <div className="text-[11px] text-muted-foreground">
+                          <div className="text-[0.6875rem] text-muted-foreground">
                             {c.clientCode && (
                               <span className="font-mono">
                                 {c.clientCode} •{" "}
@@ -400,12 +400,12 @@ export function ClientsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
                       {typeLabels[c.clientType]}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full ${statusColors[c.status]}`}
+                        className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${statusColors[c.status]}`}
                       >
                         {statusLabels[c.status]}
                       </span>
@@ -424,7 +424,7 @@ export function ClientsPage() {
                         {fmtVND(c.outstandingBalance)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden xl:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden xl:table-cell">
                       {c.accountManager?.fullName ?? "—"}
                     </td>
                     <td className="px-4 py-3">
@@ -448,24 +448,24 @@ export function ClientsPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border flex items-center justify-between">
             <span>{total} khách hàng</span>
             {totalPages > 1 && (
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchClients(page - 1)}
                   disabled={page <= 1}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Trước
                 </button>
-                <span className="px-3 py-1 text-[11px]">
+                <span className="px-3 py-1 text-[0.6875rem]">
                   Trang {page}/{totalPages}
                 </span>
                 <button
                   onClick={() => fetchClients(page + 1)}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Sau
                 </button>
@@ -546,23 +546,23 @@ function ClientDetailPanel({
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-[18px] font-medium">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-lg font-medium">
               {c.companyName[0]}
             </div>
             <div>
-              <h2 className="text-[18px]">{c.companyName}</h2>
+              <h2 className="text-lg">{c.companyName}</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 {c.clientCode && (
-                  <span className="text-[11px] text-muted-foreground font-mono">
+                  <span className="text-[0.6875rem] text-muted-foreground font-mono">
                     {c.clientCode}
                   </span>
                 )}
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full ${statusColors[c.status]}`}
+                  className={`text-[0.625rem] px-2 py-0.5 rounded-full ${statusColors[c.status]}`}
                 >
                   {statusLabels[c.status]}
                 </span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[0.6875rem] text-muted-foreground">
                   {typeLabels[c.clientType]}
                 </span>
               </div>
@@ -572,7 +572,7 @@ function ClientDetailPanel({
             {canManage && (
               <button
                 onClick={onEdit}
-                className="px-3 py-1.5 border border-border rounded-lg text-[12px] hover:bg-accent flex items-center gap-1"
+                className="px-3 py-1.5 border border-border rounded-lg text-xs hover:bg-accent flex items-center gap-1"
               >
                 <Edit2 size={12} /> Sửa
               </button>
@@ -589,7 +589,7 @@ function ClientDetailPanel({
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 text-[13px] border-b-2 transition-colors ${tab === t ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground"}`}
+              className={`flex-1 py-2.5 text-[0.8125rem] border-b-2 transition-colors ${tab === t ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground"}`}
             >
               {t === "info"
                 ? "Thông tin"
@@ -603,7 +603,7 @@ function ClientDetailPanel({
         <div className="p-5">
           {tab === "info" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-[13px]">
+              <div className="grid grid-cols-2 gap-4 text-[0.8125rem]">
                 {[
                   {
                     label: "Ngành nghề",
@@ -657,7 +657,7 @@ function ClientDetailPanel({
                   },
                 ].map((f) => (
                   <div key={f.label}>
-                    <div className="text-[11px] text-muted-foreground flex items-center gap-1 mb-0.5">
+                    <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1 mb-0.5">
                       {f.icon}
                       {f.label}
                     </div>
@@ -666,7 +666,7 @@ function ClientDetailPanel({
                 ))}
               </div>
               {c.notes && (
-                <div className="bg-muted/30 rounded-lg p-3 text-[12px] text-muted-foreground">
+                <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground">
                   <div className="font-medium text-foreground mb-1">
                     Ghi chú
                   </div>
@@ -676,7 +676,7 @@ function ClientDetailPanel({
               {/* Status change */}
               {canManage && (
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-                  <span className="text-[12px] text-muted-foreground self-center">
+                  <span className="text-xs text-muted-foreground self-center">
                     Đổi trạng thái:
                   </span>
                   {(
@@ -693,7 +693,7 @@ function ClientDetailPanel({
                         key={s}
                         onClick={() => onStatusChange(s)}
                         disabled={statusChanging}
-                        className={`text-[11px] px-2.5 py-1 rounded-lg transition-opacity flex items-center gap-1 ${
+                        className={`text-[0.6875rem] px-2.5 py-1 rounded-lg transition-opacity flex items-center gap-1 ${
                           statusChanging
                             ? "cursor-not-allowed opacity-60"
                             : "cursor-pointer hover:opacity-80"
@@ -720,14 +720,14 @@ function ClientDetailPanel({
                 <div className="flex justify-end">
                   <button
                     onClick={() => setShowAddContact(true)}
-                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-blue-700"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-blue-700"
                   >
                     <Plus size={12} /> Thêm liên hệ
                   </button>
                 </div>
               )}
               {(c.contacts ?? []).length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-[13px]">
+                <div className="text-center py-8 text-muted-foreground text-[0.8125rem]">
                   <Users size={32} className="mx-auto mb-2 opacity-30" />
                   Chưa có liên hệ nào
                 </div>
@@ -737,24 +737,24 @@ function ClientDetailPanel({
                     key={ct.id}
                     className="flex items-start gap-3 p-3 bg-muted/20 rounded-xl"
                   >
-                    <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-[12px] shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs shrink-0">
                       {ct.fullName[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium">
+                        <span className="text-[0.8125rem] font-medium">
                           {ct.fullName}
                         </span>
                         {ct.isPrimary && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">
+                          <span className="text-[0.625rem] px-1.5 py-0.5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded">
                             Chính
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {ct.jobTitle ?? ""}
                       </div>
-                      <div className="flex gap-3 mt-1 text-[11px] text-muted-foreground">
+                      <div className="flex gap-3 mt-1 text-[0.6875rem] text-muted-foreground">
                         {ct.email && (
                           <span className="flex items-center gap-0.5">
                             <Mail size={10} />
@@ -774,7 +774,7 @@ function ClientDetailPanel({
                         {!ct.isPrimary && (
                           <button
                             onClick={() => onSetPrimary(ct.id)}
-                            className="px-2 py-1 text-[10px] border border-border rounded hover:bg-accent"
+                            className="px-2 py-1 text-[0.625rem] border border-border rounded hover:bg-accent"
                           >
                             Đặt chính
                           </button>
@@ -843,10 +843,10 @@ function ClientDetailPanel({
                   key={s.label}
                   className="bg-muted/30 rounded-xl p-3 text-center"
                 >
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-[0.625rem] text-muted-foreground">
                     {s.label}
                   </div>
-                  <div className={`text-[16px] mt-1 ${s.color}`}>{s.value}</div>
+                  <div className={`text-base mt-1 ${s.color}`}>{s.value}</div>
                 </div>
               ))}
             </div>
@@ -878,7 +878,7 @@ function AddContactDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Thêm liên hệ</h3>
+          <h3 className="text-base">Thêm liên hệ</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -899,7 +899,7 @@ function AddContactDialog({
             { label: "Điện thoại", key: "phone", placeholder: "0901234567" },
           ].map((f) => (
             <div key={f.key}>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 {f.label}
               </label>
               <input
@@ -910,11 +910,11 @@ function AddContactDialog({
                   setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                 }
                 placeholder={f.placeholder}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           ))}
-          <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+          <label className="flex items-center gap-2 text-[0.8125rem] cursor-pointer">
             <input
               type="checkbox"
               checked={form.isPrimary}
@@ -928,7 +928,7 @@ function AddContactDialog({
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
@@ -946,7 +946,7 @@ function AddContactDialog({
                 isPrimary: form.isPrimary,
               });
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700"
           >
             Thêm
           </button>
@@ -1012,7 +1012,7 @@ function ClientFormDialog({
     type = "text",
   ) => (
     <div key={key}>
-      <label className="block text-[12px] text-muted-foreground mb-1">
+      <label className="block text-xs text-muted-foreground mb-1">
         {label}
       </label>
       <input
@@ -1020,7 +1020,7 @@ function ClientFormDialog({
         value={form[key] as string}
         onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
         placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
       />
     </div>
   );
@@ -1030,7 +1030,7 @@ function ClientFormDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">
+          <h3 className="text-base">
             {client ? "Cập nhật khách hàng" : "Thêm khách hàng"}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
@@ -1040,7 +1040,7 @@ function ClientFormDialog({
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Loại *
               </label>
               <select
@@ -1051,7 +1051,7 @@ function ClientFormDialog({
                     clientType: e.target.value as ClientType,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {Object.entries(typeLabels).map(([k, v]) => (
                   <option key={k} value={k}>
@@ -1080,7 +1080,7 @@ function ClientFormDialog({
           </div>
           {F("Địa chỉ", "address", "123 Nguyễn Huệ, Q.1")}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ghi chú
             </label>
             <textarea
@@ -1089,21 +1089,21 @@ function ClientFormDialog({
                 setForm((f) => ({ ...f, notes: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />

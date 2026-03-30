@@ -260,7 +260,7 @@ export function AttendanceAdminPage() {
 
   if (!isAdminHR && !isManager) {
     return (
-      <div className="p-8 text-center text-muted-foreground text-[14px]">
+      <div className="p-8 text-center text-muted-foreground text-sm">
         Bạn không có quyền truy cập trang này.
       </div>
     );
@@ -271,9 +271,9 @@ export function AttendanceAdminPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[20px] font-semibold">Quản lý chấm công</h1>
+      <h1 className="text-xl font-semibold">Quản lý chấm công</h1>
       {loadingReqs && (
-        <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        <div className="flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
           <Loader2 size={14} className="animate-spin" /> Đang tải dữ liệu...
         </div>
       )}
@@ -283,12 +283,12 @@ export function AttendanceAdminPage() {
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-3 py-2.5 text-[0.8125rem] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             {t.icon}
             {t.label}
             {t.badge ? (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-full">
+              <span className="ml-1 px-1.5 py-0.5 text-[0.625rem] bg-red-500 text-white rounded-full">
                 {t.badge}
               </span>
             ) : null}
@@ -374,7 +374,7 @@ function ApproveTab({
 
   return (
     <div className="space-y-3">
-      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-[12px] text-blue-700 dark:text-blue-400">
+      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-700 dark:text-blue-400">
         <AlertTriangle size={14} className="shrink-0 mt-0.5" />
         <span>
           Khi duyệt yêu cầu, hệ thống sẽ tự động tạo hoặc cập nhật bản ghi chấm
@@ -392,7 +392,7 @@ function ApproveTab({
           placeholder="Tìm nhân viên, ngày..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -410,11 +410,11 @@ function ApproveTab({
           <button
             key={t.key}
             onClick={() => setSubTab(t.key as typeof subTab)}
-            className={`px-3 py-1.5 rounded-lg text-[12px] border transition ${subTab === t.key ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "border-border text-muted-foreground hover:bg-accent"}`}
+            className={`px-3 py-1.5 rounded-lg text-xs border transition ${subTab === t.key ? "border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "border-border text-muted-foreground hover:bg-accent"}`}
           >
             {t.label}{" "}
             {t.count > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-full">
+              <span className="ml-1 px-1.5 py-0.5 text-[0.625rem] bg-red-500 text-white rounded-full">
                 {t.count}
               </span>
             )}
@@ -423,7 +423,7 @@ function ApproveTab({
         {subTab !== "processed" && shown.length > 0 && (
           <button
             onClick={() => onApproveAll(shown.map((r) => r.id))}
-            className="px-3 py-1.5 rounded-lg text-[12px] bg-emerald-600 text-white hover:bg-emerald-700 transition ml-auto"
+            className="px-3 py-1.5 rounded-lg text-xs bg-emerald-600 text-white hover:bg-emerald-700 transition ml-auto"
           >
             <Check size={12} className="inline mr-1" />
             Duyệt tất cả ({shown.length})
@@ -432,7 +432,7 @@ function ApproveTab({
       </div>
 
       {shown.length === 0 ? (
-        <div className="text-center py-10 text-muted-foreground text-[13px]">
+        <div className="text-center py-10 text-muted-foreground text-[0.8125rem]">
           Không có yêu cầu nào
         </div>
       ) : (
@@ -460,21 +460,21 @@ function ApproveTab({
                       )}
                     </div>
                     <div>
-                      <div className="text-[13px] font-medium">
+                      <div className="text-[0.8125rem] font-medium">
                         {displayName}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {rType === "CHECK_IN" ? "Check-in" : "Check-out"} ·{" "}
                         {rTime ? new Date(rTime).toLocaleString("vi-VN") : "—"}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         Ngày:{" "}
                         {workDate
                           ? new Date(workDate).toLocaleDateString("vi-VN")
                           : "—"}
                       </div>
                       {noteText && (
-                        <div className="text-[11px] italic text-muted-foreground">
+                        <div className="text-[0.6875rem] italic text-muted-foreground">
                           {noteText}
                         </div>
                       )}
@@ -482,7 +482,7 @@ function ApproveTab({
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-[11px] px-2 py-0.5 rounded-full ${reqStatusColors[r.status] ?? ""}`}
+                      className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${reqStatusColors[r.status] ?? ""}`}
                     >
                       {reqStatusLabels[r.status] ?? r.status}
                     </span>
@@ -490,7 +490,7 @@ function ApproveTab({
                       <>
                         <button
                           onClick={() => onApprove(r.id)}
-                          className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-emerald-700 transition"
+                          className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-emerald-700 transition"
                         >
                           <Check size={12} /> Duyệt
                         </button>
@@ -499,7 +499,7 @@ function ApproveTab({
                             setRejectDialog(r.id);
                             setRejectReason("");
                           }}
-                          className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-red-700 transition"
+                          className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-red-700 transition"
                         >
                           <X size={12} /> Từ chối
                         </button>
@@ -521,24 +521,24 @@ function ApproveTab({
             onClick={() => setRejectDialog(null)}
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">
-            <h3 className="text-[15px] font-medium">Lý do từ chối</h3>
+            <h3 className="text-[0.9375rem] font-medium">Lý do từ chối</h3>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               rows={3}
               placeholder="Nhập lý do từ chối..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setRejectDialog(null)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleReject}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-[13px] hover:bg-red-700 transition"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-[0.8125rem] hover:bg-red-700 transition"
               >
                 Từ chối
               </button>
@@ -699,31 +699,31 @@ function AdjustTab({
             placeholder="Tìm nhân viên..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <input
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
         />
         <input
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
         />
         <button
           onClick={() => setCreateOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition whitespace-nowrap"
+          className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 transition whitespace-nowrap"
         >
           <Plus size={14} /> Tạo chấm công
         </button>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="hidden sm:grid grid-cols-[1fr_100px_120px_120px_80px_80px_40px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="hidden sm:grid grid-cols-[1fr_100px_120px_120px_80px_80px_40px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide">
           <span>Nhân viên</span>
           <span>Ngày</span>
           <span>Check-in</span>
@@ -734,7 +734,7 @@ function AdjustTab({
         </div>
         <div className="divide-y divide-border">
           {filtered.length === 0 && (
-            <div className="text-center py-10 text-muted-foreground text-[13px]">
+            <div className="text-center py-10 text-muted-foreground text-[0.8125rem]">
               Không có bản ghi nào trong khoảng thời gian này
             </div>
           )}
@@ -754,22 +754,22 @@ function AdjustTab({
                 className="grid sm:grid-cols-[1fr_100px_120px_120px_80px_80px_40px] gap-3 px-4 py-3 items-center hover:bg-muted/30 transition"
               >
                 <div>
-                  <div className="text-[13px]">{displayName}</div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-[0.8125rem]">{displayName}</div>
+                  <div className="text-[0.6875rem] text-muted-foreground">
                     {displayCode}
                   </div>
                 </div>
-                <div className="text-[12px]">
+                <div className="text-xs">
                   {new Date(r.workDate).toLocaleDateString("vi-VN")}
                 </div>
-                <div className="text-[12px]">{fmtT(r.checkInAt)}</div>
-                <div className="text-[12px]">{fmtT(r.checkOutAt)}</div>
-                <div className="text-[12px]">
+                <div className="text-xs">{fmtT(r.checkInAt)}</div>
+                <div className="text-xs">{fmtT(r.checkOutAt)}</div>
+                <div className="text-xs">
                   {Math.floor((r.totalWorkMinutes ?? 0) / 60)}h
                   {(r.totalWorkMinutes ?? 0) % 60}m
                 </div>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${attStatusBg[r.status] ?? ""}`}
+                  className={`text-[0.625rem] px-1.5 py-0.5 rounded-full ${attStatusBg[r.status] ?? ""}`}
                 >
                   {attStatusLabels[r.status] ?? r.status}
                 </span>
@@ -794,7 +794,7 @@ function AdjustTab({
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-medium">Tạo bản ghi chấm công</h3>
+              <h3 className="text-[0.9375rem] font-medium">Tạo bản ghi chấm công</h3>
               <button
                 onClick={() => setCreateOpen(false)}
                 className="p-1.5 rounded-lg hover:bg-accent"
@@ -803,13 +803,13 @@ function AdjustTab({
               </button>
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Nhân viên <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <div
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] cursor-pointer flex items-center justify-between"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] cursor-pointer flex items-center justify-between"
                 >
                   <span className={selectedUser ? "" : "text-muted-foreground"}>
                     {selectedUser
@@ -834,7 +834,7 @@ function AdjustTab({
                           placeholder="Tìm nhân viên..."
                           value={userSearch}
                           onChange={(e) => setUserSearch(e.target.value)}
-                          className="w-full pl-8 pr-3 py-1.5 rounded-md border border-border bg-background text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-8 pr-3 py-1.5 rounded-md border border-border bg-background text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                           autoFocus
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -842,7 +842,7 @@ function AdjustTab({
                     </div>
                     <div className="overflow-y-auto max-h-44">
                       {filteredUsers.length === 0 && (
-                        <div className="px-3 py-2 text-[12px] text-muted-foreground text-center">
+                        <div className="px-3 py-2 text-xs text-muted-foreground text-center">
                           Không tìm thấy nhân viên
                         </div>
                       )}
@@ -855,7 +855,7 @@ function AdjustTab({
                             setUserDropdownOpen(false);
                             setUserSearch("");
                           }}
-                          className={`w-full text-left px-3 py-2 text-[12px] hover:bg-accent transition ${
+                          className={`w-full text-left px-3 py-2 text-xs hover:bg-accent transition ${
                             createForm.userId === u.id
                               ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600"
                               : ""
@@ -873,7 +873,7 @@ function AdjustTab({
               </div>
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Ngày làm việc <span className="text-red-500">*</span>
               </label>
               <input
@@ -882,7 +882,7 @@ function AdjustTab({
                 onChange={(e) =>
                   setCreateForm((p) => ({ ...p, workDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
               />
             </div>
             {(
@@ -892,7 +892,7 @@ function AdjustTab({
               ] as const
             ).map((f) => (
               <div key={f.key}>
-                <label className="text-[12px] text-muted-foreground block mb-1">
+                <label className="text-xs text-muted-foreground block mb-1">
                   {f.label}
                 </label>
                 <input
@@ -901,12 +901,12 @@ function AdjustTab({
                   onChange={(e) =>
                     setCreateForm((p) => ({ ...p, [f.key]: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
                 />
               </div>
             ))}
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Ghi chú
               </label>
               <input
@@ -916,20 +916,20 @@ function AdjustTab({
                   setCreateForm((p) => ({ ...p, note: e.target.value }))
                 }
                 placeholder="Lý do điều chỉnh thủ công..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
               />
             </div>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setCreateOpen(false)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition disabled:opacity-60"
+                className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 transition disabled:opacity-60"
               >
                 {creating && <Loader2 size={13} className="animate-spin" />}
                 Tạo bản ghi
@@ -948,7 +948,7 @@ function AdjustTab({
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-medium">Điều chỉnh bản ghi</h3>
+              <h3 className="text-[0.9375rem] font-medium">Điều chỉnh bản ghi</h3>
               <button
                 onClick={() => setEditRecord(null)}
                 className="p-1.5 rounded-lg hover:bg-accent"
@@ -956,7 +956,7 @@ function AdjustTab({
                 <X size={15} />
               </button>
             </div>
-            <div className="bg-muted/50 rounded-lg p-3 text-[12px]">
+            <div className="bg-muted/50 rounded-lg p-3 text-xs">
               <div>
                 {editRecord.user?.fullName ?? editRecord.userId ?? "—"} —{" "}
                 {new Date(editRecord.workDate).toLocaleDateString("vi-VN")}
@@ -967,7 +967,7 @@ function AdjustTab({
               { label: "Giờ check-out", key: "checkOutAt" },
             ].map((f) => (
               <div key={f.key}>
-                <label className="text-[12px] text-muted-foreground block mb-1">
+                <label className="text-xs text-muted-foreground block mb-1">
                   {f.label}
                 </label>
                 <input
@@ -976,12 +976,12 @@ function AdjustTab({
                   onChange={(e) =>
                     setEditForm((p) => ({ ...p, [f.key]: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
                 />
               </div>
             ))}
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Trạng thái
               </label>
               <select
@@ -989,7 +989,7 @@ function AdjustTab({
                 onChange={(e) =>
                   setEditForm((p) => ({ ...p, status: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
               >
                 {Object.entries(attStatusLabels).map(([v, l]) => (
                   <option key={v} value={v}>
@@ -999,7 +999,7 @@ function AdjustTab({
               </select>
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Ghi chú
               </label>
               <input
@@ -1008,19 +1008,19 @@ function AdjustTab({
                 onChange={(e) =>
                   setEditForm((p) => ({ ...p, note: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
               />
             </div>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setEditRecord(null)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 transition"
               >
                 Lưu thay đổi
               </button>
@@ -1101,20 +1101,20 @@ function SummaryTab({ records }: { records: ApiAttendanceRecord[] }) {
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <div>
-          <label className="text-[12px] text-muted-foreground block mb-1">
+          <label className="text-xs text-muted-foreground block mb-1">
             Tháng
           </label>
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           />
         </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="hidden sm:grid grid-cols-[2fr_80px_80px_80px_80px_80px_100px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="hidden sm:grid grid-cols-[2fr_80px_80px_80px_80px_80px_100px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide">
           <span>Phòng ban</span>
           <span>NV</span>
           <span>Có mặt</span>
@@ -1131,18 +1131,18 @@ function SummaryTab({ records }: { records: ApiAttendanceRecord[] }) {
             >
               <div className="flex items-center gap-2">
                 <Building2 size={14} className="text-muted-foreground" />
-                <span className="text-[13px]">{d.name}</span>
+                <span className="text-[0.8125rem]">{d.name}</span>
               </div>
-              <span className="text-[12px]">{d.employees.size}</span>
-              <span className="text-[12px] text-emerald-600">{d.present}</span>
-              <span className="text-[12px] text-red-500">{d.absent}</span>
-              <span className="text-[12px] text-blue-500">{d.leave}</span>
+              <span className="text-xs">{d.employees.size}</span>
+              <span className="text-xs text-emerald-600">{d.present}</span>
+              <span className="text-xs text-red-500">{d.absent}</span>
+              <span className="text-xs text-blue-500">{d.leave}</span>
               <span
-                className={`text-[12px] ${d.lateMinutes > 0 ? "text-amber-600" : "text-muted-foreground"}`}
+                className={`text-xs ${d.lateMinutes > 0 ? "text-amber-600" : "text-muted-foreground"}`}
               >
                 {d.lateMinutes}
               </span>
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {Math.floor(d.totalMinutes / 60)}h{d.totalMinutes % 60}m
               </span>
             </div>

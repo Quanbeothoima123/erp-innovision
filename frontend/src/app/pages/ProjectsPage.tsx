@@ -261,7 +261,7 @@ export function ProjectsPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <FolderKanban size={22} className="text-blue-600" /> Quản lý dự án
         </h1>
         <div className="flex gap-2">
@@ -275,7 +275,7 @@ export function ProjectsPage() {
           {isAdminMgr && (
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
             >
               <Plus size={16} /> Tạo dự án
             </button>
@@ -319,8 +319,8 @@ export function ProjectsPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">{s.label}</div>
-              <div className={`text-[18px] ${s.color}`}>{s.value}</div>
+              <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
+              <div className={`text-lg ${s.color}`}>{s.value}</div>
             </div>
           </div>
         ))}
@@ -338,13 +338,13 @@ export function ProjectsPage() {
             placeholder="Tìm dự án, mã, khách hàng..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả trạng thái</option>
           {Object.entries(statusLabels).map(([k, v]) => (
@@ -356,7 +356,7 @@ export function ProjectsPage() {
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả ưu tiên</option>
           {Object.entries(priorityLabels).map(([k, v]) => (
@@ -368,7 +368,7 @@ export function ProjectsPage() {
         <select
           value={healthFilter}
           onChange={(e) => setHealthFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả sức khoẻ</option>
           {Object.entries(healthLabels).map(([k, v]) => (
@@ -383,7 +383,7 @@ export function ProjectsPage() {
               setPriorityFilter("");
               setHealthFilter("");
             }}
-            className="px-3 py-2 rounded-lg border border-border text-[13px] text-muted-foreground hover:bg-accent"
+            className="px-3 py-2 rounded-lg border border-border text-[0.8125rem] text-muted-foreground hover:bg-accent"
           >
             Xoá lọc
           </button>
@@ -394,12 +394,12 @@ export function ProjectsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : projects.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center text-muted-foreground">
           <FolderKanban size={40} className="mx-auto mb-2 opacity-30" />
-          <div className="text-[14px]">Chưa có dự án nào</div>
+          <div className="text-sm">Chưa có dự án nào</div>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -418,21 +418,21 @@ export function ProjectsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-[12px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             Trang {page}/{totalPages} — {total} dự án
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => fetchProjects(page - 1)}
               disabled={page <= 1 || loading}
-              className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50"
             >
               Trước
             </button>
             <button
               onClick={() => fetchProjects(page + 1)}
               disabled={page >= totalPages || loading}
-              className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50"
             >
               Sau
             </button>
@@ -491,19 +491,19 @@ function ProjectCard({
           <div className="flex items-center gap-2 flex-wrap mb-1">
             {p.healthStatus && (
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-full ${healthColors[p.healthStatus]}`}
+                className={`text-[0.625rem] px-1.5 py-0.5 rounded-full ${healthColors[p.healthStatus]}`}
               >
                 {healthEmoji[p.healthStatus]} {healthLabels[p.healthStatus]}
               </span>
             )}
             <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[p.status]}`}
+              className={`text-[0.625rem] px-1.5 py-0.5 rounded-full ${statusColors[p.status]}`}
             >
               {statusLabels[p.status]}
             </span>
           </div>
-          <h3 className="text-[14px] font-medium truncate">{p.projectName}</h3>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
+          <h3 className="text-sm font-medium truncate">{p.projectName}</h3>
+          <div className="text-[0.6875rem] text-muted-foreground mt-0.5">
             {p.projectCode && (
               <span className="font-mono">{p.projectCode} • </span>
             )}
@@ -512,7 +512,7 @@ function ProjectCard({
         </div>
         {p.priority && (
           <span
-            className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${priorityColors[p.priority]}`}
+            className={`text-[0.625rem] px-1.5 py-0.5 rounded shrink-0 ${priorityColors[p.priority]}`}
           >
             {priorityLabels[p.priority]}
           </span>
@@ -521,7 +521,7 @@ function ProjectCard({
 
       {/* Progress */}
       <div className="mb-3">
-        <div className="flex justify-between text-[11px] text-muted-foreground mb-1">
+        <div className="flex justify-between text-[0.6875rem] text-muted-foreground mb-1">
           <span>Tiến độ</span>
           <span>{p.progressPercent}%</span>
         </div>
@@ -536,7 +536,7 @@ function ProjectCard({
       {/* Budget */}
       {p.budgetAmount && (
         <div className="mb-3">
-          <div className="flex justify-between text-[11px] text-muted-foreground mb-1">
+          <div className="flex justify-between text-[0.6875rem] text-muted-foreground mb-1">
             <span>Ngân sách</span>
             <span className={budgetPct > 90 ? "text-red-500" : ""}>
               {budgetPct.toFixed(0)}%
@@ -548,7 +548,7 @@ function ProjectCard({
               style={{ width: `${budgetBar}%` }}
             />
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+          <div className="flex justify-between text-[0.625rem] text-muted-foreground mt-0.5">
             <span>Đã dùng: {fmtVNDShort(p.spentAmount)}</span>
             <span>Tổng: {fmtVNDShort(p.budgetAmount)}</span>
           </div>
@@ -556,7 +556,7 @@ function ProjectCard({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+      <div className="flex items-center justify-between text-[0.6875rem] text-muted-foreground">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <Users size={11} /> {p.activeMemberCount}
@@ -584,8 +584,8 @@ function ProjectCard({
 
       {/* PM */}
       {p.projectManager && (
-        <div className="mt-2 pt-2 border-t border-border flex items-center gap-2 text-[11px] text-muted-foreground">
-          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+        <div className="mt-2 pt-2 border-t border-border flex items-center gap-2 text-[0.6875rem] text-muted-foreground">
+          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.5625rem] shrink-0">
             {p.projectManager.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
           </div>
           <span>PM: {p.projectManager.fullName}</span>
@@ -709,7 +709,7 @@ function ProjectFormDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">{title}</h3>
+          <h3 className="text-base">{title}</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -717,7 +717,7 @@ function ProjectFormDialog({
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Tên dự án *
               </label>
               <input
@@ -726,11 +726,11 @@ function ProjectFormDialog({
                   setForm((f) => ({ ...f, projectName: e.target.value }))
                 }
                 placeholder="Nhập tên dự án..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Mã dự án
               </label>
               <input
@@ -742,11 +742,11 @@ function ProjectFormDialog({
                   }))
                 }
                 placeholder="DA-001"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] uppercase"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] uppercase"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ưu tiên
               </label>
               <select
@@ -757,7 +757,7 @@ function ProjectFormDialog({
                     priority: e.target.value as ProjectPriority,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {Object.entries(priorityLabels).map(([k, v]) => (
                   <option key={k} value={k}>
@@ -767,7 +767,7 @@ function ProjectFormDialog({
               </select>
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Trạng thái
               </label>
               <select
@@ -778,7 +778,7 @@ function ProjectFormDialog({
                     status: e.target.value as ProjectStatus,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {Object.entries(statusLabels).map(([k, v]) => (
                   <option key={k} value={k}>
@@ -788,7 +788,7 @@ function ProjectFormDialog({
               </select>
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày bắt đầu
               </label>
               <input
@@ -797,11 +797,11 @@ function ProjectFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, startDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày kết thúc
               </label>
               <input
@@ -810,13 +810,13 @@ function ProjectFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, endDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
 
             {/* ── Project Manager ── */}
             <div className="col-span-2">
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Quản lý dự án (PM)
               </label>
               <select
@@ -828,7 +828,7 @@ function ProjectFormDialog({
                   }))
                 }
                 disabled={loadingDropdowns}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] disabled:opacity-60"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] disabled:opacity-60"
               >
                 <option value="">-- Chưa chọn PM --</option>
                 {users.map((u) => (
@@ -841,7 +841,7 @@ function ProjectFormDialog({
 
             {/* ── Client ── */}
             <div className="col-span-2">
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Khách hàng
               </label>
               <select
@@ -854,7 +854,7 @@ function ProjectFormDialog({
                   }))
                 }
                 disabled={loadingDropdowns}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] disabled:opacity-60"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] disabled:opacity-60"
               >
                 <option value="">-- Nội bộ (không có KH) --</option>
                 {clients.map((c) => (
@@ -869,7 +869,7 @@ function ProjectFormDialog({
             {/* ── Contract (only show if client selected) ── */}
             {form.clientId && (
               <div className="col-span-2">
-                <label className="block text-[12px] text-muted-foreground mb-1">
+                <label className="block text-xs text-muted-foreground mb-1">
                   Hợp đồng liên kết
                 </label>
                 <select
@@ -877,7 +877,7 @@ function ProjectFormDialog({
                   onChange={(e) =>
                     setForm((f) => ({ ...f, contractId: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                 >
                   <option value="">-- Không liên kết hợp đồng --</option>
                   {contracts.map((c) => (
@@ -891,7 +891,7 @@ function ProjectFormDialog({
             )}
 
             <div className="col-span-2">
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngân sách (VND)
               </label>
               <input
@@ -901,11 +901,11 @@ function ProjectFormDialog({
                   setForm((f) => ({ ...f, budgetAmount: e.target.value }))
                 }
                 placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Mô tả
               </label>
               <textarea
@@ -915,7 +915,7 @@ function ProjectFormDialog({
                 }
                 rows={3}
                 placeholder="Mô tả ngắn về dự án..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
               />
             </div>
           </div>
@@ -923,14 +923,14 @@ function ProjectFormDialog({
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -1050,7 +1050,7 @@ export function ProjectExpensesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px]">Chi phí dự án</h1>
+        <h1 className="text-xl">Chi phí dự án</h1>
         <button
           onClick={() => fetchExpenses(page)}
           disabled={loading}
@@ -1063,33 +1063,33 @@ export function ProjectExpensesPage() {
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1">
             <Clock size={12} /> Đang chờ duyệt
           </div>
-          <div className="text-[20px] mt-1 text-yellow-600">
+          <div className="text-xl mt-1 text-yellow-600">
             {stats.pending}
           </div>
-          <div className="text-[12px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {fmtVND(stats.totalPending)}
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1">
             <CheckCircle2 size={12} /> Đã duyệt
           </div>
-          <div className="text-[20px] mt-1 text-green-600">
+          <div className="text-xl mt-1 text-green-600">
             {stats.approved}
           </div>
-          <div className="text-[12px] text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             {fmtVND(stats.totalApproved)}
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1">
             <AlertTriangle size={12} /> Bị từ chối
           </div>
-          <div className="text-[20px] mt-1 text-red-600">{stats.rejected}</div>
-          <div className="text-[12px] text-muted-foreground">{total} tổng</div>
+          <div className="text-xl mt-1 text-red-600">{stats.rejected}</div>
+          <div className="text-xs text-muted-foreground">{total} tổng</div>
         </div>
       </div>
 
@@ -1105,13 +1105,13 @@ export function ProjectExpensesPage() {
             placeholder="Tìm tiêu đề, mô tả..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả TT</option>
           {Object.entries(expStatusLabels).map(([k, v]) => (
@@ -1123,7 +1123,7 @@ export function ProjectExpensesPage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả loại</option>
           {Object.entries(expCategoryLabels).map(([k, v]) => (
@@ -1138,36 +1138,36 @@ export function ProjectExpensesPage() {
       {loading ? (
         <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
           <Loader2 size={18} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Dự án
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Tiêu đề
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Loại
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Số tiền
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Người gửi
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Ngày
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Trạng thái
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Thao tác
                   </th>
                 </tr>
@@ -1178,27 +1178,27 @@ export function ProjectExpensesPage() {
                     key={e.id}
                     className="border-t border-border hover:bg-accent/50"
                   >
-                    <td className="px-4 py-3 text-[12px]">
+                    <td className="px-4 py-3 text-xs">
                       {e.project?.projectName ?? "—"}
                     </td>
                     <td className="px-4 py-3 max-w-[180px] truncate">
                       {e.title}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-muted">
+                      <span className="text-[0.6875rem] px-2 py-0.5 rounded bg-muted">
                         {expCategoryLabels[e.category]}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">{fmtVND(e.amount)}</td>
-                    <td className="px-4 py-3 text-[12px] hidden md:table-cell">
+                    <td className="px-4 py-3 text-xs hidden md:table-cell">
                       {e.submittedBy?.fullName ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-[12px] hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs hidden lg:table-cell">
                       {fmtDate(e.expenseDate)}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
+                        className={`text-[0.625rem] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
                       >
                         {expStatusLabels[e.status]}
                       </span>
@@ -1229,13 +1229,13 @@ export function ProjectExpensesPage() {
                                   }
                                   placeholder="Lý do *"
                                   autoFocus
-                                  className="w-28 px-2 py-1 rounded border border-red-300 text-[11px] bg-input-background"
+                                  className="w-28 px-2 py-1 rounded border border-red-300 text-[0.6875rem] bg-input-background"
                                 />
                                 <button
                                   onClick={() =>
                                     handleReject(e.project!.id, e.id)
                                   }
-                                  className="p-1.5 bg-red-600 text-white rounded text-[11px]"
+                                  className="p-1.5 bg-red-600 text-white rounded text-[0.6875rem]"
                                 >
                                   ✓
                                 </button>
@@ -1244,7 +1244,7 @@ export function ProjectExpensesPage() {
                                     setRejectingId(null);
                                     setRejectReason("");
                                   }}
-                                  className="p-1.5 border border-border rounded text-[11px]"
+                                  className="p-1.5 border border-border rounded text-[0.6875rem]"
                                 >
                                   ✕
                                 </button>
@@ -1276,7 +1276,7 @@ export function ProjectExpensesPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
             {displayed.length} / {total} chi phí
           </div>
         </div>
@@ -1285,21 +1285,21 @@ export function ProjectExpensesPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-[12px] text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             Trang {page}/{totalPages}
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => fetchExpenses(page - 1)}
               disabled={page <= 1 || loading}
-              className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50"
             >
               Trước
             </button>
             <button
               onClick={() => fetchExpenses(page + 1)}
               disabled={page >= totalPages || loading}
-              className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50"
             >
               Sau
             </button>
@@ -1331,12 +1331,12 @@ function ExpenseDetailDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Chi tiết chi phí</h3>
+          <h3 className="text-base">Chi tiết chi phí</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
         </div>
-        <div className="p-4 space-y-3 text-[13px]">
+        <div className="p-4 space-y-3 text-[0.8125rem]">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Tiêu đề:</span>
             <span>{e.title}</span>
@@ -1364,18 +1364,18 @@ function ExpenseDetailDialog({
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Trạng thái:</span>
             <span
-              className={`text-[11px] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
+              className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${expStatusColors[e.status]}`}
             >
               {expStatusLabels[e.status]}
             </span>
           </div>
           {e.rejectReason && (
-            <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-3 text-[12px] text-red-700 dark:text-red-400">
+            <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-3 text-xs text-red-700 dark:text-red-400">
               Lý do từ chối: {e.rejectReason}
             </div>
           )}
           {e.description && (
-            <div className="text-[12px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               {e.description}
             </div>
           )}
@@ -1383,7 +1383,7 @@ function ExpenseDetailDialog({
         <div className="flex justify-end p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Đóng
           </button>
@@ -1463,14 +1463,14 @@ export function ProjectHealthPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <Gauge size={22} /> Project Health Dashboard
         </h1>
         <div className="flex gap-2">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           >
             <option value="">Tất cả trạng thái</option>
             {Object.entries(statusLabels).map(([k, v]) => (
@@ -1492,7 +1492,7 @@ export function ProjectHealthPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <>
@@ -1500,7 +1500,7 @@ export function ProjectHealthPage() {
           <div className="grid md:grid-cols-2 gap-4">
             {/* Health Pie */}
             <div className="bg-card border border-border rounded-xl p-4">
-              <div className="text-[13px] mb-3">Phân bố sức khoẻ dự án</div>
+              <div className="text-[0.8125rem] mb-3">Phân bố sức khoẻ dự án</div>
               {healthDist.length > 0 ? (
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
@@ -1526,7 +1526,7 @@ export function ProjectHealthPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="py-8 text-center text-muted-foreground text-[13px]">
+                <div className="py-8 text-center text-muted-foreground text-[0.8125rem]">
                   Không có dữ liệu
                 </div>
               )}
@@ -1534,7 +1534,7 @@ export function ProjectHealthPage() {
 
             {/* Budget usage bar */}
             <div className="bg-card border border-border rounded-xl p-4">
-              <div className="text-[13px] mb-3">
+              <div className="text-[0.8125rem] mb-3">
                 Tỉ lệ sử dụng ngân sách (%)
               </div>
               {budgetByProject.length > 0 ? (
@@ -1570,7 +1570,7 @@ export function ProjectHealthPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="py-8 text-center text-muted-foreground text-[13px]">
+                <div className="py-8 text-center text-muted-foreground text-[0.8125rem]">
                   Không có dự án có ngân sách
                 </div>
               )}
@@ -1580,33 +1580,33 @@ export function ProjectHealthPage() {
           {/* Project health table */}
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-              <span className="text-[13px]">
+              <span className="text-[0.8125rem]">
                 Danh sách dự án ({projects.length})
               </span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-[13px]">
+              <table className="w-full text-[0.8125rem]">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Dự án
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Trạng thái
                     </th>
-                    <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Sức khoẻ
                     </th>
-                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                    <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                       Tiến độ
                     </th>
-                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                    <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                       Ngân sách dùng
                     </th>
-                    <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                    <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                       PM
                     </th>
-                    <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                    <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                       Kết thúc
                     </th>
                     <th className="px-4 py-3 w-10" />
@@ -1620,16 +1620,16 @@ export function ProjectHealthPage() {
                       onClick={() => navigate(`/projects/${p.id}`)}
                     >
                       <td className="px-4 py-3">
-                        <div className="text-[13px]">{p.projectName}</div>
+                        <div className="text-[0.8125rem]">{p.projectName}</div>
                         {p.projectCode && (
-                          <div className="text-[10px] text-muted-foreground font-mono">
+                          <div className="text-[0.625rem] text-muted-foreground font-mono">
                             {p.projectCode}
                           </div>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full ${statusColors[p.status]}`}
+                          className={`text-[0.625rem] px-2 py-0.5 rounded-full ${statusColors[p.status]}`}
                         >
                           {statusLabels[p.status]}
                         </span>
@@ -1637,13 +1637,13 @@ export function ProjectHealthPage() {
                       <td className="px-4 py-3 text-center">
                         {p.healthStatus ? (
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full ${healthColors[p.healthStatus]}`}
+                            className={`text-[0.625rem] px-2 py-0.5 rounded-full ${healthColors[p.healthStatus]}`}
                           >
                             {healthEmoji[p.healthStatus]}{" "}
                             {healthLabels[p.healthStatus]}
                           </span>
                         ) : (
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             —
                           </span>
                         )}
@@ -1676,10 +1676,10 @@ export function ProjectHealthPage() {
                           "—"
                         )}
                       </td>
-                      <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                         {p.projectManager?.fullName ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right text-[12px] text-muted-foreground hidden lg:table-cell">
+                      <td className="px-4 py-3 text-right text-xs text-muted-foreground hidden lg:table-cell">
                         {fmtDate(p.endDate)}
                       </td>
                       <td className="px-4 py-3 text-center">

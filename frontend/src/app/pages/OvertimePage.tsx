@@ -295,20 +295,20 @@ export function OvertimePage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-[20px]">Quản lý làm thêm giờ (OT)</h1>
+        <h1 className="text-xl">Quản lý làm thêm giờ (OT)</h1>
         <div className="flex gap-2">
           <button
             onClick={() => {
               fetchMyReqs();
               fetchAllReqs();
             }}
-            className="px-3 py-2 rounded-lg border border-border text-[13px] hover:bg-accent flex items-center gap-1"
+            className="px-3 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent flex items-center gap-1"
           >
             <RefreshCw size={14} /> Làm mới
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
           >
             <Plus size={16} /> Tạo yêu cầu OT
           </button>
@@ -316,17 +316,17 @@ export function OvertimePage() {
       </div>
 
       {/* Rate info */}
-      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-[12px] text-blue-700 dark:text-blue-400">
+      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-start gap-2 text-xs text-blue-700 dark:text-blue-400">
         <Info size={14} className="shrink-0 mt-0.5" />
         <div>
           <span className="font-medium">Hệ số tính OT:</span>{" "}
-          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded text-[11px]">
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded text-[0.6875rem]">
             Ngày thường ×1.5
           </span>
-          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded text-[11px] ml-1">
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded text-[0.6875rem] ml-1">
             Cuối tuần ×2.0
           </span>
-          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-[11px] ml-1">
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-[0.6875rem] ml-1">
             Ngày lễ ×3.0
           </span>
         </div>
@@ -338,11 +338,11 @@ export function OvertimePage() {
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key as TabKey)}
-            className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-3 py-2.5 text-[0.8125rem] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             {t.icon} {t.label}
             {t.badge ? (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-full">
+              <span className="ml-1 px-1.5 py-0.5 text-[0.625rem] bg-red-500 text-white rounded-full">
                 {t.badge}
               </span>
             ) : null}
@@ -423,7 +423,7 @@ function LoadingState() {
   return (
     <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
       <Loader2 size={20} className="animate-spin" />
-      <span className="text-[13px]">Đang tải...</span>
+      <span className="text-[0.8125rem]">Đang tải...</span>
     </div>
   );
 }
@@ -463,33 +463,33 @@ function MyOTTab({
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground">
             <Clock size={12} /> Tổng giờ OT
           </div>
-          <div className="text-[20px] mt-1">
+          <div className="text-xl mt-1">
             {totalApprovedHours.toFixed(1)}
-            <span className="text-[12px] text-muted-foreground">h</span>
+            <span className="text-xs text-muted-foreground">h</span>
           </div>
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[0.625rem] text-muted-foreground">
             {approvedCount} ca đã duyệt
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground">
             <DollarSign size={12} /> OT tháng này
           </div>
-          <div className="text-[18px] mt-1 text-green-600">
+          <div className="text-lg mt-1 text-green-600">
             {stats ? `${stats.totalApprovedHours.toFixed(1)}h` : "—"}
           </div>
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[0.625rem] text-muted-foreground">
             {stats ? `${stats.sessionCount} ca` : "Đang tải..."}
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground">
             <Zap size={12} /> Phân bổ
           </div>
-          <div className="text-[12px] mt-1 space-y-0.5">
+          <div className="text-xs mt-1 space-y-0.5">
             {stats ? (
               <>
                 <div className="text-blue-600">
@@ -505,11 +505,11 @@ function MyOTTab({
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-3">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground">
             <AlertTriangle size={12} /> Đang chờ
           </div>
-          <div className="text-[20px] mt-1 text-yellow-600">{pendingCount}</div>
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-xl mt-1 text-yellow-600">{pendingCount}</div>
+          <div className="text-[0.625rem] text-muted-foreground">
             yêu cầu chờ duyệt
           </div>
         </div>
@@ -526,7 +526,7 @@ function MyOTTab({
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-2 text-[13px] border-b-2 whitespace-nowrap ${statusFilter === s ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground"}`}
+              className={`px-3 py-2 text-[0.8125rem] border-b-2 whitespace-nowrap ${statusFilter === s ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground"}`}
             >
               {s === "all" ? "Tất cả" : statusLabels[s]} ({count})
             </button>
@@ -553,7 +553,7 @@ function MyOTTab({
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[13px]">
+                      <span className="text-[0.8125rem]">
                         {new Date(r.workDate).toLocaleDateString("vi-VN", {
                           weekday: "short",
                           day: "2-digit",
@@ -562,17 +562,17 @@ function MyOTTab({
                         })}
                       </span>
                       <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded ${getMultiplierBadge(r.isHoliday, r.isWeekend)}`}
+                        className={`text-[0.625rem] px-1.5 py-0.5 rounded ${getMultiplierBadge(r.isHoliday, r.isWeekend)}`}
                       >
                         {getMultiplierLabel(r.isHoliday, r.isWeekend)}
                       </span>
                       <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[r.status]}`}
+                        className={`text-[0.625rem] px-1.5 py-0.5 rounded-full ${statusColors[r.status]}`}
                       >
                         {statusLabels[r.status]}
                       </span>
                     </div>
-                    <div className="text-[12px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       {r.startTime} — {r.endTime} ({r.plannedHours.toFixed(1)}h
                       dự kiến
                       {r.actualHours
@@ -583,17 +583,17 @@ function MyOTTab({
                   </div>
                   <div className="text-right shrink-0">
                     {r.status === "APPROVED" && r.otPay && (
-                      <div className="text-[13px] text-green-600">
+                      <div className="text-[0.8125rem] text-green-600">
                         {formatVND(r.otPay.amount)}
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="text-[12px] text-muted-foreground mt-1.5">
+                <div className="text-xs text-muted-foreground mt-1.5">
                   {r.reason}
                 </div>
                 {r.comment && (
-                  <div className="text-[11px] mt-1.5 flex items-start gap-1 text-muted-foreground">
+                  <div className="text-[0.6875rem] mt-1.5 flex items-start gap-1 text-muted-foreground">
                     <MessageSquare size={10} className="mt-0.5 shrink-0" /> "
                     {r.comment}"
                     {r.approver && <span>— {r.approver.fullName}</span>}
@@ -605,7 +605,7 @@ function MyOTTab({
                       e.stopPropagation();
                       onCancel(r.id);
                     }}
-                    className="mt-2 px-3 py-1 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-[11px] flex items-center gap-1"
+                    className="mt-2 px-3 py-1 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 text-[0.6875rem] flex items-center gap-1"
                   >
                     <Ban size={10} /> Huỷ
                   </button>
@@ -617,7 +617,7 @@ function MyOTTab({
         {sorted.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             <Timer size={40} className="mx-auto mb-2 opacity-30" />
-            <div className="text-[14px]">Chưa có yêu cầu OT nào</div>
+            <div className="text-sm">Chưa có yêu cầu OT nào</div>
           </div>
         )}
       </div>
@@ -655,27 +655,27 @@ function ApproveOTTab({
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div className="bg-yellow-50 dark:bg-yellow-900/10 rounded-xl p-3 text-center">
-          <div className="text-[20px] text-yellow-600">
+          <div className="text-xl text-yellow-600">
             {pendingReqs.length}
           </div>
-          <div className="text-[10px] text-muted-foreground">Chờ duyệt</div>
+          <div className="text-[0.625rem] text-muted-foreground">Chờ duyệt</div>
         </div>
         <div
           className="bg-orange-50 dark:bg-orange-900/10 rounded-xl p-3 text-center cursor-pointer"
           onClick={() => setShowRecent(!showRecent)}
         >
-          <div className="text-[20px] text-orange-600">
+          <div className="text-xl text-orange-600">
             {recentApprovedReqs.length}
           </div>
-          <div className="text-[10px] text-muted-foreground">
+          <div className="text-[0.625rem] text-muted-foreground">
             Cần nhập giờ thực tế
           </div>
         </div>
         <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-3 text-center">
-          <div className="text-[13px] text-green-600 flex items-center justify-center gap-1">
+          <div className="text-[0.8125rem] text-green-600 flex items-center justify-center gap-1">
             <CheckCircle2 size={14} /> Sẵn sàng duyệt
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1">
+          <div className="text-[0.625rem] text-muted-foreground mt-1">
             Kiểm tra lý do trước khi duyệt
           </div>
         </div>
@@ -684,7 +684,7 @@ function ApproveOTTab({
       {/* Need actual minutes */}
       {showRecent && recentApprovedReqs.length > 0 && (
         <div className="bg-card border border-orange-200 dark:border-orange-800 rounded-xl p-4 space-y-3">
-          <div className="text-[13px] flex items-center gap-1.5">
+          <div className="text-[0.8125rem] flex items-center gap-1.5">
             <Edit3 size={14} className="text-orange-600" /> Nhập số giờ thực tế
             cho ca OT đã duyệt
           </div>
@@ -698,7 +698,7 @@ function ApproveOTTab({
       {pendingReqs.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <CheckCircle2 size={40} className="mx-auto mb-2 opacity-30" />
-          <div className="text-[14px]">Không có yêu cầu OT nào chờ duyệt</div>
+          <div className="text-sm">Không có yêu cầu OT nào chờ duyệt</div>
         </div>
       ) : (
         <div className="space-y-3">
@@ -714,30 +714,30 @@ function ApproveOTTab({
                     className="flex items-center gap-3 cursor-pointer"
                     onClick={() => onViewDetail(r)}
                   >
-                    <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-[12px] shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs shrink-0">
                       {u?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                     </div>
                     <div>
-                      <div className="text-[14px]">
+                      <div className="text-sm">
                         {u?.fullName ?? "—"}{" "}
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-[0.6875rem] text-muted-foreground">
                           ({u?.userCode})
                         </span>
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {(u as { department?: { name: string } } | null)
                           ?.department?.name ?? "—"}
                       </div>
                     </div>
                   </div>
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded ${getMultiplierBadge(r.isHoliday, r.isWeekend)}`}
+                    className={`text-[0.625rem] px-1.5 py-0.5 rounded ${getMultiplierBadge(r.isHoliday, r.isWeekend)}`}
                   >
                     {getMultiplierLabel(r.isHoliday, r.isWeekend)}
                   </span>
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-[12px]">
+                <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                   <div>
                     <span className="text-muted-foreground">Ngày:</span>{" "}
                     {new Date(r.workDate).toLocaleDateString("vi-VN")}
@@ -767,7 +767,7 @@ function ApproveOTTab({
                         [r.id]: e.target.value,
                       }))
                     }
-                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-input-background text-[12px]"
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-input-background text-xs"
                   />
                   <button
                     onClick={() => {
@@ -778,7 +778,7 @@ function ApproveOTTab({
                         return n;
                       });
                     }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-[12px] hover:bg-green-700 flex items-center gap-1 shrink-0"
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 flex items-center gap-1 shrink-0"
                   >
                     <Check size={14} /> Duyệt
                   </button>
@@ -789,7 +789,7 @@ function ApproveOTTab({
                         placeholder="Lý do từ chối *"
                         value={rejectComment}
                         onChange={(e) => setRejectComment(e.target.value)}
-                        className="px-3 py-2 rounded-lg border border-red-300 bg-input-background text-[12px] w-40"
+                        className="px-3 py-2 rounded-lg border border-red-300 bg-input-background text-xs w-40"
                         autoFocus
                       />
                       <button
@@ -798,7 +798,7 @@ function ApproveOTTab({
                           setRejectingId(null);
                           setRejectComment("");
                         }}
-                        className="px-3 py-2 bg-red-600 text-white rounded-lg text-[12px]"
+                        className="px-3 py-2 bg-red-600 text-white rounded-lg text-xs"
                       >
                         <Check size={14} />
                       </button>
@@ -807,7 +807,7 @@ function ApproveOTTab({
                           setRejectingId(null);
                           setRejectComment("");
                         }}
-                        className="px-3 py-2 border border-border rounded-lg text-[12px]"
+                        className="px-3 py-2 border border-border rounded-lg text-xs"
                       >
                         <X size={14} />
                       </button>
@@ -815,7 +815,7 @@ function ApproveOTTab({
                   ) : (
                     <button
                       onClick={() => setRejectingId(r.id)}
-                      className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-[12px] hover:bg-red-200 dark:bg-red-900/30 flex items-center gap-1 shrink-0"
+                      className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-xs hover:bg-red-200 dark:bg-red-900/30 flex items-center gap-1 shrink-0"
                     >
                       <X size={14} /> Từ chối
                     </button>
@@ -840,7 +840,7 @@ function ActualMinutesInput({
 }) {
   const [value, setValue] = useState("");
   return (
-    <div className="flex items-center gap-3 text-[12px]">
+    <div className="flex items-center gap-3 text-xs">
       <span className="min-w-[120px]">{req.user?.fullName ?? "—"}</span>
       <span className="text-muted-foreground">
         {new Date(req.workDate).toLocaleDateString("vi-VN")}
@@ -856,7 +856,7 @@ function ActualMinutesInput({
         placeholder="Phút thực tế"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-24 px-2 py-1 rounded border border-border bg-input-background text-[12px]"
+        className="w-24 px-2 py-1 rounded border border-border bg-input-background text-xs"
       />
       <button
         onClick={() => {
@@ -868,7 +868,7 @@ function ActualMinutesInput({
           onUpdate(req.id, mins);
           setValue("");
         }}
-        className="px-2 py-1 bg-blue-600 text-white rounded text-[11px] hover:bg-blue-700"
+        className="px-2 py-1 bg-blue-600 text-white rounded text-[0.6875rem] hover:bg-blue-700"
       >
         Lưu
       </button>
@@ -970,8 +970,8 @@ function AllOTTab({
           },
         ].map((s) => (
           <div key={s.label} className={`${s.bg} rounded-xl p-3 text-center`}>
-            <div className={`text-[16px] ${s.color}`}>{s.value}</div>
-            <div className="text-[10px] text-muted-foreground">{s.label}</div>
+            <div className={`text-base ${s.color}`}>{s.value}</div>
+            <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
           </div>
         ))}
       </div>
@@ -988,13 +988,13 @@ function AllOTTab({
             placeholder="Tìm nhân viên, lý do..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả trạng thái</option>
           {Object.entries(statusLabels).map(([k, v]) => (
@@ -1006,7 +1006,7 @@ function AllOTTab({
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả loại</option>
           <option value="NORMAL">Ngày thường</option>
@@ -1021,28 +1021,28 @@ function AllOTTab({
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                   Nhân viên
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                   Ngày
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
                   Giờ
                 </th>
-                <th className="text-right px-4 py-3 text-[12px] text-muted-foreground hidden sm:table-cell">
+                <th className="text-right px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
                   Kế hoạch
                 </th>
-                <th className="text-right px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                <th className="text-right px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
                   Thực tế
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
                   Loại
                 </th>
-                <th className="text-right px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                <th className="text-right px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                   Chi phí OT
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                   Trạng thái
                 </th>
               </tr>
@@ -1056,47 +1056,47 @@ function AllOTTab({
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                         {r.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                       </div>
                       <div>
-                        <div className="text-[13px]">
+                        <div className="text-[0.8125rem]">
                           {r.user?.fullName ?? "—"}
                         </div>
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-[0.625rem] text-muted-foreground">
                           {(r.user as { department?: { name: string } } | null)
                             ?.department?.name ?? "—"}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-[13px]">
+                  <td className="px-4 py-3 text-[0.8125rem]">
                     {new Date(r.workDate).toLocaleDateString("vi-VN")}
                   </td>
-                  <td className="px-4 py-3 text-[13px] hidden sm:table-cell">
+                  <td className="px-4 py-3 text-[0.8125rem] hidden sm:table-cell">
                     {r.startTime}—{r.endTime}
                   </td>
-                  <td className="px-4 py-3 text-[13px] text-right hidden sm:table-cell">
+                  <td className="px-4 py-3 text-[0.8125rem] text-right hidden sm:table-cell">
                     {r.plannedHours.toFixed(1)}h
                   </td>
-                  <td className="px-4 py-3 text-[13px] text-right hidden md:table-cell">
+                  <td className="px-4 py-3 text-[0.8125rem] text-right hidden md:table-cell">
                     {r.actualHours ? `${r.actualHours.toFixed(1)}h` : "—"}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded ${getMultiplierBadge(r.isHoliday, r.isWeekend)}`}
+                      className={`text-[0.625rem] px-1.5 py-0.5 rounded ${getMultiplierBadge(r.isHoliday, r.isWeekend)}`}
                     >
                       {r.dayType}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-right hidden lg:table-cell text-green-600">
+                  <td className="px-4 py-3 text-xs text-right hidden lg:table-cell text-green-600">
                     {r.status === "APPROVED" && r.otPay
                       ? formatVND(r.otPay.amount)
                       : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`text-[11px] px-2 py-0.5 rounded-full ${statusColors[r.status]}`}
+                      className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${statusColors[r.status]}`}
                     >
                       {statusLabels[r.status]}
                     </span>
@@ -1107,7 +1107,7 @@ function AllOTTab({
                 <tr>
                   <td
                     colSpan={8}
-                    className="text-center py-8 text-muted-foreground text-[13px]"
+                    className="text-center py-8 text-muted-foreground text-[0.8125rem]"
                   >
                     Không tìm thấy yêu cầu OT
                   </td>
@@ -1116,7 +1116,7 @@ function AllOTTab({
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border">
+        <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
           {filtered.length} / {reqs.length} yêu cầu
         </div>
       </div>
@@ -1169,14 +1169,14 @@ function CreateOTDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Tạo yêu cầu OT</h3>
+          <h3 className="text-base">Tạo yêu cầu OT</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
         </div>
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ngày làm thêm *
             </label>
             <input
@@ -1185,10 +1185,10 @@ function CreateOTDialog({
               onChange={(e) =>
                 setForm((f) => ({ ...f, workDate: e.target.value }))
               }
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
             {dateInfo && (
-              <div className="mt-1 flex items-center gap-2 text-[11px]">
+              <div className="mt-1 flex items-center gap-2 text-[0.6875rem]">
                 <span className="text-muted-foreground">
                   {dateInfo.dayName}
                 </span>
@@ -1203,7 +1203,7 @@ function CreateOTDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Giờ bắt đầu *
               </label>
               <input
@@ -1212,11 +1212,11 @@ function CreateOTDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, startTime: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Giờ kết thúc *
               </label>
               <input
@@ -1225,13 +1225,13 @@ function CreateOTDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, endTime: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
 
           <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+            <label className="flex items-center gap-2 text-[0.8125rem] cursor-pointer">
               <input
                 type="checkbox"
                 checked={effectiveIsWeekend}
@@ -1242,7 +1242,7 @@ function CreateOTDialog({
               />
               Cuối tuần (×2.0)
             </label>
-            <label className="flex items-center gap-2 text-[13px] cursor-pointer">
+            <label className="flex items-center gap-2 text-[0.8125rem] cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.isHoliday}
@@ -1258,10 +1258,10 @@ function CreateOTDialog({
           {/* Preview */}
           {minutes > 0 && (
             <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl p-3">
-              <div className="text-[12px] text-green-700 dark:text-green-400 mb-2 flex items-center gap-1">
+              <div className="text-xs text-green-700 dark:text-green-400 mb-2 flex items-center gap-1">
                 <DollarSign size={14} /> Thông tin OT
               </div>
-              <div className="grid grid-cols-2 gap-1 text-[12px]">
+              <div className="grid grid-cols-2 gap-1 text-xs">
                 <span className="text-muted-foreground">Số giờ:</span>
                 <span>{hours}h</span>
                 <span className="text-muted-foreground">Hệ số:</span>
@@ -1287,7 +1287,7 @@ function CreateOTDialog({
           )}
 
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Lý do *
             </label>
             <textarea
@@ -1296,21 +1296,21 @@ function CreateOTDialog({
                 setForm((f) => ({ ...f, reason: e.target.value }))
               }
               placeholder="Nhập lý do làm thêm giờ..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] h-20 resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] h-20 resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -1360,7 +1360,7 @@ function OTDetailDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Chi tiết yêu cầu OT</h3>
+          <h3 className="text-base">Chi tiết yêu cầu OT</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -1368,32 +1368,32 @@ function OTDetailDialog({
         <div className="p-4 space-y-4">
           {/* Employee */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-[14px]">
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm">
               {req.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
             </div>
             <div>
-              <div className="text-[14px]">
+              <div className="text-sm">
                 {req.user?.fullName ?? "—"}{" "}
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[0.6875rem] text-muted-foreground">
                   ({req.user?.userCode})
                 </span>
               </div>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-[0.6875rem] text-muted-foreground">
                 {(req.user as { department?: { name: string } } | null)
                   ?.department?.name ?? "—"}
               </div>
             </div>
             <span
-              className={`ml-auto text-[11px] px-2 py-0.5 rounded-full ${statusColors[req.status]}`}
+              className={`ml-auto text-[0.6875rem] px-2 py-0.5 rounded-full ${statusColors[req.status]}`}
             >
               {statusLabels[req.status]}
             </span>
           </div>
 
           {/* Details grid */}
-          <div className="grid grid-cols-2 gap-3 text-[13px]">
+          <div className="grid grid-cols-2 gap-3 text-[0.8125rem]">
             <div>
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Ngày
               </div>
               {new Date(req.workDate).toLocaleDateString("vi-VN", {
@@ -1404,23 +1404,23 @@ function OTDetailDialog({
               })}
             </div>
             <div>
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Giờ
               </div>
               {req.startTime} — {req.endTime}
             </div>
             <div>
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Loại ngày
               </div>
               <span
-                className={`text-[11px] px-1.5 py-0.5 rounded ${getMultiplierBadge(req.isHoliday, req.isWeekend)}`}
+                className={`text-[0.6875rem] px-1.5 py-0.5 rounded ${getMultiplierBadge(req.isHoliday, req.isWeekend)}`}
               >
                 {req.dayType}
               </span>
             </div>
             <div>
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Giờ kế hoạch
               </div>
               {req.plannedHours.toFixed(1)}h ({req.plannedMinutes} phút)
@@ -1428,24 +1428,24 @@ function OTDetailDialog({
           </div>
 
           {req.actualMinutes && (
-            <div className="text-[13px]">
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+            <div className="text-[0.8125rem]">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Giờ thực tế
               </div>
               {req.actualHours?.toFixed(1)}h ({req.actualMinutes} phút)
             </div>
           )}
 
-          <div className="text-[13px]">
-            <div className="text-[11px] text-muted-foreground mb-0.5">
+          <div className="text-[0.8125rem]">
+            <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
               Lý do
             </div>
             {req.reason}
           </div>
 
           {req.approver && (
-            <div className="text-[13px]">
-              <div className="text-[11px] text-muted-foreground mb-0.5">
+            <div className="text-[0.8125rem]">
+              <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                 Người duyệt
               </div>
               {req.approver.fullName}
@@ -1461,10 +1461,10 @@ function OTDetailDialog({
           {/* Cost breakdown from API */}
           {req.status === "APPROVED" && req.otPay && (
             <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl p-3">
-              <div className="text-[12px] text-green-700 dark:text-green-400 mb-2 flex items-center gap-1">
+              <div className="text-xs text-green-700 dark:text-green-400 mb-2 flex items-center gap-1">
                 <DollarSign size={14} /> Chi phí OT
               </div>
-              <div className="grid grid-cols-2 gap-1 text-[12px]">
+              <div className="grid grid-cols-2 gap-1 text-xs">
                 <span className="text-muted-foreground">Số giờ:</span>
                 <span>
                   {req.actualHours?.toFixed(1) ?? req.plannedHours.toFixed(1)}h
@@ -1476,7 +1476,7 @@ function OTDetailDialog({
                 <span className="text-muted-foreground border-t border-green-200 pt-1">
                   Thành tiền:
                 </span>
-                <span className="text-[14px] text-green-600 border-t border-green-200 pt-1">
+                <span className="text-sm text-green-600 border-t border-green-200 pt-1">
                   {formatVND(req.otPay.amount)}
                 </span>
               </div>
@@ -1486,7 +1486,7 @@ function OTDetailDialog({
           {/* Edit actual minutes */}
           {canEditActual && (
             <div className="space-y-2 pt-2 border-t border-border">
-              <div className="text-[12px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Cập nhật số phút thực tế
               </div>
               <div className="flex gap-2">
@@ -1495,7 +1495,7 @@ function OTDetailDialog({
                   value={actualInput}
                   onChange={(e) => setActualInput(e.target.value)}
                   placeholder="Phút thực tế"
-                  className="flex-1 px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                  className="flex-1 px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                 />
                 <button
                   onClick={() => {
@@ -1506,7 +1506,7 @@ function OTDetailDialog({
                     }
                     onUpdateActual(req.id, mins);
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[12px] hover:bg-blue-700"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700"
                 >
                   Lưu
                 </button>
@@ -1522,7 +1522,7 @@ function OTDetailDialog({
                 placeholder="Nhận xét (không bắt buộc)..."
                 value={actionComment}
                 onChange={(e) => setActionComment(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
               <div className="flex gap-2">
                 <button
@@ -1530,13 +1530,13 @@ function OTDetailDialog({
                     onApprove(req.id, actionComment || undefined);
                     onClose();
                   }}
-                  className="flex-1 py-2 bg-green-600 text-white rounded-lg text-[13px] hover:bg-green-700 flex items-center justify-center gap-1"
+                  className="flex-1 py-2 bg-green-600 text-white rounded-lg text-[0.8125rem] hover:bg-green-700 flex items-center justify-center gap-1"
                 >
                   <Check size={14} /> Duyệt
                 </button>
                 <button
                   onClick={() => setShowRejectForm(true)}
-                  className="flex-1 py-2 bg-red-600 text-white rounded-lg text-[13px] hover:bg-red-700 flex items-center justify-center gap-1"
+                  className="flex-1 py-2 bg-red-600 text-white rounded-lg text-[0.8125rem] hover:bg-red-700 flex items-center justify-center gap-1"
                 >
                   <X size={14} /> Từ chối
                 </button>
@@ -1549,13 +1549,13 @@ function OTDetailDialog({
                 value={actionComment}
                 onChange={(e) => setActionComment(e.target.value)}
                 placeholder="Lý do từ chối * (bắt buộc)"
-                className="w-full p-3 rounded-lg border border-red-300 bg-input-background text-[13px] h-20 resize-none"
+                className="w-full p-3 rounded-lg border border-red-300 bg-input-background text-[0.8125rem] h-20 resize-none"
                 autoFocus
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowRejectForm(false)}
-                  className="flex-1 py-2 rounded-lg border border-border text-[13px]"
+                  className="flex-1 py-2 rounded-lg border border-border text-[0.8125rem]"
                 >
                   Quay lại
                 </button>
@@ -1565,7 +1565,7 @@ function OTDetailDialog({
                     onClose();
                   }}
                   disabled={!actionComment.trim()}
-                  className="flex-1 py-2 bg-red-600 text-white rounded-lg text-[13px] disabled:opacity-50"
+                  className="flex-1 py-2 bg-red-600 text-white rounded-lg text-[0.8125rem] disabled:opacity-50"
                 >
                   Xác nhận từ chối
                 </button>
@@ -1580,7 +1580,7 @@ function OTDetailDialog({
                 onCancel(req.id);
                 onClose();
               }}
-              className="w-full py-2 border border-red-300 text-red-600 rounded-lg text-[13px] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-1"
+              className="w-full py-2 border border-red-300 text-red-600 rounded-lg text-[0.8125rem] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-1"
             >
               <Ban size={14} /> Huỷ yêu cầu OT
             </button>

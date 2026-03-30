@@ -330,14 +330,14 @@ export function Layout() {
             >
               {item.icon}
               {sidebarOpen && (
-                <span className="flex-1 text-left text-[13px]">
+                <span className="flex-1 text-left text-[0.8125rem]">
                   {item.label}
                 </span>
               )}
               {sidebarOpen && (
                 <span className="flex items-center gap-1">
                   {item.children.some((c) => c.badge && c.badge > 0) && (
-                    <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                    <span className="bg-red-500 text-white text-[0.625rem] px-1.5 py-0.5 rounded-full">
                       {item.children.reduce((s, c) => s + (c.badge || 0), 0)}
                     </span>
                   )}
@@ -356,11 +356,11 @@ export function Layout() {
                     key={child.path}
                     to={child.path}
                     onClick={() => setMobileSidebar(false)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] transition-colors hover:bg-accent ${isActive(child.path) ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.8125rem] transition-colors hover:bg-accent ${isActive(child.path) ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                   >
                     <span className="flex-1">{child.label}</span>
                     {child.badge ? (
-                      <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                      <span className="bg-red-500 text-white text-[0.625rem] px-1.5 py-0.5 rounded-full">
                         {child.badge}
                       </span>
                     ) : null}
@@ -376,12 +376,12 @@ export function Layout() {
           key={item.path}
           to={item.path!}
           onClick={() => setMobileSidebar(false)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] transition-colors hover:bg-accent ${isActive(item.path!) ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] transition-colors hover:bg-accent ${isActive(item.path!) ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
         >
           {item.icon}
           {sidebarOpen && <span className="flex-1">{item.label}</span>}
           {sidebarOpen && item.badge ? (
-            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+            <span className="bg-red-500 text-white text-[0.625rem] px-1.5 py-0.5 rounded-full">
               {item.badge}
             </span>
           ) : null}
@@ -392,10 +392,10 @@ export function Layout() {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="p-4 flex items-center gap-2 border-b border-border">
-        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-[13px]">
+        <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-[0.8125rem]">
           T
         </div>
-        {sidebarOpen && <span className="text-[15px]">Innovision</span>}
+        {sidebarOpen && <span className="text-[0.9375rem]">Innovision</span>}
       </div>
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {renderNav(navItems)}
@@ -413,14 +413,14 @@ export function Layout() {
               className="w-8 h-8 rounded-full object-cover border border-border"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px] shrink-0">
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.6875rem] shrink-0">
               {currentUser.fullName.split(" ").slice(-1)[0][0]}
             </div>
           )}
           {sidebarOpen && (
             <div className="flex-1 min-w-0">
-              <div className="text-[12px] truncate">{currentUser.fullName}</div>
-              <div className="text-[11px] text-muted-foreground truncate">
+              <div className="text-xs truncate">{currentUser.fullName}</div>
+              <div className="text-[0.6875rem] text-muted-foreground truncate">
                 {currentUser.roles.join(", ")}
               </div>
             </div>
@@ -464,7 +464,7 @@ export function Layout() {
             >
               <Menu size={18} />
             </button>
-            <div className="hidden sm:block text-muted-foreground text-[13px]">
+            <div className="hidden sm:block text-muted-foreground text-[0.8125rem]">
               {deptName} / {jobName}
             </div>
           </div>
@@ -483,7 +483,7 @@ export function Layout() {
               >
                 <Bell size={18} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[0.5625rem] w-4 h-4 rounded-full flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
@@ -496,17 +496,17 @@ export function Layout() {
                   />
                   <div className="absolute right-0 top-10 z-50 w-80 max-h-96 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
                     <div className="flex items-center justify-between p-3 border-b border-border">
-                      <span className="text-[13px]">Thông báo</span>
+                      <span className="text-[0.8125rem]">Thông báo</span>
                       <button
                         onClick={markAllRead}
-                        className="text-[11px] text-blue-500 hover:underline"
+                        className="text-[0.6875rem] text-blue-500 hover:underline"
                       >
                         Đọc tất cả
                       </button>
                     </div>
                     <div className="overflow-y-auto max-h-72">
                       {notifications.length === 0 ? (
-                        <div className="p-4 text-center text-muted-foreground text-[13px]">
+                        <div className="p-4 text-center text-muted-foreground text-[0.8125rem]">
                           Không có thông báo
                         </div>
                       ) : (
@@ -520,11 +520,11 @@ export function Layout() {
                             className={`p-3 border-b border-border cursor-pointer hover:bg-accent transition-colors ${!n.isRead ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
                           >
                             <div
-                              className={`text-[12px] ${!n.isRead ? "" : "text-muted-foreground"}`}
+                              className={`text-xs ${!n.isRead ? "" : "text-muted-foreground"}`}
                             >
                               {n.title}
                             </div>
-                            <div className="text-[11px] text-muted-foreground mt-0.5">
+                            <div className="text-[0.6875rem] text-muted-foreground mt-0.5">
                               {n.message}
                             </div>
                           </div>
@@ -535,7 +535,7 @@ export function Layout() {
                       <Link
                         to="/notifications"
                         onClick={() => setNotifOpen(false)}
-                        className="block p-2.5 text-center text-[12px] text-blue-600 hover:bg-accent border-t border-border"
+                        className="block p-2.5 text-center text-xs text-blue-600 hover:bg-accent border-t border-border"
                       >
                         Xem tất cả thông báo →
                       </Link>
@@ -557,7 +557,7 @@ export function Layout() {
                     className="w-7 h-7 rounded-full object-cover border border-border"
                   />
                 ) : (
-                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                     {currentUser.fullName.split(" ").slice(-1)[0][0]}
                   </div>
                 )}
@@ -574,8 +574,8 @@ export function Layout() {
                   />
                   <div className="absolute right-0 top-10 z-50 w-56 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
                     <div className="p-3 border-b border-border">
-                      <div className="text-[13px]">{currentUser.fullName}</div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.8125rem]">{currentUser.fullName}</div>
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {currentUser.email}
                       </div>
                     </div>
@@ -583,7 +583,7 @@ export function Layout() {
                       <Link
                         to="/profile"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
                       >
                         <User size={14} className="text-muted-foreground" /> Hồ
                         sơ cá nhân
@@ -591,12 +591,12 @@ export function Layout() {
                       <Link
                         to="/notifications"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
                       >
                         <Bell size={14} className="text-muted-foreground" />{" "}
                         Thông báo
                         {unreadCount > 0 && (
-                          <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full ml-auto">
+                          <span className="bg-red-500 text-white text-[0.5625rem] px-1.5 py-0.5 rounded-full ml-auto">
                             {unreadCount}
                           </span>
                         )}
@@ -604,7 +604,7 @@ export function Layout() {
                       <Link
                         to="/change-password"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
                       >
                         <Lock size={14} className="text-muted-foreground" /> Đổi
                         mật khẩu
@@ -612,7 +612,7 @@ export function Layout() {
                       <Link
                         to="/security/two-factor"
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors"
                       >
                         <Shield size={14} className="text-muted-foreground" />{" "}
                         Bảo mật 2 lớp
@@ -625,7 +625,7 @@ export function Layout() {
                           logout();
                           navigate("/login");
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] hover:bg-accent transition-colors text-red-500"
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] hover:bg-accent transition-colors text-red-500"
                       >
                         <LogOut size={14} /> Đăng xuất
                       </button>

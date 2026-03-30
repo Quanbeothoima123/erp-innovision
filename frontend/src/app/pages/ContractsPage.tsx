@@ -221,7 +221,7 @@ export function ContractsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <FileText size={22} className="text-blue-600" /> Hợp đồng
         </h1>
         <div className="flex gap-2">
@@ -235,7 +235,7 @@ export function ContractsPage() {
           {canManage && (
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
             >
               <Plus size={16} /> Tạo hợp đồng
             </button>
@@ -279,8 +279,8 @@ export function ContractsPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">{s.label}</div>
-              <div className={`text-[16px] ${s.color}`}>{s.value}</div>
+              <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
+              <div className={`text-base ${s.color}`}>{s.value}</div>
             </div>
           </div>
         ))}
@@ -298,13 +298,13 @@ export function ContractsPage() {
             placeholder="Tìm tiêu đề, mã, khách hàng..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả trạng thái</option>
           {Object.entries(contractStatusLabels).map(([k, v]) => (
@@ -316,7 +316,7 @@ export function ContractsPage() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả loại</option>
           {Object.entries(contractTypeLabels).map(([k, v]) => (
@@ -327,7 +327,7 @@ export function ContractsPage() {
         </select>
         <button
           onClick={() => setExpiringFilter(!expiringFilter)}
-          className={`px-3 py-2 rounded-lg border text-[13px] flex items-center gap-1 ${expiringFilter ? "border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-900/20" : "border-border hover:bg-accent"}`}
+          className={`px-3 py-2 rounded-lg border text-[0.8125rem] flex items-center gap-1 ${expiringFilter ? "border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-900/20" : "border-border hover:bg-accent"}`}
         >
           <AlertTriangle size={13} /> Sắp hết hạn
         </button>
@@ -337,30 +337,30 @@ export function ContractsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Hợp đồng
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Khách hàng
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Trạng thái
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Giá trị
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Thu được
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground hidden xl:table-cell">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground hidden xl:table-cell">
                     Kết thúc
                   </th>
                   <th className="px-4 py-3 w-10" />
@@ -378,7 +378,7 @@ export function ContractsPage() {
                     <td className="px-4 py-3">
                       <div>
                         <div className="font-medium">{c.title}</div>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-[0.6875rem] text-muted-foreground">
                           {c.contractCode && (
                             <span className="font-mono">
                               {c.contractCode} •{" "}
@@ -388,18 +388,18 @@ export function ContractsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[12px] hidden md:table-cell">
+                    <td className="px-4 py-3 text-xs hidden md:table-cell">
                       {c.client?.shortName ?? c.client?.companyName ?? "—"}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full w-fit ${contractStatusColors[c.status]}`}
+                          className={`text-[0.625rem] px-2 py-0.5 rounded-full w-fit ${contractStatusColors[c.status]}`}
                         >
                           {contractStatusLabels[c.status]}
                         </span>
                         {c.isExpiringSoon && !c.isExpired && (
-                          <span className="text-[10px] text-orange-600 flex items-center gap-0.5">
+                          <span className="text-[0.625rem] text-orange-600 flex items-center gap-0.5">
                             <AlertTriangle size={9} /> Còn {c.daysLeft} ngày
                           </span>
                         )}
@@ -409,16 +409,16 @@ export function ContractsPage() {
                       {fmtVND(c.totalValue)}
                     </td>
                     <td className="px-4 py-3 text-right hidden lg:table-cell">
-                      <div className="text-[12px]">
+                      <div className="text-xs">
                         {fmtVND(c.receivedAmount)}
                       </div>
                       {c.collectionPercent != null && (
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-[0.625rem] text-muted-foreground">
                           {c.collectionPercent.toFixed(0)}%
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-center text-[12px] text-muted-foreground hidden xl:table-cell">
+                    <td className="px-4 py-3 text-center text-xs text-muted-foreground hidden xl:table-cell">
                       {fmtDate(c.endDate)}
                     </td>
                     <td className="px-4 py-3">
@@ -442,24 +442,24 @@ export function ContractsPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border flex items-center justify-between">
             <span>{total} hợp đồng</span>
             {totalPages > 1 && (
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchContracts(page - 1)}
                   disabled={page <= 1}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Trước
                 </button>
-                <span className="px-2 py-1 text-[11px]">
+                <span className="px-2 py-1 text-[0.6875rem]">
                   {page}/{totalPages}
                 </span>
                 <button
                   onClick={() => fetchContracts(page + 1)}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Sau
                 </button>
@@ -541,24 +541,24 @@ function ContractDetailPanel({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               {c.contractCode && (
-                <span className="text-[11px] font-mono text-muted-foreground">
+                <span className="text-[0.6875rem] font-mono text-muted-foreground">
                   {c.contractCode}
                 </span>
               )}
               <span
-                className={`text-[10px] px-2 py-0.5 rounded-full ${contractStatusColors[c.status]}`}
+                className={`text-[0.625rem] px-2 py-0.5 rounded-full ${contractStatusColors[c.status]}`}
               >
                 {contractStatusLabels[c.status]}
               </span>
               {c.isExpiringSoon && (
-                <span className="text-[10px] text-orange-600 flex items-center gap-0.5">
+                <span className="text-[0.625rem] text-orange-600 flex items-center gap-0.5">
                   <AlertTriangle size={9} />
                   Sắp hết hạn
                 </span>
               )}
             </div>
-            <h2 className="text-[18px] mt-1">{c.title}</h2>
-            <div className="text-[12px] text-muted-foreground mt-0.5">
+            <h2 className="text-lg mt-1">{c.title}</h2>
+            <div className="text-xs text-muted-foreground mt-0.5">
               {c.client?.companyName ?? "—"} •{" "}
               {contractTypeLabels[c.contractType]}
             </div>
@@ -567,7 +567,7 @@ function ContractDetailPanel({
             {canManage && (
               <button
                 onClick={onEdit}
-                className="px-3 py-1.5 border border-border rounded-lg text-[12px] hover:bg-accent flex items-center gap-1"
+                className="px-3 py-1.5 border border-border rounded-lg text-xs hover:bg-accent flex items-center gap-1"
               >
                 <Edit2 size={12} />
                 Sửa
@@ -584,7 +584,7 @@ function ContractDetailPanel({
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 text-[13px] border-b-2 transition-colors ${tab === t ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground"}`}
+              className={`flex-1 py-2.5 text-[0.8125rem] border-b-2 transition-colors ${tab === t ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground"}`}
             >
               {t === "info"
                 ? "Thông tin"
@@ -596,7 +596,7 @@ function ContractDetailPanel({
         <div className="p-5">
           {tab === "info" && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-[13px]">
+              <div className="grid grid-cols-2 gap-4 text-[0.8125rem]">
                 {[
                   { label: "Giá trị HĐ", value: fmtVND(c.totalValue) },
                   { label: "Đã thu", value: fmtVND(c.receivedAmount) },
@@ -616,7 +616,7 @@ function ContractDetailPanel({
                   { label: "Số phụ lục", value: String(c.amendmentCount) },
                 ].map((f) => (
                   <div key={f.label}>
-                    <div className="text-[11px] text-muted-foreground mb-0.5">
+                    <div className="text-[0.6875rem] text-muted-foreground mb-0.5">
                       {f.label}
                     </div>
                     <div>{f.value}</div>
@@ -624,20 +624,20 @@ function ContractDetailPanel({
                 ))}
               </div>
               {c.description && (
-                <div className="bg-muted/30 rounded-lg p-3 text-[12px] text-muted-foreground">
+                <div className="bg-muted/30 rounded-lg p-3 text-xs text-muted-foreground">
                   {c.description}
                 </div>
               )}
               {canManage && nextStatuses.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-                  <span className="text-[12px] text-muted-foreground self-center">
+                  <span className="text-xs text-muted-foreground self-center">
                     Chuyển sang:
                   </span>
                   {nextStatuses.map((s) => (
                     <button
                       key={s}
                       onClick={() => onStatusChange(s)}
-                      className={`text-[11px] px-2.5 py-1 rounded-lg ${contractStatusColors[s]}`}
+                      className={`text-[0.6875rem] px-2.5 py-1 rounded-lg ${contractStatusColors[s]}`}
                     >
                       {contractStatusLabels[s]}
                     </button>
@@ -653,14 +653,14 @@ function ContractDetailPanel({
                 <div className="flex justify-end">
                   <button
                     onClick={() => setShowAddAmendment(true)}
-                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1 hover:bg-blue-700"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs flex items-center gap-1 hover:bg-blue-700"
                   >
                     <Plus size={12} /> Thêm phụ lục
                   </button>
                 </div>
               )}
               {(c.amendments ?? []).length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-[13px]">
+                <div className="text-center py-8 text-muted-foreground text-[0.8125rem]">
                   Chưa có phụ lục
                 </div>
               ) : (
@@ -671,14 +671,14 @@ function ContractDetailPanel({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono text-muted-foreground">
+                        <span className="text-[0.6875rem] font-mono text-muted-foreground">
                           {a.amendmentCode}
                         </span>
-                        <span className="text-[13px] font-medium">
+                        <span className="text-[0.8125rem] font-medium">
                           {a.title}
                         </span>
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded ${a.status === "SIGNED" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-600"}`}
+                          className={`text-[0.625rem] px-1.5 py-0.5 rounded ${a.status === "SIGNED" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-600"}`}
                         >
                           {a.status === "SIGNED"
                             ? "Đã ký"
@@ -696,7 +696,7 @@ function ContractDetailPanel({
                         </button>
                       )}
                     </div>
-                    <div className="flex gap-4 text-[11px] text-muted-foreground">
+                    <div className="flex gap-4 text-[0.6875rem] text-muted-foreground">
                       <span>Hiệu lực: {fmtDate(a.effectiveDate)}</span>
                       {a.valueChange != null && (
                         <span
@@ -712,7 +712,7 @@ function ContractDetailPanel({
                       )}
                     </div>
                     {a.description && (
-                      <div className="text-[12px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {a.description}
                       </div>
                     )}
@@ -758,7 +758,7 @@ function AmendmentFormDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Thêm phụ lục</h3>
+          <h3 className="text-base">Thêm phụ lục</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
@@ -766,7 +766,7 @@ function AmendmentFormDialog({
         <div className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Mã phụ lục *
               </label>
               <input
@@ -775,11 +775,11 @@ function AmendmentFormDialog({
                   setForm((f) => ({ ...f, amendmentCode: e.target.value }))
                 }
                 placeholder="PL-01"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày hiệu lực *
               </label>
               <input
@@ -788,12 +788,12 @@ function AmendmentFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, effectiveDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Tiêu đề *
             </label>
             <input
@@ -802,11 +802,11 @@ function AmendmentFormDialog({
                 setForm((f) => ({ ...f, title: e.target.value }))
               }
               placeholder="Phụ lục bổ sung..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Thay đổi giá trị (VND, để trống = không thay đổi)
             </label>
             <input
@@ -816,11 +816,11 @@ function AmendmentFormDialog({
                 setForm((f) => ({ ...f, valueChange: e.target.value }))
               }
               placeholder="0"
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Mô tả
             </label>
             <textarea
@@ -829,14 +829,14 @@ function AmendmentFormDialog({
                 setForm((f) => ({ ...f, description: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
@@ -857,7 +857,7 @@ function AmendmentFormDialog({
                 status: form.status,
               });
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700"
           >
             Lưu
           </button>
@@ -926,7 +926,7 @@ function ContractFormDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">
+          <h3 className="text-base">
             {contract ? "Cập nhật hợp đồng" : "Tạo hợp đồng mới"}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
@@ -936,7 +936,7 @@ function ContractFormDialog({
         <div className="p-4 space-y-3">
           {!contract && (
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 ID Khách hàng *
               </label>
               <input
@@ -945,12 +945,12 @@ function ContractFormDialog({
                   setForm((f) => ({ ...f, clientId: e.target.value }))
                 }
                 placeholder="Client ID..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] font-mono"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] font-mono"
               />
             </div>
           )}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Tiêu đề hợp đồng *
             </label>
             <input
@@ -959,12 +959,12 @@ function ContractFormDialog({
                 setForm((f) => ({ ...f, title: e.target.value }))
               }
               placeholder="Hợp đồng cung cấp dịch vụ phần mềm..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Loại hợp đồng *
               </label>
               <select
@@ -975,7 +975,7 @@ function ContractFormDialog({
                     contractType: e.target.value as ContractType,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               >
                 {Object.entries(contractTypeLabels).map(([k, v]) => (
                   <option key={k} value={k}>
@@ -985,7 +985,7 @@ function ContractFormDialog({
               </select>
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Giá trị (VND) *
               </label>
               <input
@@ -995,13 +995,13 @@ function ContractFormDialog({
                   setForm((f) => ({ ...f, totalValue: e.target.value }))
                 }
                 placeholder="0"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày bắt đầu *
               </label>
               <input
@@ -1010,11 +1010,11 @@ function ContractFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, startDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày kết thúc *
               </label>
               <input
@@ -1023,12 +1023,12 @@ function ContractFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, endDate: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ngày ký
             </label>
             <input
@@ -1037,11 +1037,11 @@ function ContractFormDialog({
               onChange={(e) =>
                 setForm((f) => ({ ...f, signedDate: e.target.value }))
               }
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
             />
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Ghi chú
             </label>
             <textarea
@@ -1050,21 +1050,21 @@ function ContractFormDialog({
                 setForm((f) => ({ ...f, notes: e.target.value }))
               }
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />

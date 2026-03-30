@@ -141,7 +141,7 @@ function Overlay({
 function DlgHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-      <h3 className="text-[16px]">{title}</h3>
+      <h3 className="text-base">{title}</h3>
       <button onClick={onClose} className="p-1 rounded hover:bg-accent">
         <X size={18} />
       </button>
@@ -348,10 +348,10 @@ export function AccountsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-[20px]">Tài khoản & Phân quyền</h1>
+      <h1 className="text-xl">Tài khoản & Phân quyền</h1>
 
       {loading && (
-        <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        <div className="flex items-center gap-2 text-[0.8125rem] text-muted-foreground">
           <Loader2 size={14} className="animate-spin" /> Đang tải...
         </div>
       )}
@@ -363,10 +363,10 @@ export function AccountsPage() {
             <Users size={20} className="text-blue-600" />
           </div>
           <div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-[0.6875rem] text-muted-foreground">
               Tổng tài khoản
             </div>
-            <div className="text-[20px]">{total}</div>
+            <div className="text-xl">{total}</div>
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
@@ -374,10 +374,10 @@ export function AccountsPage() {
             <UserCheck size={20} className="text-green-600" />
           </div>
           <div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-[0.6875rem] text-muted-foreground">
               Đang hoạt động
             </div>
-            <div className="text-[20px] text-green-600">{active}</div>
+            <div className="text-xl text-green-600">{active}</div>
           </div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
@@ -385,8 +385,8 @@ export function AccountsPage() {
             <Lock size={20} className="text-red-600" />
           </div>
           <div>
-            <div className="text-[11px] text-muted-foreground">Đã khoá</div>
-            <div className="text-[20px] text-red-500">{locked}</div>
+            <div className="text-[0.6875rem] text-muted-foreground">Đã khoá</div>
+            <div className="text-xl text-red-500">{locked}</div>
           </div>
         </div>
       </div>
@@ -403,13 +403,13 @@ export function AccountsPage() {
             placeholder="Tìm tên, email, mã NV..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả TT</option>
           {Object.entries(accStatusLabels).map(([k, v]) => (
@@ -421,7 +421,7 @@ export function AccountsPage() {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả role</option>
           {ALL_ROLES.map((r) => (
@@ -437,7 +437,7 @@ export function AccountsPage() {
               setStatusFilter("");
               setRoleFilter("");
             }}
-            className="px-3 py-2 rounded-lg border border-border text-[13px] text-muted-foreground hover:bg-accent"
+            className="px-3 py-2 rounded-lg border border-border text-[0.8125rem] text-muted-foreground hover:bg-accent"
           >
             Xoá lọc
           </button>
@@ -450,25 +450,25 @@ export function AccountsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                   Nhân viên
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden md:table-cell">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">
                   Email
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                   Phòng ban
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                   Vai trò
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground">
                   Tài khoản
                 </th>
-                <th className="text-left px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                <th className="text-left px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                   Đăng nhập cuối
                 </th>
-                <th className="text-center px-4 py-3 text-[12px] text-muted-foreground">
+                <th className="text-center px-4 py-3 text-xs text-muted-foreground">
                   Hành động
                 </th>
               </tr>
@@ -482,21 +482,21 @@ export function AccountsPage() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                           {u.fullName.split(" ").slice(-1)[0][0]}
                         </div>
                         <div>
-                          <span className="text-[13px]">{u.fullName}</span>
-                          <div className="text-[10px] text-muted-foreground">
+                          <span className="text-[0.8125rem]">{u.fullName}</span>
+                          <div className="text-[0.625rem] text-muted-foreground">
                             {u.userCode}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-3 text-[0.8125rem] text-muted-foreground hidden md:table-cell">
                       {u.email}
                     </td>
-                    <td className="px-4 py-3 text-[13px] hidden lg:table-cell">
+                    <td className="px-4 py-3 text-[0.8125rem] hidden lg:table-cell">
                       {(u as any).department?.name || u.departmentId || "—"}
                     </td>
                     <td className="px-4 py-3">
@@ -508,7 +508,7 @@ export function AccountsPage() {
                           return (
                             <span
                               key={r}
-                              className={`text-[10px] px-1.5 py-0.5 rounded ${roleInfo?.color || "bg-gray-100 text-gray-700"}`}
+                              className={`text-[0.625rem] px-1.5 py-0.5 rounded ${roleInfo?.color || "bg-gray-100 text-gray-700"}`}
                             >
                               {roleInfo?.label || r}
                             </span>
@@ -519,18 +519,18 @@ export function AccountsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <span
-                          className={`text-[11px] px-2 py-0.5 rounded-full ${accStatusColors[u.accountStatus]}`}
+                          className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${accStatusColors[u.accountStatus]}`}
                         >
                           {accStatusLabels[u.accountStatus]}
                         </span>
                         {u.mustChangePassword && (
-                          <span className="text-[9px] px-1 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                          <span className="text-[0.5625rem] px-1 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
                             Đổi MK
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                       {u.lastLoginAt
                         ? new Date(u.lastLoginAt).toLocaleString("vi-VN")
                         : "—"}
@@ -573,7 +573,7 @@ export function AccountsPage() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="text-center py-8 text-muted-foreground text-[13px]"
+                    className="text-center py-8 text-muted-foreground text-[0.8125rem]"
                   >
                     Không tìm thấy tài khoản
                   </td>
@@ -582,7 +582,7 @@ export function AccountsPage() {
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border">
+        <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border">
           {filtered.length} tài khoản
         </div>
       </div>
@@ -595,7 +595,7 @@ export function AccountsPage() {
             onClose={() => setRoleDialogUser(null)}
           />
           <div className="p-4 space-y-3">
-            <div className="text-[12px] text-muted-foreground mb-2">
+            <div className="text-xs text-muted-foreground mb-2">
               Nhấn vào vai trò để gán/bỏ gán. Người dùng phải có ít nhất 1 vai
               trò.
             </div>
@@ -612,20 +612,20 @@ export function AccountsPage() {
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className={`text-[12px] px-2 py-0.5 rounded ${r.color}`}
+                        className={`text-xs px-2 py-0.5 rounded ${r.color}`}
                       >
                         {r.label}
                       </span>
                       {has && <Check size={16} className="text-blue-600" />}
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-1">
+                    <div className="text-[0.6875rem] text-muted-foreground mt-1">
                       {r.desc}
                     </div>
                   </button>
                 );
               })}
             </div>
-            <div className="mt-3 text-[12px] text-muted-foreground">
+            <div className="mt-3 text-xs text-muted-foreground">
               Vai trò hiện tại:{" "}
               <span className="text-foreground">
                 {roleDialogUserObj.roles
@@ -650,13 +650,13 @@ export function AccountsPage() {
                 <Lock size={28} className="text-red-500" />
               )}
             </div>
-            <h3 className="text-[16px]">
+            <h3 className="text-base">
               {lockDialogUserObj.accountStatus === "LOCKED"
                 ? "Mở khoá"
                 : "Khoá"}{" "}
               tài khoản?
             </h3>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[0.8125rem] text-muted-foreground">
               {lockDialogUserObj.accountStatus === "LOCKED"
                 ? `Mở khoá tài khoản cho ${lockDialogUserObj.fullName}. Người dùng sẽ có thể đăng nhập lại.`
                 : `Khoá tài khoản ${lockDialogUserObj.fullName}. Người dùng sẽ không thể đăng nhập.`}
@@ -664,13 +664,13 @@ export function AccountsPage() {
             <div className="flex justify-center gap-2">
               <button
                 onClick={() => setLockDialogUser(null)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={() => handleLockToggle(lockDialogUserObj.id)}
-                className={`px-4 py-2 rounded-lg text-white text-[13px] ${lockDialogUserObj.accountStatus === "LOCKED" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}`}
+                className={`px-4 py-2 rounded-lg text-white text-[0.8125rem] ${lockDialogUserObj.accountStatus === "LOCKED" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}`}
               >
                 {lockDialogUserObj.accountStatus === "LOCKED"
                   ? "Mở khoá"
@@ -688,12 +688,12 @@ export function AccountsPage() {
             <div className="w-14 h-14 rounded-full mx-auto flex items-center justify-center bg-orange-100 dark:bg-orange-900/20">
               <KeyRound size={28} className="text-orange-500" />
             </div>
-            <h3 className="text-[16px]">Reset mật khẩu?</h3>
-            <p className="text-[13px] text-muted-foreground">
+            <h3 className="text-base">Reset mật khẩu?</h3>
+            <p className="text-[0.8125rem] text-muted-foreground">
               Đặt lại mật khẩu cho{" "}
               <strong>{resetDialogUserObj.fullName}</strong>.<br />
               Mật khẩu mặc định:{" "}
-              <code className="bg-muted px-1.5 py-0.5 rounded text-[12px]">
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
                 TechVN@2025
               </code>
               <br />
@@ -703,13 +703,13 @@ export function AccountsPage() {
             <div className="flex justify-center gap-2">
               <button
                 onClick={() => setResetDialogUser(null)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={() => handleResetPassword(resetDialogUserObj.id)}
-                className="px-4 py-2 bg-orange-600 text-white rounded-lg text-[13px] hover:bg-orange-700"
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg text-[0.8125rem] hover:bg-orange-700"
               >
                 Reset mật khẩu
               </button>
@@ -886,7 +886,7 @@ export function AuditLogPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <ScrollText size={20} /> Nhật ký hệ thống
         </h1>
         <button
@@ -909,13 +909,13 @@ export function AuditLogPage() {
             placeholder="Tìm mô tả, người thực hiện..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <select
           value={entityFilter}
           onChange={(e) => setEntityFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả thực thể</option>
           {[
@@ -941,7 +941,7 @@ export function AuditLogPage() {
         <select
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+          className="px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
         >
           <option value="">Tất cả hành động</option>
           {[
@@ -969,27 +969,27 @@ export function AuditLogPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
           <Loader2 size={18} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Thời gian
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Người thực hiện
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Hành động
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Thực thể
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Mô tả
                   </th>
                   <th className="px-4 py-3 w-12" />
@@ -1002,15 +1002,15 @@ export function AuditLogPage() {
                     className="border-t border-border hover:bg-accent/30 cursor-pointer"
                     onClick={() => setSelectedLog(log)}
                   >
-                    <td className="px-4 py-3 text-[11px] text-muted-foreground whitespace-nowrap">
+                    <td className="px-4 py-3 text-[0.6875rem] text-muted-foreground whitespace-nowrap">
                       {new Date(log.createdAt).toLocaleString("vi-VN")}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-[12px]">
+                      <div className="text-xs">
                         {log.actor?.fullName ?? "System"}
                       </div>
                       {log.actor && (
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-[0.625rem] text-muted-foreground">
                           {log.actor.userCode}
                         </div>
                       )}
@@ -1018,7 +1018,7 @@ export function AuditLogPage() {
                     <td className="px-4 py-3">
                       <span
                         className={
-                          "text-[10px] px-1.5 py-0.5 rounded " +
+                          "text-[0.625rem] px-1.5 py-0.5 rounded " +
                           (actionTypeColors[log.actionType] ??
                             "bg-gray-100 text-gray-600")
                         }
@@ -1026,10 +1026,10 @@ export function AuditLogPage() {
                         {ACTION_TYPE_LABELS[log.actionType] ?? log.actionType}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                       {ENTITY_TYPE_LABELS[log.entityType] ?? log.entityType}
                     </td>
-                    <td className="px-4 py-3 text-[12px] max-w-[300px] truncate">
+                    <td className="px-4 py-3 text-xs max-w-[300px] truncate">
                       {log.description}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -1050,24 +1050,24 @@ export function AuditLogPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border flex items-center justify-between">
             <span>{total} bản ghi</span>
             {totalPages > 1 && (
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchLogs(page - 1)}
                   disabled={page <= 1}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Trước
                 </button>
-                <span className="px-2 py-1 text-[11px]">
+                <span className="px-2 py-1 text-[0.6875rem]">
                   {page}/{totalPages}
                 </span>
                 <button
                   onClick={() => fetchLogs(page + 1)}
                   disabled={page >= totalPages}
-                  className="px-3 py-1 rounded border border-border text-[11px] disabled:opacity-50 hover:bg-accent"
+                  className="px-3 py-1 rounded border border-border text-[0.6875rem] disabled:opacity-50 hover:bg-accent"
                 >
                   Sau
                 </button>
@@ -1085,7 +1085,7 @@ export function AuditLogPage() {
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-[16px]">Chi tiết nhật ký</h3>
+              <h3 className="text-base">Chi tiết nhật ký</h3>
               <button
                 onClick={() => setSelectedLog(null)}
                 className="p-1 rounded hover:bg-accent"
@@ -1093,7 +1093,7 @@ export function AuditLogPage() {
                 <X size={18} />
               </button>
             </div>
-            <div className="p-4 space-y-3 text-[13px]">
+            <div className="p-4 space-y-3 text-[0.8125rem]">
               <div className="grid grid-cols-2 gap-3">
                 {[
                   {
@@ -1127,7 +1127,7 @@ export function AuditLogPage() {
                   { label: "IP", value: selectedLog.ipAddress ?? "—" },
                 ].map((f) => (
                   <div key={f.label}>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-[0.6875rem] text-muted-foreground">
                       {f.label}
                     </div>
                     <div>{f.value}</div>
@@ -1135,10 +1135,10 @@ export function AuditLogPage() {
                 ))}
               </div>
               <div>
-                <div className="text-[11px] text-muted-foreground mb-1">
+                <div className="text-[0.6875rem] text-muted-foreground mb-1">
                   Mô tả
                 </div>
-                <div className="bg-muted/30 rounded-lg p-3 text-[12px]">
+                <div className="bg-muted/30 rounded-lg p-3 text-xs">
                   {selectedLog.description}
                 </div>
               </div>
@@ -1146,7 +1146,7 @@ export function AuditLogPage() {
             <div className="flex justify-end p-4 border-t border-border">
               <button
                 onClick={() => setSelectedLog(null)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Đóng
               </button>
@@ -1216,7 +1216,7 @@ export function SystemConfigPage() {
         <select
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[13px] w-full max-w-[300px]"
+          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[0.8125rem] w-full max-w-[300px]"
         >
           {TIMEZONE_OPTIONS.map((tz) => (
             <option key={tz} value={tz}>
@@ -1231,7 +1231,7 @@ export function SystemConfigPage() {
         <select
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[13px] w-24"
+          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[0.8125rem] w-24"
         >
           {[1, 2, 3, 4, 5, 6, 7].map((n) => (
             <option key={n} value={String(n)}>
@@ -1250,7 +1250,7 @@ export function SystemConfigPage() {
           onChange={(e) => setEditValue(e.target.value)}
           min={min}
           max={max}
-          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[13px] w-28"
+          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[0.8125rem] w-28"
         />
       );
     }
@@ -1259,7 +1259,7 @@ export function SystemConfigPage() {
         type="text"
         value={editValue}
         onChange={(e) => setEditValue(e.target.value)}
-        className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[13px] w-full max-w-[400px]"
+        className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[0.8125rem] w-full max-w-[400px]"
       />
     );
   };
@@ -1268,7 +1268,7 @@ export function SystemConfigPage() {
     return (
       <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
         <Loader2 size={20} className="animate-spin" />
-        <span className="text-[13px]">Đang tải cấu hình...</span>
+        <span className="text-[0.8125rem]">Đang tải cấu hình...</span>
       </div>
     );
   }
@@ -1276,8 +1276,8 @@ export function SystemConfigPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[20px]">Cấu hình hệ thống</h1>
-        <p className="text-[13px] text-muted-foreground mt-1">
+        <h1 className="text-xl">Cấu hình hệ thống</h1>
+        <p className="text-[0.8125rem] text-muted-foreground mt-1">
           Quản lý các thông số vận hành của hệ thống
         </p>
       </div>
@@ -1290,17 +1290,17 @@ export function SystemConfigPage() {
           >
             <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/30">
               <span className="text-muted-foreground">{group.icon}</span>
-              <h3 className="text-[14px]">{group.title}</h3>
+              <h3 className="text-sm">{group.title}</h3>
             </div>
             <div className="divide-y divide-border">
               {group.keys.map((key) => (
                 <div key={key} className="px-5 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px]">
+                      <div className="text-[0.8125rem]">
                         {CONFIG_LABELS[key] || key}
                       </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                      <div className="text-[0.6875rem] text-muted-foreground mt-0.5">
                         {getDesc(key)}
                       </div>
                     </div>
@@ -1329,7 +1329,7 @@ export function SystemConfigPage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[13px] bg-muted/50 px-3 py-1 rounded-lg">
+                        <span className="text-[0.8125rem] bg-muted/50 px-3 py-1 rounded-lg">
                           {getVal(key) || (
                             <span className="text-muted-foreground italic">
                               Chưa cấu hình

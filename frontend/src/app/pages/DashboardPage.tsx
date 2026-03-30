@@ -150,7 +150,7 @@ function StatCard({
         </div>
         {trend && (
           <div
-            className={`flex items-center gap-0.5 text-[11px] ${trend === "up" ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
+            className={`flex items-center gap-0.5 text-[0.6875rem] ${trend === "up" ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
           >
             {trend === "up" ? (
               <ArrowUpRight size={12} />
@@ -161,10 +161,10 @@ function StatCard({
         )}
       </div>
       <div className="mt-3">
-        <div className="text-[22px]">{value}</div>
-        <div className="text-[12px] text-muted-foreground">{label}</div>
+        <div className="text-[1.375rem]">{value}</div>
+        <div className="text-xs text-muted-foreground">{label}</div>
         {subValue && (
-          <div className="text-[11px] text-muted-foreground mt-0.5">
+          <div className="text-[0.6875rem] text-muted-foreground mt-0.5">
             {subValue}
           </div>
         )}
@@ -181,7 +181,7 @@ function Badge({
   color: string;
 }) {
   return (
-    <span className={`text-[10px] px-1.5 py-0.5 rounded ${color}`}>
+    <span className={`text-[0.625rem] px-1.5 py-0.5 rounded ${color}`}>
       {children}
     </span>
   );
@@ -205,7 +205,7 @@ function SectionSkeleton({ h = 280 }: { h?: number }) {
 const CustomTooltipVND = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-popover border border-border rounded-lg p-2.5 shadow-lg text-[12px]">
+    <div className="bg-popover border border-border rounded-lg p-2.5 shadow-lg text-xs">
       <div className="text-muted-foreground mb-1">{label}</div>
       {payload.map((p: any, i: number) => (
         <div key={i} className="flex items-center gap-2">
@@ -256,8 +256,8 @@ export function DashboardPage() {
     return (
       <div className="space-y-6">
         <div>
-          <div className="text-[22px]">Xin chào, {currentUser.fullName}</div>
-          <div className="text-muted-foreground text-[13px]">{TODAY_LABEL}</div>
+          <div className="text-[1.375rem]">Xin chào, {currentUser.fullName}</div>
+          <div className="text-muted-foreground text-[0.8125rem]">{TODAY_LABEL}</div>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
@@ -300,7 +300,7 @@ export function DashboardPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 text-[13px] border-b-2 transition-colors -mb-px ${
+              className={`px-4 py-2.5 text-[0.8125rem] border-b-2 transition-colors -mb-px ${
                 activeTab === tab.id
                   ? "border-primary text-primary font-medium"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -435,7 +435,7 @@ function TasksDashboardLists({
     >
       {myUpcomingTasks.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+          <h3 className="text-sm mb-3 flex items-center gap-2">
             <ListTodo size={16} className="text-blue-500" /> Task sắp tới của
             tôi
           </h3>
@@ -447,7 +447,7 @@ function TasksDashboardLists({
                 onClick={() => navigate("/tasks")}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[13px] truncate flex-1">{t.title}</span>
+                  <span className="text-[0.8125rem] truncate flex-1">{t.title}</span>
                   <Badge
                     color={
                       PRIORITY_COLORS[t.priority] ?? PRIORITY_COLORS.MEDIUM
@@ -456,7 +456,7 @@ function TasksDashboardLists({
                     {PRIORITY_LABELS[t.priority] ?? t.priority}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-1 text-[0.6875rem] text-muted-foreground">
                   {t.deadline && (
                     <span
                       className={
@@ -476,7 +476,7 @@ function TasksDashboardLists({
       )}
       {teamOverdueTasks.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+          <h3 className="text-sm mb-3 flex items-center gap-2">
             <AlertTriangle size={16} className="text-red-500" /> Task quá hạn
             (team)
           </h3>
@@ -488,7 +488,7 @@ function TasksDashboardLists({
                 onClick={() => navigate("/tasks")}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[13px] truncate flex-1">{t.title}</span>
+                  <span className="text-[0.8125rem] truncate flex-1">{t.title}</span>
                   <Badge
                     color={
                       PRIORITY_COLORS[t.priority] ?? PRIORITY_COLORS.MEDIUM
@@ -497,7 +497,7 @@ function TasksDashboardLists({
                     {PRIORITY_LABELS[t.priority] ?? t.priority}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-1 text-[0.6875rem] text-muted-foreground">
                   {t.deadline && (
                     <span className="text-red-500">
                       ⏰ {fmtDate(t.deadline)}
@@ -597,8 +597,8 @@ function AdminHRDashboard({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px]">Xin chào, {currentUser.fullName}</h1>
-        <p className="text-muted-foreground text-[13px]">
+        <h1 className="text-[1.375rem]">Xin chào, {currentUser.fullName}</h1>
+        <p className="text-muted-foreground text-[0.8125rem]">
           {TODAY_LABEL} · Dashboard Quản trị
         </p>
       </div>
@@ -692,7 +692,7 @@ function AdminHRDashboard({
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Department Distribution */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-4 flex items-center gap-2">
+            <h3 className="text-sm mb-4 flex items-center gap-2">
               <PieChartIcon size={16} className="text-blue-500" /> Phân bố nhân
               viên theo phòng ban
             </h3>
@@ -724,7 +724,7 @@ function AdminHRDashboard({
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[13px]">
+              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[0.8125rem]">
                 Chưa có dữ liệu
               </div>
             )}
@@ -732,7 +732,7 @@ function AdminHRDashboard({
 
           {/* Employment Status */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-4 flex items-center gap-2">
+            <h3 className="text-sm mb-4 flex items-center gap-2">
               <Users size={16} className="text-green-500" /> Trạng thái nhân
               viên
             </h3>
@@ -777,7 +777,7 @@ function AdminHRDashboard({
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[13px]">
+              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[0.8125rem]">
                 Chưa có dữ liệu
               </div>
             )}
@@ -790,7 +790,7 @@ function AdminHRDashboard({
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Salary Trend */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-4 flex items-center gap-2">
+            <h3 className="text-sm mb-4 flex items-center gap-2">
               <BarChart3 size={16} className="text-green-500" /> Xu hướng lương
               theo kỳ ({new Date().getFullYear()})
             </h3>
@@ -836,7 +836,7 @@ function AdminHRDashboard({
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[13px]">
+              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[0.8125rem]">
                 Chưa có dữ liệu kỳ lương
               </div>
             )}
@@ -844,7 +844,7 @@ function AdminHRDashboard({
 
           {/* Active Projects health */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <FolderKanban size={16} className="text-teal-500" /> Sức khoẻ dự
               án đang chạy
             </h3>
@@ -857,7 +857,7 @@ function AdminHRDashboard({
                     onClick={() => navigate(`/projects/${p.id}`)}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] truncate">
+                      <div className="text-[0.8125rem] truncate">
                         {p.projectName}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
@@ -867,7 +867,7 @@ function AdminHRDashboard({
                             style={{ width: `${p.progressPercent ?? 0}%` }}
                           />
                         </div>
-                        <span className="text-[11px] text-muted-foreground shrink-0">
+                        <span className="text-[0.6875rem] text-muted-foreground shrink-0">
                           {p.progressPercent ?? 0}%
                         </span>
                       </div>
@@ -890,7 +890,7 @@ function AdminHRDashboard({
                   </div>
                 ))
               ) : (
-                <div className="text-center text-muted-foreground text-[13px] py-8">
+                <div className="text-center text-muted-foreground text-[0.8125rem] py-8">
                   Không có dự án đang chạy
                 </div>
               )}
@@ -904,7 +904,7 @@ function AdminHRDashboard({
         <div className="grid md:grid-cols-2 gap-4">
           {/* Pending Leave */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <CalendarDays size={16} className="text-orange-500" /> Đơn nghỉ
               phép chờ duyệt
             </h3>
@@ -916,14 +916,14 @@ function AdminHRDashboard({
                     className="flex items-center justify-between py-1.5 border-b border-border last:border-0"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-[9px]">
+                      <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-[0.5625rem]">
                         {initials(r.user?.fullName ?? "?")}
                       </div>
                       <div>
-                        <span className="text-[13px]">
+                        <span className="text-[0.8125rem]">
                           {r.user?.fullName ?? "—"}
                         </span>
-                        <span className="text-[11px] text-muted-foreground ml-2">
+                        <span className="text-[0.6875rem] text-muted-foreground ml-2">
                           {r.leaveType?.name} · {r.totalDays} ngày
                         </span>
                       </div>
@@ -940,7 +940,7 @@ function AdminHRDashboard({
                   </div>
                 ))
               ) : (
-                <div className="text-center text-muted-foreground text-[13px] py-4">
+                <div className="text-center text-muted-foreground text-[0.8125rem] py-4">
                   Không có đơn chờ duyệt
                 </div>
               )}
@@ -949,7 +949,7 @@ function AdminHRDashboard({
 
           {/* Pending OT */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <Timer size={16} className="text-purple-500" /> OT chờ duyệt
             </h3>
             <div className="space-y-2">
@@ -960,14 +960,14 @@ function AdminHRDashboard({
                     className="flex items-center justify-between py-1.5 border-b border-border last:border-0"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-[9px]">
+                      <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-[0.5625rem]">
                         {initials(r.user?.fullName ?? "?")}
                       </div>
                       <div>
-                        <span className="text-[13px]">
+                        <span className="text-[0.8125rem]">
                           {r.user?.fullName ?? "—"}
                         </span>
-                        <span className="text-[11px] text-muted-foreground ml-2">
+                        <span className="text-[0.6875rem] text-muted-foreground ml-2">
                           {r.plannedMinutes} phút · {fmtDate(r.workDate)}
                         </span>
                       </div>
@@ -990,7 +990,7 @@ function AdminHRDashboard({
                   </div>
                 ))
               ) : (
-                <div className="text-center text-muted-foreground text-[13px] py-4">
+                <div className="text-center text-muted-foreground text-[0.8125rem] py-4">
                   Không có OT chờ duyệt
                 </div>
               )}
@@ -1002,7 +1002,7 @@ function AdminHRDashboard({
       {/* Attendance Pending */}
       {!loading && pendingAttendance.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+          <h3 className="text-sm mb-3 flex items-center gap-2">
             <Clock size={16} className="text-red-500" /> Yêu cầu chấm công chờ
             duyệt
           </h3>
@@ -1013,11 +1013,11 @@ function AdminHRDashboard({
                 className="flex items-center justify-between py-1.5 border-b border-border last:border-0"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px]">
+                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.5625rem]">
                     {initials(r.user?.fullName ?? "?")}
                   </div>
                   <div>
-                    <span className="text-[13px]">
+                    <span className="text-[0.8125rem]">
                       {r.user?.fullName ?? "—"}
                     </span>
                     <Badge
@@ -1032,7 +1032,7 @@ function AdminHRDashboard({
                   </div>
                 </div>
                 {r.requestedAt && (
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[0.6875rem] text-muted-foreground">
                     {new Date(r.requestedAt).toLocaleTimeString("vi-VN", {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -1110,8 +1110,8 @@ function SalesDashboard({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px]">Tổng quan kinh doanh</h1>
-        <p className="text-muted-foreground text-[13px]">
+        <h1 className="text-[1.375rem]">Tổng quan kinh doanh</h1>
+        <p className="text-muted-foreground text-[0.8125rem]">
           {TODAY_LABEL} · Dashboard Kinh doanh
         </p>
       </div>
@@ -1184,7 +1184,7 @@ function SalesDashboard({
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Client Pipeline */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-4 flex items-center gap-2">
+            <h3 className="text-sm mb-4 flex items-center gap-2">
               <Handshake size={16} className="text-blue-500" /> Pipeline khách
               hàng
             </h3>
@@ -1215,7 +1215,7 @@ function SalesDashboard({
 
           {/* Revenue by client */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-4 flex items-center gap-2">
+            <h3 className="text-sm mb-4 flex items-center gap-2">
               <BarChart3 size={16} className="text-green-500" /> Top khách hàng
               theo công nợ
             </h3>
@@ -1227,21 +1227,21 @@ function SalesDashboard({
                     className="flex items-center justify-between py-1.5 border-b border-border last:border-0"
                   >
                     <div>
-                      <div className="text-[13px]">
+                      <div className="text-[0.8125rem]">
                         {d.shortName || d.companyName}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         HĐ: {fmtVND(d.totalContractValue)}
                       </div>
                     </div>
-                    <span className="text-[13px] text-red-500">
+                    <span className="text-[0.8125rem] text-red-500">
                       {fmtVND(d.outstandingBalance)}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="h-[220px] flex items-center justify-center text-muted-foreground text-[13px]">
+              <div className="h-[220px] flex items-center justify-center text-muted-foreground text-[0.8125rem]">
                 Không có công nợ
               </div>
             )}
@@ -1253,7 +1253,7 @@ function SalesDashboard({
         <div className="grid md:grid-cols-2 gap-4">
           {/* Recent Clients */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <Building2 size={16} className="text-blue-500" /> Khách hàng mới
               nhất
             </h3>
@@ -1265,8 +1265,8 @@ function SalesDashboard({
                   onClick={() => navigate(`/clients/${c.id}`)}
                 >
                   <div>
-                    <div className="text-[13px]">{c.companyName}</div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-[0.8125rem]">{c.companyName}</div>
+                    <div className="text-[0.6875rem] text-muted-foreground">
                       {c.industry || "N/A"} · {c.city || "N/A"}
                     </div>
                   </div>
@@ -1292,7 +1292,7 @@ function SalesDashboard({
 
           {/* Active Contracts */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <FileText size={16} className="text-indigo-500" /> Hợp đồng đang
               thực hiện
             </h3>
@@ -1308,8 +1308,8 @@ function SalesDashboard({
                     className="py-1.5 border-b border-border last:border-0"
                   >
                     <div className="flex justify-between">
-                      <div className="text-[13px] truncate">{c.title}</div>
-                      <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
+                      <div className="text-[0.8125rem] truncate">{c.title}</div>
+                      <span className="text-[0.6875rem] text-muted-foreground shrink-0 ml-2">
                         {fmtVND(Number(c.totalValue))}
                       </span>
                     </div>
@@ -1320,7 +1320,7 @@ function SalesDashboard({
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-[0.6875rem] text-muted-foreground">
                         {pct.toFixed(0)}%
                       </span>
                     </div>
@@ -1328,7 +1328,7 @@ function SalesDashboard({
                 );
               })}
               {contracts.length === 0 && (
-                <div className="text-center text-muted-foreground text-[13px] py-4">
+                <div className="text-center text-muted-foreground text-[0.8125rem] py-4">
                   Không có hợp đồng đang chạy
                 </div>
               )}
@@ -1419,8 +1419,8 @@ function AccountantDashboard({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px]">Tổng quan tài chính</h1>
-        <p className="text-muted-foreground text-[13px]">
+        <h1 className="text-[1.375rem]">Tổng quan tài chính</h1>
+        <p className="text-muted-foreground text-[0.8125rem]">
           {TODAY_LABEL} · Dashboard Kế toán
         </p>
       </div>
@@ -1496,7 +1496,7 @@ function AccountantDashboard({
         <div className="grid lg:grid-cols-2 gap-4">
           {/* Invoice Status */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-4 flex items-center gap-2">
+            <h3 className="text-sm mb-4 flex items-center gap-2">
               <PieChartIcon size={16} className="text-blue-500" /> Trạng thái
               hóa đơn
             </h3>
@@ -1525,7 +1525,7 @@ function AccountantDashboard({
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[13px]">
+              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[0.8125rem]">
                 Chưa có dữ liệu
               </div>
             )}
@@ -1533,7 +1533,7 @@ function AccountantDashboard({
 
           {/* Salary Trend */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-4 flex items-center gap-2">
+            <h3 className="text-sm mb-4 flex items-center gap-2">
               <BarChart3 size={16} className="text-green-500" /> Xu hướng lương{" "}
               {y}
             </h3>
@@ -1574,7 +1574,7 @@ function AccountantDashboard({
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[13px]">
+              <div className="h-[260px] flex items-center justify-center text-muted-foreground text-[0.8125rem]">
                 Chưa có dữ liệu
               </div>
             )}
@@ -1584,7 +1584,7 @@ function AccountantDashboard({
 
       {!loading && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+          <h3 className="text-sm mb-3 flex items-center gap-2">
             <AlertTriangle size={16} className="text-red-500" /> Hóa đơn quá hạn
           </h3>
           {overdueInvoices.length > 0 ? (
@@ -1595,19 +1595,19 @@ function AccountantDashboard({
                   className="flex items-center justify-between py-2"
                 >
                   <div>
-                    <div className="text-[13px]">{inv.invoiceCode}</div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-[0.8125rem]">{inv.invoiceCode}</div>
+                    <div className="text-[0.6875rem] text-muted-foreground">
                       Hạn: {inv.dueDate ? fmtDate(inv.dueDate) : "—"}
                     </div>
                   </div>
-                  <span className="text-[13px] text-red-500">
+                  <span className="text-[0.8125rem] text-red-500">
                     {fmtVND(Number(inv.outstandingAmount ?? 0))}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-muted-foreground text-[13px] py-4">
+            <div className="text-center text-muted-foreground text-[0.8125rem] py-4">
               Không có hóa đơn quá hạn
             </div>
           )}
@@ -1672,8 +1672,8 @@ function ManagerDashboard({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px]">Xin chào, {currentUser.fullName}</h1>
-        <p className="text-muted-foreground text-[13px]">
+        <h1 className="text-[1.375rem]">Xin chào, {currentUser.fullName}</h1>
+        <p className="text-muted-foreground text-[0.8125rem]">
           {TODAY_LABEL} · Dashboard Quản lý
         </p>
       </div>
@@ -1713,7 +1713,7 @@ function ManagerDashboard({
         <div className="grid md:grid-cols-2 gap-4">
           {/* Pending Leave */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <CalendarDays size={16} className="text-orange-500" /> Đơn nghỉ
               chờ duyệt
             </h3>
@@ -1725,14 +1725,14 @@ function ManagerDashboard({
                     className="flex items-center justify-between py-1.5 border-b border-border last:border-0"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-[9px]">
+                      <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-[0.5625rem]">
                         {initials(r.user?.fullName ?? "?")}
                       </div>
                       <div>
-                        <div className="text-[13px]">
+                        <div className="text-[0.8125rem]">
                           {r.user?.fullName ?? "—"}
                         </div>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-[0.6875rem] text-muted-foreground">
                           {r.leaveType?.name} · {r.totalDays} ngày ·{" "}
                           {fmtDate(r.startDate)}
                         </div>
@@ -1741,7 +1741,7 @@ function ManagerDashboard({
                   </div>
                 ))
               ) : (
-                <div className="text-center text-muted-foreground text-[13px] py-4">
+                <div className="text-center text-muted-foreground text-[0.8125rem] py-4">
                   Không có đơn chờ duyệt
                 </div>
               )}
@@ -1750,7 +1750,7 @@ function ManagerDashboard({
 
           {/* My Projects */}
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <FolderKanban size={16} className="text-teal-500" /> Dự án của tôi
             </h3>
             <div className="space-y-3">
@@ -1763,7 +1763,7 @@ function ManagerDashboard({
                     onClick={() => navigate(`/projects/${p.id}`)}
                   >
                     <div className="flex justify-between items-start">
-                      <div className="text-[13px]">{p.projectName}</div>
+                      <div className="text-[0.8125rem]">{p.projectName}</div>
                       {p.healthStatus && (
                         <Badge
                           color={
@@ -1789,7 +1789,7 @@ function ManagerDashboard({
                           style={{ width: `${p.progressPercent ?? 0}%` }}
                         />
                       </div>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-[0.6875rem] text-muted-foreground">
                         {p.progressPercent ?? 0}%
                       </span>
                     </div>
@@ -1798,7 +1798,7 @@ function ManagerDashboard({
               {myProjects.filter((p) =>
                 ["ACTIVE", "PLANNING"].includes(p.status),
               ).length === 0 && (
-                <div className="text-center text-muted-foreground text-[13px] py-4">
+                <div className="text-center text-muted-foreground text-[0.8125rem] py-4">
                   Chưa tham gia dự án nào
                 </div>
               )}
@@ -1889,8 +1889,8 @@ function EmployeeDashboard({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[22px]">Xin chào, {currentUser.fullName}</h1>
-        <p className="text-muted-foreground text-[13px]">
+        <h1 className="text-[1.375rem]">Xin chào, {currentUser.fullName}</h1>
+        <p className="text-muted-foreground text-[0.8125rem]">
           {TODAY_LABEL} · Dashboard Nhân viên
         </p>
       </div>
@@ -1903,8 +1903,8 @@ function EmployeeDashboard({
           <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-white mb-2">
             <Clock size={28} />
           </div>
-          <div className="text-[15px]">Chấm công</div>
-          <div className="text-[12px] text-muted-foreground">
+          <div className="text-[0.9375rem]">Chấm công</div>
+          <div className="text-xs text-muted-foreground">
             Gửi yêu cầu Check-in/out
           </div>
         </div>
@@ -1961,7 +1961,7 @@ function EmployeeDashboard({
 
       {!loading && myBalances.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+          <h3 className="text-sm mb-3 flex items-center gap-2">
             <CalendarDays size={16} className="text-blue-500" /> Số dư phép năm{" "}
             {new Date().getFullYear()}
           </h3>
@@ -1973,7 +1973,7 @@ function EmployeeDashboard({
                 const pct = total > 0 ? ((b.usedDays ?? 0) / total) * 100 : 0;
                 return (
                   <div key={b.id ?? `${b.leaveType?.name}-${idx}`}>
-                    <div className="flex justify-between text-[12px] mb-1">
+                    <div className="flex justify-between text-xs mb-1">
                       <span>{b.leaveType?.name ?? "—"}</span>
                       <span className="text-muted-foreground">
                         Đã dùng {b.usedDays ?? 0}/{total} · Còn{" "}
@@ -1998,7 +1998,7 @@ function EmployeeDashboard({
 
       {!loading && latestPayroll && (
         <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[14px] mb-3 flex items-center gap-2">
+          <h3 className="text-sm mb-3 flex items-center gap-2">
             <DollarSign size={16} className="text-green-500" /> Tóm tắt lương{" "}
             {latestPayroll?.month
               ? `T${latestPayroll.month}/${latestPayroll.year}`
@@ -2006,34 +2006,34 @@ function EmployeeDashboard({
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-muted/50 rounded-lg">
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-[0.6875rem] text-muted-foreground">
                 Lương cơ bản
               </div>
-              <div className="text-[15px] mt-0.5">
+              <div className="text-[0.9375rem] mt-0.5">
                 {fmtFullVND(latestPayroll.baseSalary)}
               </div>
             </div>
             <div className="p-3 bg-muted/50 rounded-lg">
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-[0.6875rem] text-muted-foreground">
                 Lương Gross
               </div>
-              <div className="text-[15px] mt-0.5">
+              <div className="text-[0.9375rem] mt-0.5">
                 {fmtFullVND(latestPayroll.grossSalary)}
               </div>
             </div>
             <div className="p-3 bg-muted/50 rounded-lg">
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-[0.6875rem] text-muted-foreground">
                 Tổng khấu trừ
               </div>
-              <div className="text-[15px] mt-0.5 text-red-500">
+              <div className="text-[0.9375rem] mt-0.5 text-red-500">
                 -{fmtFullVND(latestPayroll.totalDeductions)}
               </div>
             </div>
             <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="text-[11px] text-green-600 dark:text-green-400">
+              <div className="text-[0.6875rem] text-green-600 dark:text-green-400">
                 Thực nhận (NET)
               </div>
-              <div className="text-[15px] mt-0.5 text-green-700 dark:text-green-400">
+              <div className="text-[0.9375rem] mt-0.5 text-green-700 dark:text-green-400">
                 {fmtFullVND(latestPayroll.netSalary)}
               </div>
             </div>
@@ -2045,7 +2045,7 @@ function EmployeeDashboard({
         myProjects.filter((p) => ["ACTIVE", "PLANNING"].includes(p.status))
           .length > 0 && (
           <div className="bg-card border border-border rounded-xl p-4">
-            <h3 className="text-[14px] mb-3 flex items-center gap-2">
+            <h3 className="text-sm mb-3 flex items-center gap-2">
               <FolderKanban size={16} className="text-teal-500" /> Dự án đang
               tham gia
             </h3>
@@ -2059,7 +2059,7 @@ function EmployeeDashboard({
                     onClick={() => navigate(`/projects/${p.id}`)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="text-[13px]">{p.projectName}</div>
+                      <div className="text-[0.8125rem]">{p.projectName}</div>
                       {p.healthStatus && (
                         <Badge
                           color={
@@ -2085,7 +2085,7 @@ function EmployeeDashboard({
                           style={{ width: `${p.progressPercent ?? 0}%` }}
                         />
                       </div>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-[0.6875rem] text-muted-foreground">
                         {p.progressPercent ?? 0}%
                       </span>
                     </div>

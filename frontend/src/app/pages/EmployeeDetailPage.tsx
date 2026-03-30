@@ -219,8 +219,8 @@ function Avatar({
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <div className="text-[11px] text-muted-foreground mb-0.5">{label}</div>
-      <div className="text-[13px]">
+      <div className="text-[0.6875rem] text-muted-foreground mb-0.5">{label}</div>
+      <div className="text-[0.8125rem]">
         {value || <span className="text-muted-foreground italic">—</span>}
       </div>
     </div>
@@ -250,7 +250,7 @@ function Overlay({
 function DlgHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-      <h3 className="text-[16px] font-medium">{title}</h3>
+      <h3 className="text-base font-medium">{title}</h3>
       <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-accent">
         <X size={16} />
       </button>
@@ -274,14 +274,14 @@ function DlgFooter({
     <div className="flex justify-end gap-2 p-4 border-t border-border">
       <button
         onClick={onCancel}
-        className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+        className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent transition"
       >
         Huỷ
       </button>
       <button
         onClick={onConfirm}
         disabled={loading}
-        className={`px-4 py-2 text-white rounded-lg text-[13px] flex items-center gap-1.5 transition disabled:opacity-50 ${variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
+        className={`px-4 py-2 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 transition disabled:opacity-50 ${variant === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
       >
         {loading && <Loader2 size={13} className="animate-spin" />} {label}
       </button>
@@ -626,7 +626,7 @@ export function EmployeeDetailPage() {
     return (
       <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
         <Loader2 size={20} className="animate-spin" />
-        <span className="text-[13px]">Đang tải...</span>
+        <span className="text-[0.8125rem]">Đang tải...</span>
       </div>
     );
   }
@@ -634,12 +634,12 @@ export function EmployeeDetailPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-muted-foreground text-[14px] mb-4">
+        <p className="text-muted-foreground text-sm mb-4">
           Không tìm thấy nhân viên
         </p>
         <Link
           to="/employees"
-          className="text-[13px] text-blue-600 hover:underline flex items-center gap-1"
+          className="text-[0.8125rem] text-blue-600 hover:underline flex items-center gap-1"
         >
           <ChevronLeft size={14} /> Quay lại danh sách
         </Link>
@@ -685,7 +685,7 @@ export function EmployeeDetailPage() {
       {/* Back */}
       <Link
         to="/employees"
-        className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition"
+        className="inline-flex items-center gap-1.5 text-[0.8125rem] text-muted-foreground hover:text-foreground transition"
       >
         <ChevronLeft size={14} /> Danh sách nhân viên
       </Link>
@@ -697,19 +697,19 @@ export function EmployeeDetailPage() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-start gap-2 mb-1">
-            <h1 className="text-[20px] font-semibold">{user.fullName}</h1>
+            <h1 className="text-xl font-semibold">{user.fullName}</h1>
             <span
-              className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${empStatusColors[user.employmentStatus] ?? ""}`}
+              className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-medium ${empStatusColors[user.employmentStatus] ?? ""}`}
             >
               {empStatusLabels[user.employmentStatus] ?? user.employmentStatus}
             </span>
             <span
-              className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${accStatusColors[user.accountStatus] ?? ""}`}
+              className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-medium ${accStatusColors[user.accountStatus] ?? ""}`}
             >
               {accStatusLabels[user.accountStatus] ?? user.accountStatus}
             </span>
           </div>
-          <div className="text-[13px] text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
+          <div className="text-[0.8125rem] text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
             <span className="flex items-center gap-1">
               <Building2 size={12} />
               {getDeptName(user.departmentId)}
@@ -726,7 +726,7 @@ export function EmployeeDetailPage() {
               </span>
             )}
           </div>
-          <div className="text-[12px] text-muted-foreground mt-1.5 flex gap-3">
+          <div className="text-xs text-muted-foreground mt-1.5 flex gap-3">
             <span className="font-mono bg-muted px-2 py-0.5 rounded">
               {user.userCode}
             </span>
@@ -747,7 +747,7 @@ export function EmployeeDetailPage() {
           {isAdminHR && (
             <button
               onClick={() => setShowEditUser(true)}
-              className="px-3 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+              className="px-3 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition"
             >
               <Edit2 size={13} /> Chỉnh sửa
             </button>
@@ -761,7 +761,7 @@ export function EmployeeDetailPage() {
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`px-3 py-2.5 text-[0.8125rem] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${activeTab === t.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
           >
             {t.icon}
             {t.label}
@@ -773,7 +773,7 @@ export function EmployeeDetailPage() {
       {activeTab === "info" && (
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-            <h3 className="text-[13px] font-medium mb-3 flex items-center gap-1.5">
+            <h3 className="text-[0.8125rem] font-medium mb-3 flex items-center gap-1.5">
               <UserIcon size={14} /> Thông tin làm việc
             </h3>
             <InfoRow label="Mã nhân viên" value={user.userCode} />
@@ -797,14 +797,14 @@ export function EmployeeDetailPage() {
             />
           </div>
           <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-            <h3 className="text-[13px] font-medium mb-3 flex items-center gap-1.5">
+            <h3 className="text-[0.8125rem] font-medium mb-3 flex items-center gap-1.5">
               <Shield size={14} /> Phân quyền
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {(user.roles ?? []).map((r) => (
                 <span
                   key={r}
-                  className="text-[11px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium"
+                  className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium"
                 >
                   {r}
                 </span>
@@ -817,7 +817,7 @@ export function EmployeeDetailPage() {
               />
             )}
             {user.mustChangePassword && (
-              <div className="text-[12px] px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg">
+              <div className="text-xs px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg">
                 ⚠ Chưa đổi mật khẩu lần đầu
               </div>
             )}
@@ -825,7 +825,7 @@ export function EmployeeDetailPage() {
               <div className="pt-2">
                 <button
                   onClick={handleResendSetup}
-                  className="text-[12px] px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition flex items-center gap-1.5"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-accent transition flex items-center gap-1.5"
                 >
                   <KeyRound size={12} /> Gửi lại email kích hoạt
                 </button>
@@ -839,11 +839,11 @@ export function EmployeeDetailPage() {
       {activeTab === "profile" && (
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[14px] font-medium">Hồ sơ cá nhân</h3>
+            <h3 className="text-sm font-medium">Hồ sơ cá nhân</h3>
             {(isAdminHR || user.id === currentUser?.id) && (
               <button
                 onClick={() => setShowEditProfile(true)}
-                className="px-3 py-1.5 rounded-lg border border-border text-[12px] flex items-center gap-1.5 hover:bg-accent transition"
+                className="px-3 py-1.5 rounded-lg border border-border text-xs flex items-center gap-1.5 hover:bg-accent transition"
               >
                 <Edit2 size={12} /> Chỉnh sửa
               </button>
@@ -900,11 +900,11 @@ export function EmployeeDetailPage() {
           ) : (
             <div className="text-center py-10 text-muted-foreground">
               <UserIcon size={32} className="mx-auto opacity-20 mb-2" />
-              <p className="text-[13px]">Chưa có thông tin hồ sơ</p>
+              <p className="text-[0.8125rem]">Chưa có thông tin hồ sơ</p>
               {(isAdminHR || user.id === currentUser?.id) && (
                 <button
                   onClick={() => setShowEditProfile(true)}
-                  className="mt-3 text-[12px] text-blue-600 hover:underline"
+                  className="mt-3 text-xs text-blue-600 hover:underline"
                 >
                   + Thêm thông tin hồ sơ
                 </button>
@@ -918,7 +918,7 @@ export function EmployeeDetailPage() {
       {activeTab === "compensation" && isAdminHR && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-[14px] flex items-center gap-2">
+            <h3 className="text-sm flex items-center gap-2">
               <History size={16} /> Lịch sử lương
             </h3>
           </div>
@@ -926,58 +926,58 @@ export function EmployeeDetailPage() {
           {compLoading ? (
             <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
               <Loader2 size={18} className="animate-spin" />
-              <span className="text-[13px]">Đang tải...</span>
+              <span className="text-[0.8125rem]">Đang tải...</span>
             </div>
           ) : (
             <>
               {/* Summary card — lương đang áp dụng */}
               {activeComp && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                  <div className="text-[13px] text-blue-700 dark:text-blue-300 mb-3 flex items-center gap-1">
+                  <div className="text-[0.8125rem] text-blue-700 dark:text-blue-300 mb-3 flex items-center gap-1">
                     <DollarSign size={14} /> Lương hiện tại
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         Lương cơ bản
                       </div>
-                      <div className="text-[16px]">
+                      <div className="text-base">
                         {formatFullVND(activeComp.baseSalary)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         Loại lương
                       </div>
-                      <div className="text-[14px]">
+                      <div className="text-sm">
                         {salaryTypeLabels[activeComp.salaryType] ??
                           activeComp.salaryType}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         Chu kỳ trả lương
                       </div>
-                      <div className="text-[14px]">
+                      <div className="text-sm">
                         {payFrequencyLabels[activeComp.payFrequency] ??
                           activeComp.payFrequency}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         Ngày trả lương
                       </div>
-                      <div className="text-[14px]">
+                      <div className="text-sm">
                         {activeComp.payDayOfMonth
                           ? `Ngày ${activeComp.payDayOfMonth} hàng tháng`
                           : "—"}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         Hiệu lực từ
                       </div>
-                      <div className="text-[14px]">
+                      <div className="text-sm">
                         {new Date(activeComp.effectiveFrom).toLocaleDateString(
                           "vi-VN",
                         )}
@@ -985,10 +985,10 @@ export function EmployeeDetailPage() {
                     </div>
                     {activeComp.effectiveTo && (
                       <div>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-[0.6875rem] text-muted-foreground">
                           Hiệu lực đến
                         </div>
-                        <div className="text-[14px]">
+                        <div className="text-sm">
                           {new Date(activeComp.effectiveTo).toLocaleDateString(
                             "vi-VN",
                           )}
@@ -999,17 +999,17 @@ export function EmployeeDetailPage() {
                   {user.employmentStatus === "PROBATION" &&
                     activeComp.probationSalary && (
                       <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700 flex flex-wrap items-center gap-3">
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                        <span className="text-[0.6875rem] px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
                           Thử việc
                         </span>
-                        <span className="text-[13px]">
+                        <span className="text-[0.8125rem]">
                           Lương thử việc:{" "}
                           <strong>
                             {formatFullVND(activeComp.probationSalary)}
                           </strong>
                         </span>
                         {activeComp.probationEndDate && (
-                          <span className="text-[12px] text-muted-foreground">
+                          <span className="text-xs text-muted-foreground">
                             Hết thử việc:{" "}
                             {new Date(
                               activeComp.probationEndDate,
@@ -1036,31 +1036,31 @@ export function EmployeeDetailPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[15px] font-medium">
+                          <span className="text-[0.9375rem] font-medium">
                             {formatFullVND(comp.baseSalary)}
                           </span>
                           {comp.isActive && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                            <span className="text-[0.625rem] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
                               Hiện tại
                             </span>
                           )}
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             {salaryTypeLabels[comp.salaryType] ??
                               comp.salaryType}
                           </span>
                         </div>
                         {comp.changeReason && (
-                          <div className="text-[12px] text-muted-foreground mt-0.5">
+                          <div className="text-xs text-muted-foreground mt-0.5">
                             {comp.changeReason}
                           </div>
                         )}
                         {comp.notes && (
-                          <div className="text-[11px] text-muted-foreground mt-0.5 italic">
+                          <div className="text-[0.6875rem] text-muted-foreground mt-0.5 italic">
                             {comp.notes}
                           </div>
                         )}
                       </div>
-                      <div className="text-right shrink-0 text-[12px] text-muted-foreground">
+                      <div className="text-right shrink-0 text-xs text-muted-foreground">
                         <div>
                           Từ{" "}
                           {new Date(comp.effectiveFrom).toLocaleDateString(
@@ -1080,7 +1080,7 @@ export function EmployeeDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-muted-foreground text-[13px]">
+                <div className="text-center py-12 text-muted-foreground text-[0.8125rem]">
                   <DollarSign size={36} className="mx-auto mb-2 opacity-20" />
                   Chưa có lịch sử lương
                 </div>
@@ -1100,13 +1100,13 @@ export function EmployeeDetailPage() {
         <div className="space-y-4">
           {/* Account status */}
           <div className="bg-card border border-border rounded-xl p-5">
-            <h3 className="text-[14px] font-medium flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
               <Lock size={15} /> Quản lý tài khoản
             </h3>
-            <p className="text-[12px] text-muted-foreground mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Trạng thái hiện tại:{" "}
               <span
-                className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${accStatusColors[user.accountStatus] ?? ""}`}
+                className={`px-2 py-0.5 rounded-full text-[0.6875rem] font-medium ${accStatusColors[user.accountStatus] ?? ""}`}
               >
                 {accStatusLabels[user.accountStatus] ?? user.accountStatus}
               </span>
@@ -1115,7 +1115,7 @@ export function EmployeeDetailPage() {
               {user.accountStatus !== "ACTIVE" && (
                 <button
                   onClick={() => setShowStatusAction("ACTIVE")}
-                  className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-[12px] flex items-center gap-1.5 hover:bg-emerald-700 transition"
+                  className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-emerald-700 transition"
                 >
                   <Unlock size={13} /> Mở khoá (ACTIVE)
                 </button>
@@ -1123,7 +1123,7 @@ export function EmployeeDetailPage() {
               {user.accountStatus !== "LOCKED" && (
                 <button
                   onClick={() => setShowStatusAction("LOCKED")}
-                  className="px-3 py-2 bg-red-600 text-white rounded-lg text-[12px] flex items-center gap-1.5 hover:bg-red-700 transition"
+                  className="px-3 py-2 bg-red-600 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-red-700 transition"
                 >
                   <Lock size={13} /> Khoá tài khoản
                 </button>
@@ -1131,7 +1131,7 @@ export function EmployeeDetailPage() {
               {user.accountStatus !== "DISABLED" && (
                 <button
                   onClick={() => setShowStatusAction("DISABLED")}
-                  className="px-3 py-2 bg-slate-600 text-white rounded-lg text-[12px] flex items-center gap-1.5 hover:bg-slate-700 transition"
+                  className="px-3 py-2 bg-slate-600 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-slate-700 transition"
                 >
                   <Ban size={13} /> Vô hiệu hoá
                 </button>
@@ -1141,20 +1141,20 @@ export function EmployeeDetailPage() {
 
           {/* Role management */}
           <div className="bg-card border border-border rounded-xl p-5">
-            <h3 className="text-[14px] font-medium flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
               <Shield size={15} /> Phân quyền
             </h3>
             <div className="flex flex-wrap gap-1.5 mb-3">
               {(user.roles ?? []).map((r) => (
                 <span
                   key={r}
-                  className="text-[11px] px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium"
+                  className="text-[0.6875rem] px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 font-medium"
                 >
                   {r}
                 </span>
               ))}
             </div>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Để thay đổi quyền, liên hệ quản trị hệ thống hoặc dùng API PUT
               /users/:id/roles
             </p>
@@ -1163,15 +1163,15 @@ export function EmployeeDetailPage() {
           {/* Terminate */}
           {user.employmentStatus !== "TERMINATED" && (
             <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-5">
-              <h3 className="text-[14px] font-medium flex items-center gap-2 mb-2 text-red-700 dark:text-red-400">
+              <h3 className="text-sm font-medium flex items-center gap-2 mb-2 text-red-700 dark:text-red-400">
                 <UserX size={15} /> Xử lý nghỉ việc
               </h3>
-              <p className="text-[12px] text-muted-foreground mb-3">
+              <p className="text-xs text-muted-foreground mb-3">
                 Đặt trạng thái TERMINATED và vô hiệu hoá tài khoản nhân viên.
               </p>
               <button
                 onClick={() => setShowTerminate(true)}
-                className="px-3 py-2 bg-red-600 text-white rounded-lg text-[12px] flex items-center gap-1.5 hover:bg-red-700 transition"
+                className="px-3 py-2 bg-red-600 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-red-700 transition"
               >
                 <UserX size={13} /> Xử lý nghỉ việc
               </button>
@@ -1186,19 +1186,19 @@ export function EmployeeDetailPage() {
           {shiftsLoading ? (
             <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
               <Loader2 size={18} className="animate-spin" />
-              <span className="text-[13px]">Đang tải...</span>
+              <span className="text-[0.8125rem]">Đang tải...</span>
             </div>
           ) : (
             <>
               {/* Header + Gan ca button */}
               {isAdminHR && (
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-[14px] font-medium flex items-center gap-2">
+                  <h3 className="text-sm font-medium flex items-center gap-2">
                     <Clock size={15} /> Ca làm việc
                   </h3>
                   <button
                     onClick={openAssignShift}
-                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[12px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs flex items-center gap-1.5 hover:bg-blue-700 transition"
                   >
                     <Plus size={13} /> Gán ca mới
                   </button>
@@ -1210,70 +1210,70 @@ export function EmployeeDetailPage() {
                 const activeShift = workShifts.find((s) => s.isActive);
                 return (
                   <div className="bg-card border border-border rounded-xl p-5">
-                    <h3 className="text-[14px] flex items-center gap-2 mb-4">
+                    <h3 className="text-sm flex items-center gap-2 mb-4">
                       <Clock size={16} /> Ca làm việc hiện tại
                     </h3>
                     {activeShift?.shift ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             Tên ca
                           </span>
-                          <p className="text-[13px] mt-0.5 font-medium">
+                          <p className="text-[0.8125rem] mt-0.5 font-medium">
                             {activeShift.shift.name}
                           </p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             Giờ làm việc
                           </span>
-                          <p className="text-[13px] mt-0.5">
+                          <p className="text-[0.8125rem] mt-0.5">
                             {activeShift.shift.startTime} →{" "}
                             {activeShift.shift.endTime}
-                            <span className="text-muted-foreground text-[11px] ml-1">
+                            <span className="text-muted-foreground text-[0.6875rem] ml-1">
                               (nghỉ giữa ca {activeShift.shift.breakMinutes}{" "}
                               phút)
                             </span>
                           </p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             Áp dụng ngày
                           </span>
-                          <p className="text-[13px] mt-0.5">
+                          <p className="text-[0.8125rem] mt-0.5">
                             {activeShift.dayOfWeek
                               ? DAY_OF_WEEK_LABELS[activeShift.dayOfWeek]
                               : "Tất cả ngày trong tuần"}
                           </p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             Hiệu lực từ
                           </span>
-                          <p className="text-[13px] mt-0.5">
+                          <p className="text-[0.8125rem] mt-0.5">
                             {new Date(
                               activeShift.effectiveFrom,
                             ).toLocaleDateString("vi-VN")}
                           </p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             Loại ca
                           </span>
-                          <p className="text-[13px] mt-0.5 flex items-center gap-1.5">
+                          <p className="text-[0.8125rem] mt-0.5 flex items-center gap-1.5">
                             {activeShift.shift.shiftType}
                             {activeShift.shift.isNightShift && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+                              <span className="text-[0.625rem] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
                                 Ca đêm
                               </span>
                             )}
                           </p>
                         </div>
                         <div>
-                          <span className="text-[11px] text-muted-foreground">
+                          <span className="text-[0.6875rem] text-muted-foreground">
                             Thời gian làm việc / ngày
                           </span>
-                          <p className="text-[13px] mt-0.5">
+                          <p className="text-[0.8125rem] mt-0.5">
                             {Math.round(
                               (activeShift.shift.workMinutes / 60) * 10,
                             ) / 10}{" "}
@@ -1282,10 +1282,10 @@ export function EmployeeDetailPage() {
                         </div>
                         {activeShift.notes && (
                           <div className="sm:col-span-2">
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="text-[0.6875rem] text-muted-foreground">
                               Ghi chú
                             </span>
-                            <p className="text-[13px] mt-0.5 text-muted-foreground italic">
+                            <p className="text-[0.8125rem] mt-0.5 text-muted-foreground italic">
                               {activeShift.notes}
                             </p>
                           </div>
@@ -1297,7 +1297,7 @@ export function EmployeeDetailPage() {
                           size={40}
                           className="mx-auto text-muted-foreground/20 mb-3"
                         />
-                        <p className="text-[13px] text-muted-foreground">
+                        <p className="text-[0.8125rem] text-muted-foreground">
                           Nhân viên này chưa được gán ca làm việc
                         </p>
                       </div>
@@ -1309,13 +1309,13 @@ export function EmployeeDetailPage() {
               {/* Lịch sử ca */}
               {workShifts.length > 1 && (
                 <div>
-                  <h3 className="text-[14px] flex items-center gap-2 mb-3">
+                  <h3 className="text-sm flex items-center gap-2 mb-3">
                     <History size={16} /> Lịch sử ca làm việc
                   </h3>
                   <div className="overflow-x-auto border border-border rounded-xl">
-                    <table className="w-full text-[13px]">
+                    <table className="w-full text-[0.8125rem]">
                       <thead>
-                        <tr className="bg-muted/50 text-muted-foreground text-[11px]">
+                        <tr className="bg-muted/50 text-muted-foreground text-[0.6875rem]">
                           <th className="px-4 py-2.5 text-left">Tên ca</th>
                           <th className="px-4 py-2.5 text-left hidden sm:table-cell">
                             Giờ làm
@@ -1363,7 +1363,7 @@ export function EmployeeDetailPage() {
                             </td>
                             <td className="px-4 py-3">
                               <span
-                                className={`text-[11px] px-2 py-0.5 rounded-full ${ws.isActive ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}
+                                className={`text-[0.6875rem] px-2 py-0.5 rounded-full ${ws.isActive ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"}`}
                               >
                                 {ws.isActive ? "Đang áp dụng" : "Kết thúc"}
                               </span>
@@ -1377,7 +1377,7 @@ export function EmployeeDetailPage() {
               )}
 
               {workShifts.length === 0 && (
-                <div className="text-center py-6 text-muted-foreground text-[13px]">
+                <div className="text-center py-6 text-muted-foreground text-[0.8125rem]">
                   Không có dữ liệu ca làm việc
                 </div>
               )}
@@ -1391,11 +1391,11 @@ export function EmployeeDetailPage() {
         <div className="space-y-4">
           {/* Header + filters */}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-[14px] flex items-center gap-2">
+            <h3 className="text-sm flex items-center gap-2">
               <ScrollText size={16} /> Nhật ký hoạt động
             </h3>
             <div className="flex items-center gap-2">
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 Hiển thị:
               </span>
               {(["about", "by", "all"] as const).map((m) => (
@@ -1405,7 +1405,7 @@ export function EmployeeDetailPage() {
                     setAuditMode(m);
                     setAuditPage(1);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-[12px] transition ${auditMode === m ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
+                  className={`px-2.5 py-1 rounded-lg text-xs transition ${auditMode === m ? "bg-blue-600 text-white" : "border border-border hover:bg-accent"}`}
                 >
                   {m === "about"
                     ? "Về nhân viên"
@@ -1420,7 +1420,7 @@ export function EmployeeDetailPage() {
           {auditLoading ? (
             <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
               <Loader2 size={18} className="animate-spin" />
-              <span className="text-[13px]">Đang tải...</span>
+              <span className="text-[0.8125rem]">Đang tải...</span>
             </div>
           ) : auditLogs.length > 0 ? (
             <>
@@ -1432,7 +1432,7 @@ export function EmployeeDetailPage() {
                   >
                     <div className="flex items-start gap-3">
                       {/* Avatar actor */}
-                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-[10px] shrink-0 mt-0.5 font-medium">
+                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-[0.625rem] shrink-0 mt-0.5 font-medium">
                         {log.actorUser?.fullName
                           ?.split(" ")
                           .slice(-1)[0]?.[0]
@@ -1440,25 +1440,25 @@ export function EmployeeDetailPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[12px] font-medium">
+                          <span className="text-xs font-medium">
                             {log.actorUser?.fullName ?? "—"}
                           </span>
                           {log.actorUser?.userCode && (
-                            <span className="text-[10px] font-mono text-muted-foreground">
+                            <span className="text-[0.625rem] font-mono text-muted-foreground">
                               {log.actorUser.userCode}
                             </span>
                           )}
                           <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${actionTypeColors[log.actionType] ?? "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}
+                            className={`text-[0.625rem] px-1.5 py-0.5 rounded font-medium ${actionTypeColors[log.actionType] ?? "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}
                           >
                             {log.actionType}
                           </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          <span className="text-[0.625rem] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                             {log.entityType}
                           </span>
                         </div>
                         {log.description && (
-                          <p className="text-[12px] text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {log.description}
                           </p>
                         )}
@@ -1466,20 +1466,20 @@ export function EmployeeDetailPage() {
                           <div className="mt-2 flex gap-3 flex-wrap">
                             {log.oldValues && (
                               <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-2 flex-1 min-w-[140px]">
-                                <div className="text-[10px] text-red-500 mb-0.5 font-medium">
+                                <div className="text-[0.625rem] text-red-500 mb-0.5 font-medium">
                                   Giá trị cũ
                                 </div>
-                                <pre className="text-[10px] whitespace-pre-wrap text-red-700 dark:text-red-300">
+                                <pre className="text-[0.625rem] whitespace-pre-wrap text-red-700 dark:text-red-300">
                                   {JSON.stringify(log.oldValues, null, 2)}
                                 </pre>
                               </div>
                             )}
                             {log.newValues && (
                               <div className="bg-green-50 dark:bg-green-900/10 rounded-lg p-2 flex-1 min-w-[140px]">
-                                <div className="text-[10px] text-green-500 mb-0.5 font-medium">
+                                <div className="text-[0.625rem] text-green-500 mb-0.5 font-medium">
                                   Giá trị mới
                                 </div>
-                                <pre className="text-[10px] whitespace-pre-wrap text-green-700 dark:text-green-300">
+                                <pre className="text-[0.625rem] whitespace-pre-wrap text-green-700 dark:text-green-300">
                                   {JSON.stringify(log.newValues, null, 2)}
                                 </pre>
                               </div>
@@ -1487,7 +1487,7 @@ export function EmployeeDetailPage() {
                           </div>
                         )}
                       </div>
-                      <div className="text-right shrink-0 text-[11px] text-muted-foreground">
+                      <div className="text-right shrink-0 text-[0.6875rem] text-muted-foreground">
                         <div>
                           {new Date(log.createdAt).toLocaleDateString("vi-VN")}
                         </div>
@@ -1498,7 +1498,7 @@ export function EmployeeDetailPage() {
                           })}
                         </div>
                         {log.ipAddress && (
-                          <div className="text-[10px] font-mono mt-0.5">
+                          <div className="text-[0.625rem] font-mono mt-0.5">
                             {log.ipAddress}
                           </div>
                         )}
@@ -1511,7 +1511,7 @@ export function EmployeeDetailPage() {
               {/* Pagination */}
               {auditTotalPages > 1 && (
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-[12px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {(auditPage - 1) * AUDIT_LIMIT + 1}–
                     {Math.min(auditPage * AUDIT_LIMIT, auditTotal)} /{" "}
                     {auditTotal} bản ghi
@@ -1524,7 +1524,7 @@ export function EmployeeDetailPage() {
                     >
                       <ChevronUp size={14} className="rotate-[-90deg]" />
                     </button>
-                    <span className="text-[12px] px-2">
+                    <span className="text-xs px-2">
                       {auditPage} / {auditTotalPages}
                     </span>
                     <button
@@ -1541,7 +1541,7 @@ export function EmployeeDetailPage() {
               )}
             </>
           ) : (
-            <div className="text-center py-12 text-muted-foreground text-[13px]">
+            <div className="text-center py-12 text-muted-foreground text-[0.8125rem]">
               <ScrollText size={36} className="mx-auto mb-2 opacity-20" />
               Chưa có nhật ký nào liên quan
             </div>
@@ -1590,7 +1590,7 @@ export function EmployeeDetailPage() {
             onClose={() => setShowStatusAction(null)}
           />
           <div className="p-5">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[0.8125rem] text-muted-foreground">
               Bạn có chắc muốn chuyển tài khoản của{" "}
               <strong>{user.fullName}</strong> sang trạng thái{" "}
               <strong>{accStatusLabels[showStatusAction]}</strong>?
@@ -1630,7 +1630,7 @@ export function EmployeeDetailPage() {
           />
           <div className="p-5 space-y-4">
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Chọn ca *
               </label>
               <select
@@ -1638,7 +1638,7 @@ export function EmployeeDetailPage() {
                 onChange={(e) =>
                   setAssignShiftForm((p) => ({ ...p, shiftId: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">-- Chọn ca --</option>
                 {availableShifts.map((s) => (
@@ -1649,7 +1649,7 @@ export function EmployeeDetailPage() {
               </select>
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Hiệu lực từ *
               </label>
               <input
@@ -1661,11 +1661,11 @@ export function EmployeeDetailPage() {
                     effectiveFrom: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="text-[12px] text-muted-foreground block mb-1">
+              <label className="text-xs text-muted-foreground block mb-1">
                 Ghi chú
               </label>
               <input
@@ -1675,21 +1675,21 @@ export function EmployeeDetailPage() {
                   setAssignShiftForm((p) => ({ ...p, notes: e.target.value }))
                 }
                 placeholder="VD: Chuyển ca theo yêu cầu..."
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
           <div className="flex justify-end gap-2 p-4 border-t border-border">
             <button
               onClick={() => setShowAssignShift(false)}
-              className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent transition"
+              className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent transition"
             >
               Huỷ
             </button>
             <button
               onClick={handleAssignShift}
               disabled={assigningSavng || !assignShiftForm.shiftId}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition disabled:opacity-50"
             >
               {assigningSavng && <Loader2 size={13} className="animate-spin" />}{" "}
               Gán ca
@@ -1737,7 +1737,7 @@ function EditUserForm({
           { label: "Ngày vào làm", key: "hireDate", type: "date" },
         ].map((fi) => (
           <div key={fi.key}>
-            <label className="text-[12px] text-muted-foreground block mb-1">
+            <label className="text-xs text-muted-foreground block mb-1">
               {fi.label}
             </label>
             <input
@@ -1746,12 +1746,12 @@ function EditUserForm({
               onChange={(e) =>
                 setF((p) => ({ ...p, [fi.key]: e.target.value }))
               }
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         ))}
         <div>
-          <label className="text-[12px] text-muted-foreground block mb-1">
+          <label className="text-xs text-muted-foreground block mb-1">
             Phòng ban *
           </label>
           <select
@@ -1759,7 +1759,7 @@ function EditUserForm({
             onChange={(e) =>
               setF((p) => ({ ...p, departmentId: e.target.value }))
             }
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           >
             {deptOptions.map((d) => (
               <option key={d.id} value={d.id}>
@@ -1769,7 +1769,7 @@ function EditUserForm({
           </select>
         </div>
         <div>
-          <label className="text-[12px] text-muted-foreground block mb-1">
+          <label className="text-xs text-muted-foreground block mb-1">
             Chức danh *
           </label>
           <select
@@ -1777,7 +1777,7 @@ function EditUserForm({
             onChange={(e) =>
               setF((p) => ({ ...p, jobTitleId: e.target.value }))
             }
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           >
             {jobOptions.map((j) => (
               <option key={j.id} value={j.id}>
@@ -1787,13 +1787,13 @@ function EditUserForm({
           </select>
         </div>
         <div>
-          <label className="text-[12px] text-muted-foreground block mb-1">
+          <label className="text-xs text-muted-foreground block mb-1">
             Quản lý trực tiếp
           </label>
           <select
             value={f.managerId}
             onChange={(e) => setF((p) => ({ ...p, managerId: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           >
             <option value="">-- Không có --</option>
             {allUsers
@@ -1806,7 +1806,7 @@ function EditUserForm({
           </select>
         </div>
         <div>
-          <label className="text-[12px] text-muted-foreground block mb-1">
+          <label className="text-xs text-muted-foreground block mb-1">
             Trạng thái làm việc
           </label>
           <select
@@ -1814,7 +1814,7 @@ function EditUserForm({
             onChange={(e) =>
               setF((p) => ({ ...p, employmentStatus: e.target.value }))
             }
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           >
             <option value="PROBATION">Thử việc</option>
             <option value="ACTIVE">Chính thức</option>
@@ -1871,33 +1871,33 @@ function EditProfileForm({
   });
   const inp = (label: string, key: keyof typeof f, type = "text") => (
     <div>
-      <label className="text-[11px] text-muted-foreground block mb-1">
+      <label className="text-[0.6875rem] text-muted-foreground block mb-1">
         {label}
       </label>
       <input
         type={type}
         value={f[key]}
         onChange={(e) => setF((p) => ({ ...p, [key]: e.target.value }))}
-        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
   );
   return (
     <>
       <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
-        <p className="text-[12px] text-muted-foreground font-medium uppercase tracking-wide">
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
           Thông tin cơ bản
         </p>
         <div className="grid grid-cols-2 gap-3">
           {inp("Ngày sinh", "dateOfBirth", "date")}
           <div>
-            <label className="text-[11px] text-muted-foreground block mb-1">
+            <label className="text-[0.6875rem] text-muted-foreground block mb-1">
               Giới tính
             </label>
             <select
               value={f.gender}
               onChange={(e) => setF((p) => ({ ...p, gender: e.target.value }))}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
             >
               <option value="">-- Chọn --</option>
               <option value="MALE">Nam</option>
@@ -1907,7 +1907,7 @@ function EditProfileForm({
             </select>
           </div>
         </div>
-        <p className="text-[12px] text-muted-foreground font-medium uppercase tracking-wide pt-1">
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide pt-1">
           Giấy tờ
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -1916,7 +1916,7 @@ function EditProfileForm({
           {inp("Số BHXH", "socialInsuranceNumber")}
           {inp("Số BHYT", "healthInsuranceNumber")}
         </div>
-        <p className="text-[12px] text-muted-foreground font-medium uppercase tracking-wide pt-1">
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide pt-1">
           Ngân hàng
         </p>
         <div className="grid grid-cols-3 gap-3">
@@ -1925,7 +1925,7 @@ function EditProfileForm({
           {inp("Chủ tài khoản", "bankAccountHolder")}
         </div>
         {inp("Địa chỉ thường trú", "permanentAddress")}
-        <p className="text-[12px] text-muted-foreground font-medium uppercase tracking-wide pt-1">
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide pt-1">
           Liên hệ khẩn cấp
         </p>
         <div className="grid grid-cols-3 gap-3">
@@ -1936,7 +1936,7 @@ function EditProfileForm({
         <div className="grid grid-cols-2 gap-3">
           {inp("Số người phụ thuộc", "dependantCount", "number")}
         </div>
-        <p className="text-[12px] text-muted-foreground font-medium uppercase tracking-wide pt-1">
+        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide pt-1">
           Học vấn
         </p>
         <div className="grid grid-cols-3 gap-3">
@@ -1985,7 +1985,7 @@ function TerminateForm({
       <div className="p-5 space-y-3">
         <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-start gap-2">
           <AlertTriangle size={15} className="text-red-500 mt-0.5 shrink-0" />
-          <div className="text-[12px] text-red-700 dark:text-red-400">
+          <div className="text-xs text-red-700 dark:text-red-400">
             Đang xử lý nghỉ việc cho <strong>{userName}</strong>. Hành động này
             sẽ:
             <ul className="list-disc ml-4 mt-1 space-y-0.5">
@@ -1995,7 +1995,7 @@ function TerminateForm({
           </div>
         </div>
         <div>
-          <label className="text-[12px] text-muted-foreground block mb-1">
+          <label className="text-xs text-muted-foreground block mb-1">
             Lý do nghỉ việc *
           </label>
           <textarea
@@ -2003,7 +2003,7 @@ function TerminateForm({
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             placeholder="VD: Xin nghỉ theo nguyện vọng cá nhân..."
-            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
           />
         </div>
       </div>
@@ -2097,7 +2097,7 @@ function SalaryComponentsTab({
     return (
       <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
         <Loader2 size={18} className="animate-spin" />
-        <span className="text-[13px]">Đang tải...</span>
+        <span className="text-[0.8125rem]">Đang tải...</span>
       </div>
     );
 
@@ -2107,13 +2107,13 @@ function SalaryComponentsTab({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-[14px] flex items-center gap-2">
+        <h3 className="text-sm flex items-center gap-2">
           <Wallet size={16} /> Phụ cấp đang áp dụng
         </h3>
         {canManage && (
           <button
             onClick={() => setShowAdd(true)}
-            className="text-[12px] px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 hover:bg-blue-700"
+            className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg flex items-center gap-1 hover:bg-blue-700"
           >
             <Plus size={13} /> Gán phụ cấp
           </button>
@@ -2122,33 +2122,33 @@ function SalaryComponentsTab({
       {components.length === 0 ? (
         <div className="text-center py-10 text-muted-foreground">
           <Wallet size={32} className="mx-auto mb-2 opacity-20" />
-          <div className="text-[13px]">Nhân viên này chưa có phụ cấp nào</div>
+          <div className="text-[0.8125rem]">Nhân viên này chưa có phụ cấp nào</div>
         </div>
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Tên phụ cấp
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Mã
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Loại
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Số tiền
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Hiệu lực từ
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Kết thúc
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Trạng thái
                   </th>
                   {canManage && <th className="px-4 py-3 w-10" />}
@@ -2163,12 +2163,12 @@ function SalaryComponentsTab({
                     <td className="px-4 py-3 font-medium">
                       {c.salaryComponent?.name ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-[11px] font-mono text-muted-foreground hidden md:table-cell">
+                    <td className="px-4 py-3 text-[0.6875rem] font-mono text-muted-foreground hidden md:table-cell">
                       {c.salaryComponent?.code}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded ${c.salaryComponent?.componentType === "EARNING" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}
+                        className={`text-[0.625rem] px-1.5 py-0.5 rounded ${c.salaryComponent?.componentType === "EARNING" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}
                       >
                         {c.salaryComponent?.componentType === "EARNING"
                           ? "Phụ cấp"
@@ -2186,15 +2186,15 @@ function SalaryComponentsTab({
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                       {fmtDate(c.effectiveFrom)}
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                       {fmtDate(c.effectiveTo)}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${c.isActive ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-400"}`}
+                        className={`text-[0.625rem] px-2 py-0.5 rounded-full ${c.isActive ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-400"}`}
                       >
                         {c.isActive ? "Đang áp dụng" : "Hết hạn"}
                       </span>
@@ -2219,7 +2219,7 @@ function SalaryComponentsTab({
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-between px-1 text-[12px] text-muted-foreground">
+          <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
             <span>{activeComponents.length} phụ cấp đang hoạt động</span>
             <span>
               Tổng:{" "}
@@ -2292,21 +2292,21 @@ function AssignComponentDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-[440px]">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px]">Gán thành phần lương</h3>
+          <h3 className="text-base">Gán thành phần lương</h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
             <X size={18} />
           </button>
         </div>
         <div className="p-4 space-y-3">
           <div className="relative">
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Thành phần lương *{" "}
               {selectedComp && <span className="text-green-600">✓</span>}
             </label>
             {selectedComp ? (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-500 bg-input-background">
-                <span className="text-[13px] flex-1">{selectedComp.name}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">
+                <span className="text-[0.8125rem] flex-1">{selectedComp.name}</span>
+                <span className="text-[0.625rem] px-1.5 py-0.5 rounded bg-muted font-mono">
                   {selectedComp.code}
                 </span>
                 <button
@@ -2314,7 +2314,7 @@ function AssignComponentDialog({
                     setSelectedComp(null);
                     setCompDropdownOpen(true);
                   }}
-                  className="text-[11px] text-blue-600 hover:underline ml-1"
+                  className="text-[0.6875rem] text-blue-600 hover:underline ml-1"
                 >
                   Đổi
                 </button>
@@ -2334,7 +2334,7 @@ function AssignComponentDialog({
                     setCompDropdownOpen(true);
                   }}
                   onFocus={() => setCompDropdownOpen(true)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                 />
                 {compDropdownOpen && (
                   <>
@@ -2351,14 +2351,14 @@ function AssignComponentDialog({
                             setCompDropdownOpen(false);
                             setCompSearch("");
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent text-[12px]"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-accent text-xs"
                         >
                           <span className="flex-1 truncate">{o.name}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">
+                          <span className="text-[0.625rem] px-1.5 py-0.5 rounded bg-muted font-mono">
                             {o.code}
                           </span>
                           <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded ${o.componentType === "EARNING" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}
+                            className={`text-[0.625rem] px-1.5 py-0.5 rounded ${o.componentType === "EARNING" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}
                           >
                             {o.componentType === "EARNING"
                               ? "Phụ cấp"
@@ -2367,7 +2367,7 @@ function AssignComponentDialog({
                         </button>
                       ))}
                       {filtered.length === 0 && (
-                        <div className="px-3 py-2 text-[12px] text-muted-foreground">
+                        <div className="px-3 py-2 text-xs text-muted-foreground">
                           {available.length === 0
                             ? "Tất cả phụ cấp đã được gán"
                             : "Không tìm thấy"}
@@ -2381,21 +2381,21 @@ function AssignComponentDialog({
           </div>
           {/* isPercentage toggle + amount */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1.5">
+            <label className="block text-xs text-muted-foreground mb-1.5">
               Kiểu giá trị *
             </label>
             <div className="flex rounded-lg border border-border overflow-hidden mb-2">
               <button
                 type="button"
                 onClick={() => setIsPercentage(false)}
-                className={`flex-1 py-2 text-[12px] transition-colors ${!isPercentage ? "bg-blue-600 text-white" : "bg-card text-muted-foreground hover:bg-accent"}`}
+                className={`flex-1 py-2 text-xs transition-colors ${!isPercentage ? "bg-blue-600 text-white" : "bg-card text-muted-foreground hover:bg-accent"}`}
               >
                 Số tiền cố định (đ)
               </button>
               <button
                 type="button"
                 onClick={() => setIsPercentage(true)}
-                className={`flex-1 py-2 text-[12px] transition-colors ${isPercentage ? "bg-blue-600 text-white" : "bg-card text-muted-foreground hover:bg-accent"}`}
+                className={`flex-1 py-2 text-xs transition-colors ${isPercentage ? "bg-blue-600 text-white" : "bg-card text-muted-foreground hover:bg-accent"}`}
               >
                 % lương cơ bản
               </button>
@@ -2408,65 +2408,65 @@ function AssignComponentDialog({
                 placeholder={
                   isPercentage ? "VD: 8 (= 8% lương CB)" : "VD: 500000"
                 }
-                className="w-full px-3 py-2 pr-12 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 pr-12 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-muted-foreground pointer-events-none">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
                 {isPercentage ? "%" : "đ"}
               </span>
             </div>
             {amount && !isPercentage && (
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-[0.625rem] text-muted-foreground mt-0.5">
                 {fmtVND(parseFloat(amount) || 0)}
               </div>
             )}
             {amount && isPercentage && (
-              <div className="text-[10px] text-blue-600 dark:text-blue-400 mt-0.5">
+              <div className="text-[0.625rem] text-blue-600 dark:text-blue-400 mt-0.5">
                 = {parseFloat(amount) || 0}% của lương cơ bản nhân viên
               </div>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày hiệu lực *
               </label>
               <input
                 type="date"
                 value={effectiveFrom}
                 onChange={(e) => setEffectiveFrom(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày kết thúc{" "}
-                <span className="text-[10px]">— để trống = không giới hạn</span>
+                <span className="text-[0.625rem]">— để trống = không giới hạn</span>
               </label>
               <input
                 type="date"
                 value={effectiveTo}
                 onChange={(e) => setEffectiveTo(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
-              Ghi chú <span className="text-[10px]">— tuỳ chọn</span>
+            <label className="block text-xs text-muted-foreground mb-1">
+              Ghi chú <span className="text-[0.625rem]">— tuỳ chọn</span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="Nhập ghi chú..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
@@ -2495,7 +2495,7 @@ function AssignComponentDialog({
                 notes: notes || null,
               });
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700"
           >
             Xác nhận
           </button>

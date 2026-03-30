@@ -272,8 +272,8 @@ export function LeaveRequestsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-semibold">Nghỉ phép</h1>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <h1 className="text-xl font-semibold">Nghỉ phép</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Gửi và quản lý đơn nghỉ phép
           </p>
         </div>
@@ -292,7 +292,7 @@ export function LeaveRequestsPage() {
           </button>
           <button
             onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 transition"
           >
             <Plus size={14} /> Tạo đơn nghỉ
           </button>
@@ -307,13 +307,13 @@ export function LeaveRequestsPage() {
               key={i}
               className="bg-card border border-border rounded-xl p-3"
             >
-              <div className="text-[11px] text-muted-foreground mb-1">
+              <div className="text-[0.6875rem] text-muted-foreground mb-1">
                 {b.leaveType?.name ?? "Loại phép"}
               </div>
-              <div className="text-[22px] font-semibold text-blue-600">
+              <div className="text-[1.375rem] font-semibold text-blue-600">
                 {b.remainingDays ?? 0}
               </div>
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[0.625rem] text-muted-foreground">
                 còn lại / {b.entitledDays ?? 0} ngày
               </div>
             </div>
@@ -327,7 +327,7 @@ export function LeaveRequestsPage() {
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`px-3 py-2.5 text-[13px] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${
+            className={`px-3 py-2.5 text-[0.8125rem] border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-colors ${
               activeTab === t.key
                 ? "border-blue-500 text-blue-600"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -336,7 +336,7 @@ export function LeaveRequestsPage() {
             {t.icon}
             {t.label}
             {(t.badge ?? 0) > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-red-500 text-white rounded-full">
+              <span className="ml-1 px-1.5 py-0.5 text-[0.625rem] bg-red-500 text-white rounded-full">
                 {t.badge}
               </span>
             )}
@@ -348,12 +348,12 @@ export function LeaveRequestsPage() {
       {loadingReqs ? (
         <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
           <Loader2 size={16} className="animate-spin" />
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : filteredReqs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 text-muted-foreground">
           <CalendarDays size={32} className="opacity-20 mb-2" />
-          <p className="text-[13px]">Không có đơn nghỉ nào</p>
+          <p className="text-[0.8125rem]">Không có đơn nghỉ nào</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -372,21 +372,21 @@ export function LeaveRequestsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       {/* User name — từ req.user (API đã include) */}
-                      <span className="text-[14px] font-medium">
+                      <span className="text-sm font-medium">
                         {req.user?.fullName ?? "—"}
                       </span>
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${statusColors[req.status] ?? ""}`}
+                        className={`text-[0.6875rem] px-2 py-0.5 rounded-full font-medium ${statusColors[req.status] ?? ""}`}
                       >
                         {statusLabels[req.status] ?? req.status}
                       </span>
                       {req.currentStep && req.status === "PENDING" && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                        <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                           Chờ {stepLabels[req.currentStep] ?? req.currentStep}
                         </span>
                       )}
                     </div>
-                    <div className="text-[12px] text-muted-foreground space-y-0.5">
+                    <div className="text-xs text-muted-foreground space-y-0.5">
                       <div className="flex items-center gap-1.5">
                         <CalendarDays size={11} />
                         {req.leaveType?.name ?? "—"} · {fmtDate(req.startDate)}{" "}
@@ -394,7 +394,7 @@ export function LeaveRequestsPage() {
                         {req.isHalfDay && " — Nửa ngày"}
                       </div>
                       {req.reason && (
-                        <div className="text-[11px] italic">{req.reason}</div>
+                        <div className="text-[0.6875rem] italic">{req.reason}</div>
                       )}
                     </div>
 
@@ -404,7 +404,7 @@ export function LeaveRequestsPage() {
                         {approvals.map((a, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                            className="flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground"
                           >
                             {a.status === "APPROVED" ? (
                               <CheckCircle2
@@ -432,7 +432,7 @@ export function LeaveRequestsPage() {
                   <div className="flex flex-col gap-1.5 items-end">
                     <button
                       onClick={() => setDetailReq(req)}
-                      className="text-[11px] text-blue-600 hover:underline"
+                      className="text-[0.6875rem] text-blue-600 hover:underline"
                     >
                       Chi tiết
                     </button>
@@ -441,7 +441,7 @@ export function LeaveRequestsPage() {
                       req.userId === currentUser?.id && (
                         <button
                           onClick={() => handleCancel(req.id)}
-                          className="text-[11px] text-red-600 hover:underline flex items-center gap-1"
+                          className="text-[0.6875rem] text-red-600 hover:underline flex items-center gap-1"
                         >
                           <Ban size={11} /> Huỷ đơn
                         </button>
@@ -469,7 +469,7 @@ export function LeaveRequestsPage() {
           />
           <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-border">
-              <h2 className="text-[16px] font-semibold">Tạo đơn nghỉ phép</h2>
+              <h2 className="text-base font-semibold">Tạo đơn nghỉ phép</h2>
               <button
                 onClick={() => setShowForm(false)}
                 className="p-1.5 rounded-lg hover:bg-accent"
@@ -479,7 +479,7 @@ export function LeaveRequestsPage() {
             </div>
             <div className="p-5 space-y-3">
               <div>
-                <label className="text-[12px] text-muted-foreground block mb-1">
+                <label className="text-xs text-muted-foreground block mb-1">
                   Loại nghỉ phép *
                 </label>
                 <select
@@ -487,7 +487,7 @@ export function LeaveRequestsPage() {
                   onChange={(e) =>
                     setForm((p) => ({ ...p, leaveTypeId: e.target.value }))
                   }
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
                 >
                   <option value="">-- Chọn loại nghỉ --</option>
                   {leaveTypeOptions.map((lt) => (
@@ -503,7 +503,7 @@ export function LeaveRequestsPage() {
                   { label: "Ngày kết thúc *", key: "endDate" },
                 ].map((f) => (
                   <div key={f.key}>
-                    <label className="text-[12px] text-muted-foreground block mb-1">
+                    <label className="text-xs text-muted-foreground block mb-1">
                       {f.label}
                     </label>
                     <input
@@ -512,7 +512,7 @@ export function LeaveRequestsPage() {
                       onChange={(e) =>
                         setForm((p) => ({ ...p, [f.key]: e.target.value }))
                       }
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
                     />
                   </div>
                 ))}
@@ -529,14 +529,14 @@ export function LeaveRequestsPage() {
                 />
                 <label
                   htmlFor="isHalfDay"
-                  className="text-[13px] cursor-pointer"
+                  className="text-[0.8125rem] cursor-pointer"
                 >
                   Nghỉ nửa ngày
                 </label>
               </div>
               {form.isHalfDay && (
                 <div>
-                  <label className="text-[12px] text-muted-foreground block mb-1">
+                  <label className="text-xs text-muted-foreground block mb-1">
                     Buổi
                   </label>
                   <div className="flex gap-3">
@@ -546,7 +546,7 @@ export function LeaveRequestsPage() {
                     ].map((opt) => (
                       <label
                         key={opt.v}
-                        className="flex items-center gap-1.5 text-[13px] cursor-pointer"
+                        className="flex items-center gap-1.5 text-[0.8125rem] cursor-pointer"
                       >
                         <input
                           type="radio"
@@ -564,7 +564,7 @@ export function LeaveRequestsPage() {
                 </div>
               )}
               <div>
-                <label className="text-[12px] text-muted-foreground block mb-1">
+                <label className="text-xs text-muted-foreground block mb-1">
                   Lý do
                 </label>
                 <textarea
@@ -574,21 +574,21 @@ export function LeaveRequestsPage() {
                   }
                   rows={3}
                   placeholder="VD: Nghỉ phép cá nhân..."
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[13px] resize-none"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem] resize-none"
                 />
               </div>
             </div>
             <div className="flex justify-end gap-2 p-5 border-t border-border">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+                className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
               >
                 Huỷ
               </button>
               <button
                 onClick={handleCreate}
                 disabled={submitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1.5 hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1.5 hover:bg-blue-700 disabled:opacity-50"
               >
                 {submitting && <Loader2 size={13} className="animate-spin" />}
                 {submitting ? "Đang gửi..." : "Gửi đơn nghỉ"}
@@ -622,13 +622,13 @@ function ApproveRejectButtons({
       <div className="flex gap-1.5">
         <button
           onClick={() => setMode("approve")}
-          className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[11px] flex items-center gap-1 hover:bg-emerald-700"
+          className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-[0.6875rem] flex items-center gap-1 hover:bg-emerald-700"
         >
           <Check size={11} /> Duyệt
         </button>
         <button
           onClick={() => setMode("reject")}
-          className="px-2.5 py-1 bg-red-600 text-white rounded-lg text-[11px] flex items-center gap-1 hover:bg-red-700"
+          className="px-2.5 py-1 bg-red-600 text-white rounded-lg text-[0.6875rem] flex items-center gap-1 hover:bg-red-700"
         >
           <X size={11} /> Từ chối
         </button>
@@ -645,7 +645,7 @@ function ApproveRejectButtons({
         placeholder={
           mode === "approve" ? "Ghi chú (tuỳ chọn)" : "Lý do từ chối *"
         }
-        className="w-full px-2 py-1.5 rounded-lg border border-border bg-background text-[11px]"
+        className="w-full px-2 py-1.5 rounded-lg border border-border bg-background text-[0.6875rem]"
       />
       <div className="flex gap-1">
         <button
@@ -653,7 +653,7 @@ function ApproveRejectButtons({
             setMode("idle");
             setNote("");
           }}
-          className="flex-1 py-1 rounded-lg border border-border text-[11px] hover:bg-accent"
+          className="flex-1 py-1 rounded-lg border border-border text-[0.6875rem] hover:bg-accent"
         >
           Huỷ
         </button>
@@ -663,7 +663,7 @@ function ApproveRejectButtons({
             setMode("idle");
             setNote("");
           }}
-          className={`flex-1 py-1 rounded-lg text-white text-[11px] ${mode === "approve" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"}`}
+          className={`flex-1 py-1 rounded-lg text-white text-[0.6875rem] ${mode === "approve" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"}`}
         >
           {mode === "approve" ? "Xác nhận" : "Từ chối"}
         </button>
@@ -687,7 +687,7 @@ function LeaveDetailDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg">
         <div className="flex items-center justify-between p-5 border-b border-border">
-          <h3 className="text-[16px] font-semibold">Chi tiết đơn nghỉ phép</h3>
+          <h3 className="text-base font-semibold">Chi tiết đơn nghỉ phép</h3>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-accent"
@@ -722,7 +722,7 @@ function LeaveDetailDialog({
 
           {approvals.length > 0 && (
             <div>
-              <p className="text-[12px] text-muted-foreground font-medium mb-2">
+              <p className="text-xs text-muted-foreground font-medium mb-2">
                 Tiến trình duyệt
               </p>
               <div className="space-y-2">
@@ -745,11 +745,11 @@ function LeaveDetailDialog({
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="text-[12px] font-medium">
+                      <div className="text-xs font-medium">
                         {stepLabels[a.stepType] ?? a.stepType}
                         {a.approver && ` — ${a.approver.fullName}`}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[0.6875rem] text-muted-foreground">
                         {a.status === "PENDING"
                           ? "Đang chờ duyệt"
                           : a.status === "APPROVED"
@@ -758,7 +758,7 @@ function LeaveDetailDialog({
                         {a.actionAt && ` · ${fmtDate(a.actionAt)}`}
                       </div>
                       {a.comment && (
-                        <div className="text-[11px] italic text-muted-foreground mt-0.5">
+                        <div className="text-[0.6875rem] italic text-muted-foreground mt-0.5">
                           "{a.comment}"
                         </div>
                       )}
@@ -772,7 +772,7 @@ function LeaveDetailDialog({
         <div className="flex justify-end p-5 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Đóng
           </button>
@@ -817,12 +817,12 @@ export function LeaveBalancesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] font-semibold">Số dư phép</h1>
+        <h1 className="text-xl font-semibold">Số dư phép</h1>
         <div className="flex items-center gap-2">
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="px-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="px-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           >
             {[2023, 2024, 2025, 2026].map((y) => (
               <option key={y} value={y}>
@@ -853,7 +853,7 @@ export function LeaveBalancesPage() {
             placeholder="Tìm nhân viên..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-background text-[0.8125rem]"
           />
         </div>
       )}
@@ -861,11 +861,11 @@ export function LeaveBalancesPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
           <Loader2 size={16} className="animate-spin" />
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[2fr_1.5fr_60px_60px_60px_60px_80px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="hidden sm:grid grid-cols-[2fr_1.5fr_60px_60px_60px_60px_80px] gap-3 px-4 py-2.5 border-b border-border bg-muted/30 text-[0.6875rem] font-medium text-muted-foreground uppercase tracking-wide">
             <span>Nhân viên</span>
             <span>Loại phép</span>
             <span>Được phép</span>
@@ -876,7 +876,7 @@ export function LeaveBalancesPage() {
           </div>
           <div className="divide-y divide-border">
             {filtered.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground text-[13px]">
+              <div className="text-center py-12 text-muted-foreground text-[0.8125rem]">
                 Không có dữ liệu số dư phép
               </div>
             )}
@@ -889,19 +889,19 @@ export function LeaveBalancesPage() {
                   key={i}
                   className="grid sm:grid-cols-[2fr_1.5fr_60px_60px_60px_60px_80px] gap-3 px-4 py-3 items-center hover:bg-muted/20"
                 >
-                  <span className="text-[13px]">{b.user?.fullName ?? "—"}</span>
-                  <span className="text-[12px] text-muted-foreground">
+                  <span className="text-[0.8125rem]">{b.user?.fullName ?? "—"}</span>
+                  <span className="text-xs text-muted-foreground">
                     {b.leaveType?.name ?? "—"}
                   </span>
-                  <span className="text-[13px] text-center">{entitled}</span>
-                  <span className="text-[13px] text-center">
+                  <span className="text-[0.8125rem] text-center">{entitled}</span>
+                  <span className="text-[0.8125rem] text-center">
                     {b.usedDays ?? 0}
                   </span>
-                  <span className="text-[13px] text-center text-amber-600">
+                  <span className="text-[0.8125rem] text-center text-amber-600">
                     {b.pendingDays ?? 0}
                   </span>
                   <span
-                    className={`text-[13px] text-center font-medium ${remaining <= 0 ? "text-red-500" : remaining <= 3 ? "text-amber-500" : "text-emerald-600"}`}
+                    className={`text-[0.8125rem] text-center font-medium ${remaining <= 0 ? "text-red-500" : remaining <= 3 ? "text-amber-500" : "text-emerald-600"}`}
                   >
                     {remaining}
                   </span>
@@ -912,7 +912,7 @@ export function LeaveBalancesPage() {
                         style={{ width: `${Math.min(100, pct)}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[0.625rem] text-muted-foreground">
                       {Math.round(pct)}%
                     </span>
                   </div>
@@ -938,15 +938,15 @@ function InfoRow({
 }) {
   return (
     <div>
-      <div className="text-[11px] text-muted-foreground mb-0.5">{label}</div>
+      <div className="text-[0.6875rem] text-muted-foreground mb-0.5">{label}</div>
       {colored ? (
         <span
-          className={`text-[12px] px-2 py-0.5 rounded-full font-medium ${colored}`}
+          className={`text-xs px-2 py-0.5 rounded-full font-medium ${colored}`}
         >
           {value ?? "—"}
         </span>
       ) : (
-        <div className="text-[13px]">{value ?? "—"}</div>
+        <div className="text-[0.8125rem]">{value ?? "—"}</div>
       )}
     </div>
   );

@@ -405,10 +405,10 @@ export function NotificationsPage() {
     <div className="max-w-4xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <Bell size={22} /> Hộp thư thông báo
           {unreadCount > 0 && (
-            <span className="text-[12px] px-2 py-0.5 rounded-full bg-red-500 text-white">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -425,7 +425,7 @@ export function NotificationsPage() {
             <button
               onClick={handleMarkAllRead}
               disabled={actionLoading}
-              className="text-[12px] px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+              className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
             >
               {actionLoading ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -439,7 +439,7 @@ export function NotificationsPage() {
             <button
               onClick={handleDeleteAllRead}
               disabled={actionLoading}
-              className="text-[12px] px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-muted-foreground flex items-center gap-1 disabled:opacity-50"
+              className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-muted-foreground flex items-center gap-1 disabled:opacity-50"
             >
               <Trash2 size={14} /> Xoá đã đọc
             </button>
@@ -447,7 +447,7 @@ export function NotificationsPage() {
           {isAdminHR && (
             <button
               onClick={() => setShowSendPanel(!showSendPanel)}
-              className="text-[12px] px-3 py-1.5 rounded-lg border border-border hover:bg-accent flex items-center gap-1"
+              className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-accent flex items-center gap-1"
             >
               <Send size={14} /> Gửi thông báo
             </button>
@@ -498,8 +498,8 @@ export function NotificationsPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[11px] text-muted-foreground">{s.label}</div>
-              <div className="text-[20px]">{s.value}</div>
+              <div className="text-[0.6875rem] text-muted-foreground">{s.label}</div>
+              <div className="text-xl">{s.value}</div>
             </div>
           </div>
         ))}
@@ -516,7 +516,7 @@ export function NotificationsPage() {
                 setReadFilter(f);
                 setCurrentPage(1);
               }}
-              className={`px-3 py-1.5 text-[12px] transition-colors ${readFilter === f ? "bg-blue-600 text-white" : "bg-card hover:bg-accent"}`}
+              className={`px-3 py-1.5 text-xs transition-colors ${readFilter === f ? "bg-blue-600 text-white" : "bg-card hover:bg-accent"}`}
             >
               {f === "all" ? "Tất cả" : f === "unread" ? "Chưa đọc" : "Đã đọc"}
             </button>
@@ -527,7 +527,7 @@ export function NotificationsPage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-[12px]"
+          className="px-3 py-1.5 rounded-lg border border-border bg-input-background text-xs"
         >
           <option value="">Tất cả loại</option>
           {uniqueCategories.map((c) => (
@@ -548,7 +548,7 @@ export function NotificationsPage() {
             placeholder="Tìm thông báo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border bg-input-background text-[12px]"
+            className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-border bg-input-background text-xs"
           />
         </div>
 
@@ -559,7 +559,7 @@ export function NotificationsPage() {
               setCategoryFilter("");
               setSearchTerm("");
             }}
-            className="px-3 py-1.5 rounded-lg border border-border text-[12px] text-muted-foreground hover:bg-accent"
+            className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:bg-accent"
           >
             Xoá lọc
           </button>
@@ -569,14 +569,14 @@ export function NotificationsPage() {
       {/* Batch action bar */}
       {selectedIds.size > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-3 flex items-center justify-between gap-2">
-          <span className="text-[13px] text-blue-700 dark:text-blue-400">
+          <span className="text-[0.8125rem] text-blue-700 dark:text-blue-400">
             Đã chọn {selectedIds.size} thông báo
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={handleBatchMarkRead}
               disabled={actionLoading}
-              className="text-[12px] px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+              className="text-xs px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
             >
               {actionLoading ? (
                 <Loader2 size={10} className="animate-spin" />
@@ -588,13 +588,13 @@ export function NotificationsPage() {
             <button
               onClick={handleBatchDelete}
               disabled={actionLoading}
-              className="text-[12px] px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center gap-1 disabled:opacity-50"
+              className="text-xs px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center gap-1 disabled:opacity-50"
             >
               <Trash2 size={12} /> Xoá
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="text-[12px] px-3 py-1 rounded-lg border border-border hover:bg-accent"
+              className="text-xs px-3 py-1 rounded-lg border border-border hover:bg-accent"
             >
               Bỏ chọn
             </button>
@@ -607,7 +607,7 @@ export function NotificationsPage() {
         <div className="flex items-center gap-2 px-1">
           <button
             onClick={selectAll}
-            className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
             <div
               className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedIds.size === displayed.length && displayed.length > 0 ? "bg-blue-600 border-blue-600 text-white" : "border-border"}`}
@@ -624,17 +624,17 @@ export function NotificationsPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />
-          <span className="text-[13px]">Đang tải thông báo...</span>
+          <span className="text-[0.8125rem]">Đang tải thông báo...</span>
         </div>
       ) : displayed.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-muted mx-auto flex items-center justify-center mb-3">
             <Bell size={28} className="text-muted-foreground" />
           </div>
-          <div className="text-[14px] text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             Không có thông báo nào
           </div>
-          <div className="text-[12px] text-muted-foreground mt-1">
+          <div className="text-xs text-muted-foreground mt-1">
             {hasFilters
               ? "Thử thay đổi bộ lọc để xem kết quả khác"
               : "Bạn sẽ nhận thông báo khi có cập nhật mới"}
@@ -647,11 +647,11 @@ export function NotificationsPage() {
             <div key={dateGroup}>
               {/* Group header */}
               <div className="flex items-center gap-3 mb-2">
-                <span className="text-[12px] text-muted-foreground whitespace-nowrap">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {dateGroup}
                 </span>
                 <div className="flex-1 border-t border-border" />
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[0.6875rem] text-muted-foreground">
                   {items.length}
                 </span>
               </div>
@@ -695,11 +695,11 @@ export function NotificationsPage() {
                         >
                           <div className="flex items-center gap-2 flex-wrap mb-0.5">
                             <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded ${typeColor}`}
+                              className={`text-[0.625rem] px-1.5 py-0.5 rounded ${typeColor}`}
                             >
                               {n.typeLabel}
                             </span>
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[0.625rem] text-muted-foreground">
                               {relativeTime(n.createdAt)}
                             </span>
                             {!n.isRead && (
@@ -708,22 +708,22 @@ export function NotificationsPage() {
                           </div>
 
                           <div
-                            className={`text-[13px] ${!n.isRead ? "font-medium" : "text-muted-foreground"}`}
+                            className={`text-[0.8125rem] ${!n.isRead ? "font-medium" : "text-muted-foreground"}`}
                           >
                             {n.title}
                           </div>
                           <div
-                            className={`text-[12px] text-muted-foreground mt-0.5 ${isExpanded ? "" : "line-clamp-2"}`}
+                            className={`text-xs text-muted-foreground mt-0.5 ${isExpanded ? "" : "line-clamp-2"}`}
                           >
                             {n.message}
                           </div>
 
                           {/* Expanded detail */}
                           {isExpanded && (
-                            <div className="mt-3 pt-3 border-t border-border space-y-1.5 text-[12px]">
+                            <div className="mt-3 pt-3 border-t border-border space-y-1.5 text-xs">
                               {n.sender && (
                                 <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] shrink-0">
+                                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.5625rem] shrink-0">
                                     {n.sender.fullName
                                       .split(" ")
                                       .slice(-1)[0]?.[0] ?? "?"}
@@ -760,7 +760,7 @@ export function NotificationsPage() {
                                       navigate(n.actionUrl!);
                                     else window.open(n.actionUrl!, "_blank");
                                   }}
-                                  className="mt-1 text-[12px] text-blue-600 hover:underline flex items-center gap-1"
+                                  className="mt-1 text-xs text-blue-600 hover:underline flex items-center gap-1"
                                 >
                                   Xem chi tiết →
                                 </button>
@@ -805,21 +805,21 @@ export function NotificationsPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 Trang {currentPage}/{totalPages} — {totalCount} thông báo
               </span>
               <div className="flex gap-2">
                 <button
                   onClick={() => fetchData(currentPage - 1)}
                   disabled={currentPage <= 1 || loading}
-                  className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50 flex items-center gap-1"
                 >
                   <ChevronLeft size={14} /> Trước
                 </button>
                 <button
                   onClick={() => fetchData(currentPage + 1)}
                   disabled={currentPage >= totalPages || loading}
-                  className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50 flex items-center gap-1"
                 >
                   Sau <ChevronRight size={14} />
                 </button>
@@ -890,7 +890,7 @@ function SendNotificationPanel({
   return (
     <div className="bg-card border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-[14px] flex items-center gap-2">
+        <h3 className="text-sm flex items-center gap-2">
           <Send size={14} className="text-blue-600" /> Gửi thông báo thủ công
         </h3>
         <button onClick={onClose} className="p-1 rounded hover:bg-accent">
@@ -899,7 +899,7 @@ function SendNotificationPanel({
       </div>
 
       <div>
-        <label className="block text-[12px] text-muted-foreground mb-1">
+        <label className="block text-xs text-muted-foreground mb-1">
           User ID người nhận * (phân cách bởi dấu phẩy hoặc dòng mới)
         </label>
         <textarea
@@ -907,13 +907,13 @@ function SendNotificationPanel({
           onChange={(e) => setRecipientIds(e.target.value)}
           rows={2}
           placeholder="user-id-1, user-id-2, ..."
-          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none font-mono"
+          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none font-mono"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-[12px] text-muted-foreground mb-1">
+          <label className="block text-xs text-muted-foreground mb-1">
             Loại thông báo
           </label>
           <select
@@ -921,7 +921,7 @@ function SendNotificationPanel({
             onChange={(e) =>
               setType(e.target.value as notificationsService.NotificationType)
             }
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           >
             <option value="GENERAL">Thông báo chung</option>
             <option value="PAYROLL_READY">Bảng lương sẵn sàng</option>
@@ -933,20 +933,20 @@ function SendNotificationPanel({
           </select>
         </div>
         <div>
-          <label className="block text-[12px] text-muted-foreground mb-1">
+          <label className="block text-xs text-muted-foreground mb-1">
             Tiêu đề *
           </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Tiêu đề thông báo..."
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-[12px] text-muted-foreground mb-1">
+        <label className="block text-xs text-muted-foreground mb-1">
           Nội dung *
         </label>
         <textarea
@@ -954,21 +954,21 @@ function SendNotificationPanel({
           onChange={(e) => setMessage(e.target.value)}
           rows={3}
           placeholder="Nội dung chi tiết của thông báo..."
-          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
         />
       </div>
 
       <div className="flex justify-end gap-2">
         <button
           onClick={onClose}
-          className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+          className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
         >
           Huỷ
         </button>
         <button
           onClick={handleSend}
           disabled={sending}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
         >
           {sending ? (
             <Loader2 size={14} className="animate-spin" />

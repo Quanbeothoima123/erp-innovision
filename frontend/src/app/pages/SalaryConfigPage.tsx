@@ -149,7 +149,7 @@ export function SalaryConfigPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-[20px] flex items-center gap-2">
+        <h1 className="text-xl flex items-center gap-2">
           <DollarSign size={22} className="text-blue-600" /> Cấu hình lương nhân
           viên
         </h1>
@@ -163,7 +163,7 @@ export function SalaryConfigPage() {
           </button>
           <button
             onClick={() => setShowAdd(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] flex items-center gap-1 hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] flex items-center gap-1 hover:bg-blue-700"
           >
             <Plus size={16} /> Thêm mới
           </button>
@@ -197,8 +197,8 @@ export function SalaryConfigPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[10px] text-muted-foreground">{s.label}</div>
-              <div className="text-[16px]">{s.value}</div>
+              <div className="text-[0.625rem] text-muted-foreground">{s.label}</div>
+              <div className="text-base">{s.value}</div>
             </div>
           </div>
         ))}
@@ -216,19 +216,19 @@ export function SalaryConfigPage() {
             placeholder="Tìm tên, mã nhân viên..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
           />
         </div>
         <div className="flex rounded-lg border border-border overflow-hidden">
           <button
             onClick={() => setActiveOnly(true)}
-            className={`px-3 py-2 text-[12px] transition-colors ${activeOnly ? "bg-blue-600 text-white" : "bg-card hover:bg-accent"}`}
+            className={`px-3 py-2 text-xs transition-colors ${activeOnly ? "bg-blue-600 text-white" : "bg-card hover:bg-accent"}`}
           >
             Đang hiệu lực
           </button>
           <button
             onClick={() => setActiveOnly(false)}
-            className={`px-3 py-2 text-[12px] transition-colors ${!activeOnly ? "bg-blue-600 text-white" : "bg-card hover:bg-accent"}`}
+            className={`px-3 py-2 text-xs transition-colors ${!activeOnly ? "bg-blue-600 text-white" : "bg-card hover:bg-accent"}`}
           >
             Tất cả
           </button>
@@ -239,7 +239,7 @@ export function SalaryConfigPage() {
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
           <Loader2 size={20} className="animate-spin" />{" "}
-          <span className="text-[13px]">Đang tải...</span>
+          <span className="text-[0.8125rem]">Đang tải...</span>
         </div>
       ) : displayed.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
@@ -247,38 +247,38 @@ export function SalaryConfigPage() {
             size={40}
             className="mx-auto mb-2 opacity-20 text-muted-foreground"
           />
-          <div className="text-[14px] text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             Chưa có cấu hình lương nào
           </div>
-          <div className="text-[12px] text-muted-foreground mt-1">
+          <div className="text-xs text-muted-foreground mt-1">
             Nhấn "Thêm mới" để bắt đầu
           </div>
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-[0.8125rem]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Nhân viên
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden md:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden md:table-cell">
                     Loại lương
                   </th>
-                  <th className="text-right px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-right px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Lương cơ bản
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Hệ số OT (T/CN/Lễ)
                   </th>
-                  <th className="text-left px-4 py-3 text-[11px] text-muted-foreground hidden lg:table-cell">
+                  <th className="text-left px-4 py-3 text-[0.6875rem] text-muted-foreground hidden lg:table-cell">
                     Hiệu lực từ
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Trạng thái
                   </th>
-                  <th className="text-center px-4 py-3 text-[11px] text-muted-foreground">
+                  <th className="text-center px-4 py-3 text-[0.6875rem] text-muted-foreground">
                     Thao tác
                   </th>
                 </tr>
@@ -291,14 +291,14 @@ export function SalaryConfigPage() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px] shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.6875rem] shrink-0">
                           {c.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                         </div>
                         <div>
                           <div className="font-medium">
                             {c.user?.fullName ?? "—"}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-[0.625rem] text-muted-foreground">
                             {c.user?.userCode}
                           </div>
                         </div>
@@ -306,7 +306,7 @@ export function SalaryConfigPage() {
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${salaryTypeColors[c.salaryType]}`}
+                        className={`text-[0.625rem] px-2 py-0.5 rounded-full ${salaryTypeColors[c.salaryType]}`}
                       >
                         {salaryTypeLabels[c.salaryType]}
                       </span>
@@ -314,20 +314,20 @@ export function SalaryConfigPage() {
                     <td className="px-4 py-3 text-right font-medium text-green-600">
                       {fmtVND(c.baseSalary)}
                     </td>
-                    <td className="px-4 py-3 text-center text-[12px] text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-3 text-center text-xs text-muted-foreground hidden lg:table-cell">
                       {c.overtimeRateWeekday}× / {c.overtimeRateWeekend}× /{" "}
                       {c.overtimeRateHoliday}×
                     </td>
-                    <td className="px-4 py-3 text-[12px] text-muted-foreground hidden lg:table-cell">
+                    <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
                       {fmtDate(c.effectiveFrom)}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {c.isActive ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 flex items-center gap-0.5 w-fit mx-auto">
+                        <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 flex items-center gap-0.5 w-fit mx-auto">
                           <Check size={9} /> Hiệu lực
                         </span>
                       ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-400">
+                        <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-900/30 dark:text-gray-400">
                           Hết hạn
                         </span>
                       )}
@@ -358,7 +358,7 @@ export function SalaryConfigPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 text-[12px] text-muted-foreground border-t border-border flex items-center justify-between">
+          <div className="px-4 py-3 text-xs text-muted-foreground border-t border-border flex items-center justify-between">
             <span>{total} cấu hình lương</span>
             {totalPages > 1 && (
               <div className="flex gap-2 items-center">
@@ -544,7 +544,7 @@ function CompensationFormDialog({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-[480px] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border sticky top-0 bg-card z-10">
-          <h3 className="text-[16px] flex items-center gap-2">
+          <h3 className="text-base flex items-center gap-2">
             <DollarSign size={15} /> {title}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
@@ -555,7 +555,7 @@ function CompensationFormDialog({
           {/* Employee selector — only for new */}
           {!existing ? (
             <div className="relative">
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Nhân viên *{" "}
                 {selectedUser && (
                   <span className="text-green-600">✓ Đã chọn</span>
@@ -563,20 +563,20 @@ function CompensationFormDialog({
               </label>
               {selectedUser ? (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-green-500 bg-input-background">
-                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                     {selectedUser.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] truncate">
+                    <div className="text-[0.8125rem] truncate">
                       {selectedUser.fullName}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
+                    <div className="text-[0.625rem] text-muted-foreground">
                       {selectedUser.userCode}
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedUser(null)}
-                    className="text-[11px] text-blue-600 hover:underline shrink-0"
+                    className="text-[0.6875rem] text-blue-600 hover:underline shrink-0"
                   >
                     Đổi
                   </button>
@@ -601,7 +601,7 @@ function CompensationFormDialog({
                       empSearch.length >= 2 && setEmpDropdownOpen(true)
                     }
                     placeholder="Tìm tên hoặc mã nhân viên..."
-                    className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                    className="w-full pl-9 pr-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                   />
                   {empDropdownOpen && empList.length > 0 && (
                     <>
@@ -618,14 +618,14 @@ function CompensationFormDialog({
                               setEmpSearch("");
                               setEmpDropdownOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-accent text-[13px] transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-accent text-[0.8125rem] transition-colors"
                           >
-                            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.625rem] shrink-0">
                               {u.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
                             </div>
                             <div className="flex-1 min-w-0 text-left">
                               <div className="truncate">{u.fullName}</div>
-                              <div className="text-[10px] text-muted-foreground">
+                              <div className="text-[0.625rem] text-muted-foreground">
                                 {u.userCode}
                               </div>
                             </div>
@@ -639,14 +639,14 @@ function CompensationFormDialog({
             </div>
           ) : (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border">
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[11px]">
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.6875rem]">
                 {existing.user?.fullName.split(" ").slice(-1)[0]?.[0] ?? "?"}
               </div>
               <div>
-                <div className="text-[13px] font-medium">
+                <div className="text-[0.8125rem] font-medium">
                   {existing.user?.fullName ?? "—"}
                 </div>
-                <div className="text-[10px] text-muted-foreground">
+                <div className="text-[0.625rem] text-muted-foreground">
                   {existing.user?.userCode}
                 </div>
               </div>
@@ -655,7 +655,7 @@ function CompensationFormDialog({
 
           {/* Salary type radio */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-2">
+            <label className="block text-xs text-muted-foreground mb-2">
               Loại lương *
             </label>
             <div className="flex gap-2">
@@ -663,7 +663,7 @@ function CompensationFormDialog({
                 <button
                   key={t}
                   onClick={() => setForm((f) => ({ ...f, salaryType: t }))}
-                  className={`flex-1 py-2 rounded-lg text-[12px] border transition-colors ${form.salaryType === t ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600" : "border-border text-muted-foreground hover:bg-accent"}`}
+                  className={`flex-1 py-2 rounded-lg text-xs border transition-colors ${form.salaryType === t ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600" : "border-border text-muted-foreground hover:bg-accent"}`}
                 >
                   {salaryTypeLabels[t]}
                 </button>
@@ -674,7 +674,7 @@ function CompensationFormDialog({
           {/* Base salary + Probation */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Lương cơ bản (VND) *
               </label>
               <input
@@ -684,16 +684,16 @@ function CompensationFormDialog({
                   setForm((f) => ({ ...f, baseSalary: e.target.value }))
                 }
                 placeholder="VD: 15,000,000"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
               {form.baseSalary && (
-                <div className="text-[10px] text-muted-foreground mt-0.5">
+                <div className="text-[0.625rem] text-muted-foreground mt-0.5">
                   {fmtVND(parseFloat(form.baseSalary) || 0)}
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Lương thử việc (VND)
               </label>
               <input
@@ -703,7 +703,7 @@ function CompensationFormDialog({
                   setForm((f) => ({ ...f, probationSalary: e.target.value }))
                 }
                 placeholder="Để trống nếu bằng lương CB"
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
@@ -711,7 +711,7 @@ function CompensationFormDialog({
           {/* Standard working days */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày công chuẩn/tháng
               </label>
               <input
@@ -725,11 +725,11 @@ function CompensationFormDialog({
                     standardWorkingDays: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
             <div>
-              <label className="block text-[12px] text-muted-foreground mb-1">
+              <label className="block text-xs text-muted-foreground mb-1">
                 Ngày hiệu lực *
               </label>
               <input
@@ -738,14 +738,14 @@ function CompensationFormDialog({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, effectiveFrom: e.target.value }))
                 }
-                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
               />
             </div>
           </div>
 
           {/* OT Rates */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-2">
+            <label className="block text-xs text-muted-foreground mb-2">
               Hệ số OT
             </label>
             <div className="grid grid-cols-3 gap-3">
@@ -755,7 +755,7 @@ function CompensationFormDialog({
                 { label: "Ngày lễ", key: "overtimeRateHoliday" as const },
               ].map((f) => (
                 <div key={f.key}>
-                  <label className="block text-[11px] text-muted-foreground mb-1">
+                  <label className="block text-[0.6875rem] text-muted-foreground mb-1">
                     {f.label}
                   </label>
                   <input
@@ -767,7 +767,7 @@ function CompensationFormDialog({
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                     }
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                   />
                 </div>
               ))}
@@ -776,7 +776,7 @@ function CompensationFormDialog({
 
           {/* Reason */}
           <div>
-            <label className="block text-[12px] text-muted-foreground mb-1">
+            <label className="block text-xs text-muted-foreground mb-1">
               Lý do thay đổi
             </label>
             <textarea
@@ -786,7 +786,7 @@ function CompensationFormDialog({
               }
               rows={2}
               placeholder="Tăng lương định kỳ, điều chỉnh thị trường..."
-              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
             />
           </div>
         </div>
@@ -794,14 +794,14 @@ function CompensationFormDialog({
         <div className="flex justify-end gap-2 p-4 border-t border-border sticky bottom-0 bg-card">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Huỷ
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[13px] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-[0.8125rem] hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 size={14} className="animate-spin" />
@@ -842,7 +842,7 @@ function SalaryHistoryModal({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="text-[16px] flex items-center gap-2">
+          <h3 className="text-base flex items-center gap-2">
             <History size={15} /> Lịch sử lương — {userName}
           </h3>
           <button onClick={onClose} className="p-1 rounded hover:bg-accent">
@@ -853,10 +853,10 @@ function SalaryHistoryModal({
           {loading ? (
             <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
               <Loader2 size={18} className="animate-spin" />{" "}
-              <span className="text-[13px]">Đang tải...</span>
+              <span className="text-[0.8125rem]">Đang tải...</span>
             </div>
           ) : history.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-[13px]">
+            <div className="text-center py-8 text-muted-foreground text-[0.8125rem]">
               Chưa có lịch sử thay đổi
             </div>
           ) : (
@@ -877,24 +877,24 @@ function SalaryHistoryModal({
                     </div>
                     <div className="flex-1 pb-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[13px] font-medium text-green-600">
+                        <span className="text-[0.8125rem] font-medium text-green-600">
                           {fmtVND(comp.baseSalary)}
                         </span>
                         {diff !== null && (
                           <span
-                            className={`text-[11px] ${diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-muted-foreground"}`}
+                            className={`text-[0.6875rem] ${diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-muted-foreground"}`}
                           >
                             {diff > 0 ? "▲" : diff < 0 ? "▼" : "="}{" "}
                             {diff !== 0 ? fmtVND(Math.abs(diff)) : "Không đổi"}
                           </span>
                         )}
                         {comp.isActive && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          <span className="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                             Hiện tại
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                      <div className="text-[0.6875rem] text-muted-foreground mt-0.5">
                         <span className="flex items-center gap-1">
                           <Clock size={10} /> Hiệu lực:{" "}
                           {fmtDate(comp.effectiveFrom)}
@@ -903,11 +903,11 @@ function SalaryHistoryModal({
                         </span>
                       </div>
                       {comp.changeReason && (
-                        <div className="text-[11px] text-muted-foreground mt-0.5 italic">
+                        <div className="text-[0.6875rem] text-muted-foreground mt-0.5 italic">
                           "{comp.changeReason}"
                         </div>
                       )}
-                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                      <div className="text-[0.625rem] text-muted-foreground mt-0.5">
                         {salaryTypeLabels[comp.salaryType]} • Ngày công:{" "}
                         {comp.standardWorkingDays ?? "—"}/tháng
                       </div>
@@ -921,7 +921,7 @@ function SalaryHistoryModal({
         <div className="flex justify-end p-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-border text-[13px] hover:bg-accent"
+            className="px-4 py-2 rounded-lg border border-border text-[0.8125rem] hover:bg-accent"
           >
             Đóng
           </button>

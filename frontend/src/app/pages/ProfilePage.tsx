@@ -316,7 +316,7 @@ export function ProfilePage() {
     return (
       <div className="flex items-center justify-center py-20 gap-2 text-muted-foreground">
         <Loader2 size={20} className="animate-spin" />
-        <span className="text-[13px]">Đang tải thông tin...</span>
+        <span className="text-[0.8125rem]">Đang tải thông tin...</span>
       </div>
     );
   }
@@ -328,16 +328,16 @@ export function ProfilePage() {
         <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle size={20} className="text-yellow-600 shrink-0" />
           <div className="flex-1">
-            <div className="text-[14px] text-yellow-700 dark:text-yellow-400">
+            <div className="text-sm text-yellow-700 dark:text-yellow-400">
               Bạn cần đổi mật khẩu
             </div>
-            <div className="text-[12px] text-yellow-600 dark:text-yellow-500">
+            <div className="text-xs text-yellow-600 dark:text-yellow-500">
               Mật khẩu của bạn đã được reset. Vui lòng đổi mật khẩu mới ngay.
             </div>
           </div>
           <button
             onClick={() => navigate("/change-password")}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-[13px] hover:bg-yellow-700 shrink-0 flex items-center gap-1"
+            className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-[0.8125rem] hover:bg-yellow-700 shrink-0 flex items-center gap-1"
           >
             Đổi ngay <ChevronRight size={14} />
           </button>
@@ -362,7 +362,7 @@ export function ProfilePage() {
                 />
               ) : (
                 <div
-                  className={`w-20 h-20 rounded-2xl ${avatarColor} flex items-center justify-center text-white text-[32px] border-4 border-card shadow-lg select-none`}
+                  className={`w-20 h-20 rounded-2xl ${avatarColor} flex items-center justify-center text-white text-[2rem] border-4 border-card shadow-lg select-none`}
                 >
                   {initials}
                 </div>
@@ -413,13 +413,13 @@ export function ProfilePage() {
 
             {/* Name + meta */}
             <div className="flex-1 pt-2 sm:pt-0">
-              <h1 className="text-[22px]">{user.fullName}</h1>
+              <h1 className="text-[1.375rem]">{user.fullName}</h1>
               <div className="flex items-center gap-2 flex-wrap mt-1">
-                <span className="text-[12px] text-muted-foreground font-mono">
+                <span className="text-xs text-muted-foreground font-mono">
                   {user.userCode}
                 </span>
                 <span className="text-muted-foreground">•</span>
-                <span className="text-[12px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {user.email}
                 </span>
               </div>
@@ -427,13 +427,13 @@ export function ProfilePage() {
                 {(user.roles ?? []).map((r) => (
                   <span
                     key={r}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    className="text-[0.625rem] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                   >
                     {roleLabels[r] ?? r}
                   </span>
                 ))}
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full ${empStatus.color}`}
+                  className={`text-[0.625rem] px-2 py-0.5 rounded-full ${empStatus.color}`}
                 >
                   {empStatus.label}
                 </span>
@@ -444,20 +444,20 @@ export function ProfilePage() {
             <div className="flex items-center gap-2 mt-2 sm:mt-0 flex-wrap justify-end">
               <button
                 onClick={fetchData}
-                className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent flex items-center gap-1"
               >
                 <RefreshCw size={12} />
               </button>
               <button
                 onClick={() => navigate("/change-password")}
-                className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent flex items-center gap-1"
               >
                 <Lock size={12} /> Đổi mật khẩu
               </button>
               {!editing ? (
                 <button
                   onClick={startEditing}
-                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[12px] hover:bg-blue-700 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-700 flex items-center gap-1"
                 >
                   <Edit2 size={12} /> Chỉnh sửa
                 </button>
@@ -466,14 +466,14 @@ export function ProfilePage() {
                   <button
                     onClick={cancelEditing}
                     disabled={saving}
-                    className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50"
                   >
                     Huỷ
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-[12px] hover:bg-green-700 flex items-center gap-1 disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700 flex items-center gap-1 disabled:opacity-50"
                   >
                     {saving ? (
                       <Loader2 size={12} className="animate-spin" />
@@ -530,7 +530,7 @@ export function ProfilePage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-[13px] border-b-2 whitespace-nowrap transition-colors
+              className={`flex items-center gap-1.5 px-4 py-3 text-[0.8125rem] border-b-2 whitespace-nowrap transition-colors
                 ${activeTab === tab.key ? "border-blue-500 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
               {tab.icon} {tab.label}
@@ -586,7 +586,7 @@ export function ProfilePage() {
                       value={phoneForm}
                       onChange={(e) => setPhoneForm(e.target.value)}
                       placeholder="0901234567"
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                     />
                   ) : undefined
                 }
@@ -623,7 +623,7 @@ export function ProfilePage() {
                             dateOfBirth: e.target.value || null,
                           }))
                         }
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -651,7 +651,7 @@ export function ProfilePage() {
                               null) as UserProfile["gender"],
                           }))
                         }
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       >
                         <option value="">-- Chọn --</option>
                         {Object.entries(genderLabels).map(([k, v]) => (
@@ -683,7 +683,7 @@ export function ProfilePage() {
                           }))
                         }
                         placeholder="001099012345"
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -711,7 +711,7 @@ export function ProfilePage() {
                             nationalIdIssueDate: e.target.value || null,
                           }))
                         }
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -738,7 +738,7 @@ export function ProfilePage() {
                           }))
                         }
                         placeholder="Cục CSLTT&PCCC TPHCM"
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -761,7 +761,7 @@ export function ProfilePage() {
                           }))
                         }
                         placeholder="1234567890"
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -770,7 +770,7 @@ export function ProfilePage() {
 
               {/* Địa chỉ */}
               <div className="pt-3 border-t border-border">
-                <div className="text-[12px] text-muted-foreground mb-3 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
                   <MapPin size={12} /> Địa chỉ
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -793,7 +793,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="123 Nguyễn Huệ, Q.1, TP.HCM"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -815,7 +815,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="456 Lê Lợi, Q.3, TP.HCM"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -835,7 +835,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="TP. Hồ Chí Minh"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -857,7 +857,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="Việt Nam"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -888,7 +888,7 @@ export function ProfilePage() {
                             dependantCount: +e.target.value,
                           }))
                         }
-                        className="w-32 px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-32 px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -902,7 +902,7 @@ export function ProfilePage() {
             <div className="space-y-6">
               {/* Ngân hàng */}
               <div>
-                <h3 className="text-[14px] mb-4 flex items-center gap-2">
+                <h3 className="text-sm mb-4 flex items-center gap-2">
                   <Landmark size={14} className="text-blue-500" /> Thông tin
                   ngân hàng
                 </h3>
@@ -922,7 +922,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="Vietcombank"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -944,7 +944,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="CN Hà Nội"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -968,7 +968,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="0011004567890"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -994,7 +994,7 @@ export function ProfilePage() {
                               }))
                             }
                             placeholder="NGUYEN VAN AN"
-                            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] uppercase"
+                            className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] uppercase"
                             style={{ textTransform: "uppercase" }}
                           />
                         ) : undefined
@@ -1006,7 +1006,7 @@ export function ProfilePage() {
 
               {/* Bảo hiểm */}
               <div className="border-t border-border pt-6">
-                <h3 className="text-[14px] mb-4 flex items-center gap-2">
+                <h3 className="text-sm mb-4 flex items-center gap-2">
                   <Shield size={14} className="text-green-500" /> Bảo hiểm xã
                   hội & Y tế
                 </h3>
@@ -1030,7 +1030,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="1234567890"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -1054,7 +1054,7 @@ export function ProfilePage() {
                             }))
                           }
                           placeholder="HN1234567890"
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -1080,7 +1080,7 @@ export function ProfilePage() {
                               healthInsuranceExpiry: e.target.value || null,
                             }))
                           }
-                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                         />
                       ) : undefined
                     }
@@ -1109,7 +1109,7 @@ export function ProfilePage() {
                           educationLevel: e.target.value || null,
                         }))
                       }
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                     >
                       <option value="">-- Chọn --</option>
                       {[
@@ -1147,7 +1147,7 @@ export function ProfilePage() {
                         }))
                       }
                       placeholder="Khoa học máy tính"
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                     />
                   ) : undefined
                 }
@@ -1170,7 +1170,7 @@ export function ProfilePage() {
                           }))
                         }
                         placeholder="Đại học Bách khoa TP.HCM"
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -1183,7 +1183,7 @@ export function ProfilePage() {
           {activeTab === "emergency" && (
             <div className="space-y-4">
               <div className="bg-yellow-50/50 dark:bg-yellow-900/5 border border-yellow-200 dark:border-yellow-800/30 rounded-xl p-4">
-                <div className="flex items-start gap-2 text-[12px] text-yellow-700 dark:text-yellow-500">
+                <div className="flex items-start gap-2 text-xs text-yellow-700 dark:text-yellow-500">
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" />
                   <span>
                     Thông tin liên hệ khẩn cấp rất quan trọng trong trường hợp
@@ -1212,7 +1212,7 @@ export function ProfilePage() {
                           }))
                         }
                         placeholder="Nguyễn Thị Mai"
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -1238,7 +1238,7 @@ export function ProfilePage() {
                           }))
                         }
                         placeholder="0912345678"
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       />
                     ) : undefined
                   }
@@ -1262,7 +1262,7 @@ export function ProfilePage() {
                             emergencyContactRel: e.target.value || null,
                           }))
                         }
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px]"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem]"
                       >
                         <option value="">-- Chọn --</option>
                         {[
@@ -1301,7 +1301,7 @@ export function ProfilePage() {
                         }
                         rows={3}
                         placeholder="Ghi chú thêm về liên hệ khẩn cấp..."
-                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[13px] resize-none"
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-input-background text-[0.8125rem] resize-none"
                       />
                     ) : undefined
                   }
@@ -1320,16 +1320,16 @@ export function ProfilePage() {
                 {teamLoading ? (
                   <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
                     <Loader2 size={16} className="animate-spin" />
-                    <span className="text-[13px]">Đang tải...</span>
+                    <span className="text-[0.8125rem]">Đang tải...</span>
                   </div>
                 ) : myTeam.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                     <Users size={28} className="opacity-20 mb-2" />
-                    <p className="text-[13px]">Không có nhân viên trực thuộc</p>
+                    <p className="text-[0.8125rem]">Không có nhân viên trực thuộc</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="text-[12px] text-muted-foreground mb-3">
+                    <div className="text-xs text-muted-foreground mb-3">
                       {myTeam.length} nhân viên trực thuộc
                     </div>
                     {myTeam.map((m) => {
@@ -1371,21 +1371,21 @@ export function ProfilePage() {
                               className="w-9 h-9 rounded-full object-cover shrink-0"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-[13px] shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-[0.8125rem] shrink-0">
                               {mInitials}
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="text-[13px] truncate">
+                            <div className="text-[0.8125rem] truncate">
                               {m.fullName}
                             </div>
-                            <div className="text-[11px] text-muted-foreground truncate">
+                            <div className="text-[0.6875rem] text-muted-foreground truncate">
                               {m.jobTitle?.name ?? "—"} ·{" "}
                               {m.department?.name ?? "—"}
                             </div>
                           </div>
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${mEmpStatus.color}`}
+                            className={`text-[0.625rem] px-2 py-0.5 rounded-full shrink-0 ${mEmpStatus.color}`}
                           >
                             {mEmpStatus.label}
                           </span>
@@ -1400,7 +1400,7 @@ export function ProfilePage() {
               {selectedMember && (
                 <div className="w-1/2 border border-border rounded-xl p-4 space-y-4 self-start">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-[14px] font-medium">
+                    <h3 className="text-sm font-medium">
                       Thông tin chi tiết
                     </h3>
                     <button
@@ -1425,7 +1425,7 @@ export function ProfilePage() {
                             className="w-12 h-12 rounded-xl object-cover"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white text-[18px]">
+                          <div className="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center text-white text-lg">
                             {selectedMember.fullName
                               ?.split(" ")
                               .slice(-1)[0]?.[0]
@@ -1433,16 +1433,16 @@ export function ProfilePage() {
                           </div>
                         )}
                         <div>
-                          <div className="text-[14px] font-medium">
+                          <div className="text-sm font-medium">
                             {selectedMember.fullName}
                           </div>
-                          <div className="text-[11px] text-muted-foreground font-mono">
+                          <div className="text-[0.6875rem] text-muted-foreground font-mono">
                             {selectedMember.userCode}
                           </div>
                         </div>
                       </div>
                       {/* Fields */}
-                      <div className="grid grid-cols-1 gap-3 text-[12px]">
+                      <div className="grid grid-cols-1 gap-3 text-xs">
                         <InfoField
                           icon={<Mail size={13} />}
                           label="Email"
@@ -1510,7 +1510,7 @@ export function ProfilePage() {
       {/* Floating save bar when editing */}
       {editing && (
         <div className="sticky bottom-4 bg-card border border-blue-200 dark:border-blue-800 shadow-lg rounded-xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[13px] text-blue-700 dark:text-blue-400">
+          <div className="flex items-center gap-2 text-[0.8125rem] text-blue-700 dark:text-blue-400">
             <Edit2 size={14} />
             <span>
               Chế độ chỉnh sửa — chuyển tab để cập nhật toàn bộ, rồi nhấn{" "}
@@ -1521,14 +1521,14 @@ export function ProfilePage() {
             <button
               onClick={cancelEditing}
               disabled={saving}
-              className="px-3 py-1.5 rounded-lg border border-border text-[12px] hover:bg-accent disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border border-border text-xs hover:bg-accent disabled:opacity-50"
             >
               Huỷ
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-1.5 rounded-lg bg-green-600 text-white text-[12px] hover:bg-green-700 flex items-center gap-1 disabled:opacity-50"
+              className="px-4 py-1.5 rounded-lg bg-green-600 text-white text-xs hover:bg-green-700 flex items-center gap-1 disabled:opacity-50"
             >
               {saving ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -1560,8 +1560,8 @@ function QuickStat({
         {icon}
       </div>
       <div className="min-w-0">
-        <div className="text-[10px] text-muted-foreground">{label}</div>
-        <div className="text-[13px] truncate">{value}</div>
+        <div className="text-[0.625rem] text-muted-foreground">{label}</div>
+        <div className="text-[0.8125rem] truncate">{value}</div>
       </div>
     </div>
   );
@@ -1582,17 +1582,17 @@ function InfoField({
 }) {
   return (
     <div>
-      <div className="text-[11px] text-muted-foreground flex items-center gap-1 mb-1">
+      <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1 mb-1">
         {icon}
         {label}
       </div>
       {editNode ??
         (badge ? (
-          <span className={`text-[12px] px-2 py-0.5 rounded-full ${badge}`}>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${badge}`}>
             {value}
           </span>
         ) : (
-          <div className="text-[13px]">{value || "—"}</div>
+          <div className="text-[0.8125rem]">{value || "—"}</div>
         ))}
     </div>
   );
