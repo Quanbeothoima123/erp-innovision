@@ -229,21 +229,27 @@ export function DashboardPage() {
   const navigate = useNavigate();
   if (!currentUser) return null;
 
-  const isAdminHR = can("ADMIN", "HR");
+  const isAdmin = can("ADMIN");
+  const isHR = can("HR");
   const isManager = can("MANAGER");
   const isSales = can("SALES");
   const isAccountant = can("ACCOUNTANT");
 
-  // Shared KPI data
+  const canViewReports =
+    isAdmin || isHR || isManager || isSales || isAccountant;
   const [dash, setDash] = useState<DashboardReport | null>(null);
   const [tasksDash, setTasksDash] = useState<TaskDashboardSummary | null>(null);
   const [dashLoading, setDashLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("personal");
 
   useEffect(() => {
-    Promise.allSettled([
-      reportsService.getDashboard().then(setDash),
+    const promises: Promise<unknown>[] = [
       tasksService.getDashboardSummary().then(setTasksDash),
-    ]).finally(() => setDashLoading(false));
+    ];
+    if (canViewReports) {
+      promises.push(reportsService.getDashboard().then(setDash));
+    }
+    Promise.allSettled(promises).finally(() => setDashLoading(false));
   }, []);
 
   if (dashLoading) {
@@ -266,7 +272,8 @@ export function DashboardPage() {
     );
   }
 
-  if (isAdminHR)
+  // ADMIN gets dedicated full admin dashboard (no tabs)
+  if (isAdmin)
     return (
       <AdminHRDashboard
         dash={dash}
@@ -275,34 +282,71 @@ export function DashboardPage() {
         navigate={navigate}
       />
     );
-  if (isSales && !isAdminHR)
-    return (
-      <SalesDashboard dash={dash} tasksDash={tasksDash} navigate={navigate} />
-    );
-  if (isAccountant && !isAdminHR && !isSales)
-    return (
-      <AccountantDashboard
-        dash={dash}
-        tasksDash={tasksDash}
-        navigate={navigate}
-      />
-    );
-  if (isManager && !isAdminHR && !isSales && !isAccountant)
-    return (
-      <ManagerDashboard
-        dash={dash}
-        tasksDash={tasksDash}
-        currentUser={currentUser}
-        navigate={navigate}
-      />
-    );
+
+  // Everyone else: Employee dashboard as default + role-specific extra tabs
+  const tabs: { id: string; label: string }[] = [
+    { id: "personal", label: "Cá nhân" },
+    ...(isHR ? [{ id: "hr", label: "Nhân sự" }] : []),
+    ...(isManager ? [{ id: "manager", label: "Quản lý" }] : []),
+    ...(isSales ? [{ id: "sales", label: "Kinh doanh" }] : []),
+    ...(isAccountant ? [{ id: "accountant", label: "Kế toán" }] : []),
+  ];
+
   return (
-    <EmployeeDashboard
-      dash={dash}
-      tasksDash={tasksDash}
-      currentUser={currentUser}
-      navigate={navigate}
-    />
+    <div className="space-y-4">
+      {tabs.length > 1 && (
+        <div className="flex border-b border-border">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2.5 text-[13px] border-b-2 transition-colors -mb-px ${
+                activeTab === tab.id
+                  ? "border-primary text-primary font-medium"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activeTab === "personal" && (
+        <EmployeeDashboard
+          dash={dash}
+          tasksDash={tasksDash}
+          currentUser={currentUser}
+          navigate={navigate}
+        />
+      )}
+      {activeTab === "hr" && isHR && (
+        <AdminHRDashboard
+          dash={dash}
+          tasksDash={tasksDash}
+          currentUser={currentUser}
+          navigate={navigate}
+        />
+      )}
+      {activeTab === "manager" && isManager && (
+        <ManagerDashboard
+          dash={dash}
+          tasksDash={tasksDash}
+          currentUser={currentUser}
+          navigate={navigate}
+        />
+      )}
+      {activeTab === "sales" && isSales && (
+        <SalesDashboard dash={dash} tasksDash={tasksDash} navigate={navigate} />
+      )}
+      {activeTab === "accountant" && isAccountant && (
+        <AccountantDashboard
+          dash={dash}
+          tasksDash={tasksDash}
+          navigate={navigate}
+        />
+      )}
+    </div>
   );
 }
 
@@ -1791,6 +1835,8 @@ function EmployeeDashboard({
     grossSalary: number;
     baseSalary: number;
     totalDeductions: number;
+    month?: number;
+    year?: number;
   } | null>(null);
   const [myOT, setMyOT] = useState<ApiOvertimeRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1811,20 +1857,18 @@ function EmployeeDashboard({
       overtimeService
         .getMyOvertimeRequests({ status: "APPROVED", limit: 10 })
         .then((r) => setMyOT(r.items)),
-      // Get latest payslip from most recent period
-      payrollService.listPeriods({ limit: 1 }).then(async (r) => {
-        if (r.items?.[0]) {
-          try {
-            const slip = await payrollService.getMyPayslip(r.items[0].id);
-            setLatestPayroll({
-              netSalary: slip.netSalary,
-              grossSalary: slip.grossSalary,
-              baseSalary: slip.baseSalary,
-              totalDeductions: slip.totalDeductions,
-            });
-          } catch {
-            /* no payslip yet */
-          }
+      // Get latest payslip from own records (EMPLOYEE-accessible)
+      payrollService.listRecords({ limit: 1 }).then((r) => {
+        const rec = r.items?.[0];
+        if (rec) {
+          setLatestPayroll({
+            netSalary: rec.netSalary,
+            grossSalary: rec.grossSalary,
+            baseSalary: rec.baseSalary,
+            totalDeductions: rec.totalDeductions,
+            month: rec.payrollPeriod?.month,
+            year: rec.payrollPeriod?.year,
+          });
         }
       }),
     ]).finally(() => setLoading(false));
@@ -1881,8 +1925,8 @@ function EmployeeDashboard({
           label="Lương NET gần nhất"
           value={latestPayroll ? fmtVND(latestPayroll.netSalary) : "—"}
           subValue={
-            dash?.finance.latestPayroll
-              ? `T${dash.finance.latestPayroll.month}/${dash.finance.latestPayroll.year}`
+            latestPayroll?.month
+              ? `T${latestPayroll.month}/${latestPayroll.year}`
               : ""
           }
           color="bg-green-500"
@@ -1924,11 +1968,11 @@ function EmployeeDashboard({
           <div className="space-y-3">
             {myBalances
               .filter((b) => b.year === new Date().getFullYear())
-              .map((b) => {
+              .map((b, idx) => {
                 const total = (b.entitledDays ?? 0) + (b.carriedDays ?? 0);
                 const pct = total > 0 ? ((b.usedDays ?? 0) / total) * 100 : 0;
                 return (
-                  <div key={`${b.userId}-${b.leaveTypeId}`}>
+                  <div key={b.id ?? `${b.leaveType?.name}-${idx}`}>
                     <div className="flex justify-between text-[12px] mb-1">
                       <span>{b.leaveType?.name ?? "—"}</span>
                       <span className="text-muted-foreground">
@@ -1956,8 +2000,8 @@ function EmployeeDashboard({
         <div className="bg-card border border-border rounded-xl p-4">
           <h3 className="text-[14px] mb-3 flex items-center gap-2">
             <DollarSign size={16} className="text-green-500" /> Tóm tắt lương{" "}
-            {dash?.finance.latestPayroll
-              ? `T${dash.finance.latestPayroll.month}/${dash.finance.latestPayroll.year}`
+            {latestPayroll?.month
+              ? `T${latestPayroll.month}/${latestPayroll.year}`
               : ""}
           </h3>
           <div className="grid grid-cols-2 gap-3">

@@ -211,6 +211,28 @@ async function getLastUserCode() {
   return user?.userCode ?? null;
 }
 
+/**
+ * Lấy danh sách nhân viên trực tiếp dưới quyền của managerId.
+ * Dùng cho endpoint /my-team và scope listUsers cho direct manager.
+ */
+async function findSubordinates(managerId) {
+  return prisma.user.findMany({
+    where: { managerId, accountStatus: "ACTIVE" },
+    include: USER_LIST_INCLUDE,
+    orderBy: { fullName: "asc" },
+  });
+}
+
+/**
+ * Kiểm tra user này có đang quản lý ít nhất 1 nhân viên active không.
+ */
+async function isDirectManager(userId) {
+  const count = await prisma.user.count({
+    where: { managerId: userId, accountStatus: "ACTIVE" },
+  });
+  return count > 0;
+}
+
 async function getUserStats() {
   const [total, byEmployment, byAccount] = await prisma.$transaction([
     prisma.user.count(),
@@ -346,4 +368,6 @@ module.exports = {
   getUserStats,
   findWorkShifts,
   findAuditLogs,
+  findSubordinates,
+  isDirectManager,
 };

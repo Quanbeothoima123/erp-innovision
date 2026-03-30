@@ -45,6 +45,14 @@ router.put(
   controller.updateMyProfile,
 );
 
+/**
+ * GET /api/users/my-team
+ * Danh sách nhân viên trực tiếp dưới quyền của user đang đăng nhập.
+ * Mở cho mọi role (authenticate only) — service trả mảng rỗng nếu không quản lý ai.
+ * Dùng cho: dropdown gán task, xem nhóm, phê duyệt OT/nghỉ phép của cấp dưới...
+ */
+router.get("/my-team", controller.getMyTeam);
+
 // ── Admin/HR only routes ──────────────────────────────────────
 
 /**
@@ -60,14 +68,11 @@ router.get("/roles", authorize(ROLES.ADMIN, ROLES.HR), controller.listRoles);
 /**
  * GET  /api/users             — Danh sách nhân viên
  * ADMIN/HR: thấy tất cả
- * MANAGER: thấy nhân viên phòng mình
+ * MANAGER (role): thấy nhân viên cùng phòng
+ * Direct manager (EMPLOYEE có thuộc cấp): thấy thuộc cấp trực tiếp
+ * EMPLOYEE thuần: 403 (xử lý trong service)
  */
-router.get(
-  "/",
-  authorize(ROLES.ADMIN, ROLES.HR, ROLES.MANAGER),
-  validate(listUsersSchema, "query"),
-  controller.listUsers,
-);
+router.get("/", validate(listUsersSchema, "query"), controller.listUsers);
 
 /**
  * POST /api/users             — Tạo nhân viên mới

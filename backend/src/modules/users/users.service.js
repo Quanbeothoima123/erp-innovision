@@ -17,24 +17,55 @@ const { prisma } = require("../../config/db");
 /**
  * Lấy danh sách nhân viên với phân quyền:
  * - ADMIN / HR: thấy tất cả
- * - MANAGER: chỉ thấy nhân viên trong phòng mình
- * - EMPLOYEE: không được gọi endpoint này (xử lý ở route)
+ * - MANAGER (role): chỉ thấy nhân viên cùng phòng
+ * - Direct manager (không có role MANAGER nhưng có thuộc cấp): chỉ thấy thuộc cấp trực tiếp
+ * - EMPLOYEE thuần (không quản lý ai): throw 403
  */
 async function listUsers(filters, requestingUser) {
   const isHrOrAdmin = requestingUser.roles.some((r) =>
     [ROLES.ADMIN, ROLES.HR].includes(r),
   );
+  const hasManagerRole = requestingUser.roles.includes(ROLES.MANAGER);
 
-  // Manager chỉ thấy nhân viên cùng phòng
-  if (!isHrOrAdmin && requestingUser.roles.includes(ROLES.MANAGER)) {
+  if (isHrOrAdmin) {
+    // ADMIN/HR: không giới hạn phạm vi, chỉ áp dụng filters từ query
+    const { users, total } = await repo.findMany(filters);
+    return {
+      users,
+      pagination: {
+        page: filters.page ?? PAGINATION.DEFAULT_PAGE,
+        limit: filters.limit ?? PAGINATION.DEFAULT_LIMIT,
+        total,
+      },
+    };
+  }
+
+  if (hasManagerRole) {
+    // MANAGER role: giới hạn theo phòng ban của manager
     const managerUser = await repo.findById(requestingUser.id);
     if (managerUser?.departmentId) {
       filters.departmentId = managerUser.departmentId;
     }
+    const { users, total } = await repo.findMany(filters);
+    return {
+      users,
+      pagination: {
+        page: filters.page ?? PAGINATION.DEFAULT_PAGE,
+        limit: filters.limit ?? PAGINATION.DEFAULT_LIMIT,
+        total,
+      },
+    };
   }
 
-  const { users, total } = await repo.findMany(filters);
+  // Không phải ADMIN/HR/MANAGER → kiểm tra có phải direct manager không
+  const isDirect = await repo.isDirectManager(requestingUser.id);
+  if (!isDirect) {
+    throw AppError.forbidden("Bạn không có quyền xem danh sách nhân viên.");
+  }
 
+  // Direct manager: chỉ thấy thuộc cấp trực tiếp của mình
+  filters.managerId = requestingUser.id;
+  const { users, total } = await repo.findMany(filters);
   return {
     users,
     pagination: {
@@ -43,6 +74,18 @@ async function listUsers(filters, requestingUser) {
       total,
     },
   };
+}
+
+// ── My Team ───────────────────────────────────────────────────
+
+/**
+ * Lấy danh sách nhân viên trực tiếp dưới quyền của user đang đăng nhập.
+ * Dùng cho: dropdown gán task, xem nhóm, phê duyệt OT/nghỉ phép...
+ * Mở cho mọi role — trả về mảng rỗng nếu không quản lý ai.
+ */
+async function getMyTeam(requestingUser) {
+  const subordinates = await repo.findSubordinates(requestingUser.id);
+  return subordinates;
 }
 
 // ── Get one ───────────────────────────────────────────────────
@@ -410,6 +453,7 @@ function _cleanUndefined(obj) {
 
 module.exports = {
   listUsers,
+  getMyTeam,
   getUserById,
   createUser,
   updateUser,

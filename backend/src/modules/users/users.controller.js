@@ -35,6 +35,21 @@ function _pickUserDto(user, requestingUser, targetId) {
 // ── Controllers ───────────────────────────────────────────────
 
 /**
+ * GET /api/users/my-team
+ * Danh sách nhân viên trực tiếp dưới quyền của user đang đăng nhập.
+ * Mở cho mọi role — trả về mảng rỗng nếu không quản lý ai.
+ */
+async function getMyTeam(req, res, next) {
+  try {
+    const subordinates = await usersService.getMyTeam(req.user);
+    const items = subordinates.map((u) => toPublicDto(u));
+    return successResponse(res, items, "Lấy danh sách nhóm thành công");
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * GET /api/users
  * Danh sách nhân viên (phân trang, filter)
  */
@@ -378,6 +393,7 @@ module.exports = {
   updateMe,
   getMyProfile,
   updateMyProfile,
+  getMyTeam,
   getUserById,
   createUser,
   updateUser,
