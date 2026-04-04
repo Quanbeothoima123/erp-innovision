@@ -3,6 +3,7 @@
 const app = require("./app");
 const { env } = require("./config/env");
 const { prisma } = require("./config/db");
+const { setWebhook } = require("./common/services/telegram.service");
 
 const PORT = env.PORT;
 
@@ -12,10 +13,16 @@ async function startServer() {
     await prisma.$connect();
     console.log("✅ Kết nối database thành công");
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, async () => {
       console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
       console.log(`📦 Môi trường: ${env.NODE_ENV}`);
       console.log(`🔒 API: http://localhost:${PORT}/api`);
+
+      // Đăng ký Telegram webhook (chỉ chạy nếu đã cấu hình token)
+      if (env.TELEGRAM_BOT_TOKEN && env.APP_URL) {
+        const webhookUrl = `${env.APP_URL}/api/telegram/webhook`;
+        await setWebhook(webhookUrl);
+      }
     });
 
     // ── Graceful shutdown ─────────────────────────────────────

@@ -55,6 +55,9 @@ model User {
   twoFactorSecret        String?                 @map("two_factor_secret") @db.VarChar(255)
   twoFactorPending       String?                 @map("two_factor_pending") @db.VarChar(255)
   twoFactorEnabledAt     DateTime?               @map("two_factor_enabled_at")
+  telegramChatId         String?                 @map("telegram_chat_id") @db.VarChar(50)
+  telegramEnabled        Boolean                 @default(false) @map("telegram_enabled")
+  telegramLinkedAt       DateTime?               @map("telegram_linked_at")
   lastLoginAt            DateTime?               @map("last_login_at")
   failedLoginCount       Int                     @default(0) @map("failed_login_count")
   lockedUntil            DateTime?               @map("locked_until")
@@ -108,6 +111,7 @@ model User {
   createdTasks           Task[]                  @relation("TaskCreator")
   assignedTasks          Task[]                  @relation("TaskAssignee")
   taskComments           TaskComment[]           @relation("TaskCommentAuthor")
+  telegramSettings       UserTelegramSetting?
 
   @@index([accountStatus, employmentStatus])
   @@index([departmentId])
@@ -156,6 +160,50 @@ model UserProfile {
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
+}
+
+model UserTelegramSetting {
+  id                       String   @id @default(cuid()) @db.VarChar(30)
+  userId                   String   @unique @map("user_id") @db.VarChar(30)
+
+  // Attendance
+  notifyAttendanceRequest  Boolean  @default(true)  @map("notify_attendance_request")
+  notifyAttendanceApproved Boolean  @default(true)  @map("notify_attendance_approved")
+  notifyAttendanceRejected Boolean  @default(true)  @map("notify_attendance_rejected")
+
+  // Leave
+  notifyLeaveRequest       Boolean  @default(true)  @map("notify_leave_request")
+  notifyLeaveApproved      Boolean  @default(true)  @map("notify_leave_approved")
+  notifyLeaveRejected      Boolean  @default(true)  @map("notify_leave_rejected")
+  notifyLeaveBalanceLow    Boolean  @default(true)  @map("notify_leave_balance_low")
+
+  // Overtime
+  notifyOvertimeRequest    Boolean  @default(true)  @map("notify_overtime_request")
+  notifyOvertimeApproved   Boolean  @default(true)  @map("notify_overtime_approved")
+  notifyOvertimeRejected   Boolean  @default(true)  @map("notify_overtime_rejected")
+
+  // Task
+  notifyTaskAssigned       Boolean  @default(true)  @map("notify_task_assigned")
+  notifyTaskUpdated        Boolean  @default(true)  @map("notify_task_updated")
+  notifyTaskDueSoon        Boolean  @default(true)  @map("notify_task_due_soon")
+
+  // Payroll
+  notifyPayroll            Boolean  @default(true)  @map("notify_payroll")
+  notifyPayslip            Boolean  @default(true)  @map("notify_payslip")
+  notifyCompensation       Boolean  @default(true)  @map("notify_compensation")
+
+  // Project
+  notifyProject            Boolean  @default(true)  @map("notify_project")
+  notifyMilestone          Boolean  @default(true)  @map("notify_milestone")
+
+  // General (admin broadcast)
+  notifyGeneral            Boolean  @default(true)  @map("notify_general")
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt      @map("updated_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_telegram_settings")
 }
 
 model Role {
@@ -1086,6 +1134,18 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model TelegramGroupConfig {
+  id          String   @id @default(cuid()) @db.VarChar(30)
+  name        String   @db.VarChar(100)          // Tên nhóm (ví dụ: "All Staff")
+  groupChatId String   @unique @map("group_chat_id") @db.VarChar(50)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  @@map("telegram_group_configs")
+}
+
 enum AccountStatus {
   PENDING
   ACTIVE
@@ -1366,6 +1426,9 @@ enum NotificationType {
   OVERTIME_REQUEST_CREATED
   OVERTIME_APPROVED
   OVERTIME_REJECTED
+  TASK_ASSIGNED
+  TASK_UPDATED
+  TASK_DUE_SOON
   PROJECT_ASSIGNED
   PROJECT_STATUS_CHANGED
   MILESTONE_DUE_SOON

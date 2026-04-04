@@ -4,6 +4,7 @@ const mapper = require("./tasks.mapper");
 const AppError = require("../../common/errors/AppError");
 const { ROLES } = require("../../config/constants");
 const { prisma } = require("../../config/db");
+const { notify } = require("../notifications/notifications.service");
 
 // ─────────────────────────────────────────────────────────────
 // PERMISSION HELPERS
@@ -87,15 +88,15 @@ const _notifyAssignee = async (task, currentUser, message) => {
   try {
     if (!task.assignedToUserId || task.assignedToUserId === currentUser.id)
       return;
-    await prisma.notification.create({
-      data: {
-        userId: task.assignedToUserId,
-        type: "TASK_ASSIGNED",
-        title: "Task mới được giao",
-        message,
-        referenceId: task.id,
-        referenceType: "TASK",
-      },
+    await notify({
+      recipientIds: task.assignedToUserId,
+      senderUserId: currentUser.id,
+      type: "TASK_ASSIGNED",
+      title: "Task mới được giao",
+      message,
+      relatedEntityType: "Task",
+      relatedEntityId: task.id,
+      actionUrl: `/tasks/${task.id}`,
     });
   } catch (_) {
     /* notification không block nghiệp vụ chính */
