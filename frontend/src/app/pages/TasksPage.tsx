@@ -1,5 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams, useLocation, useNavigate } from "react-router";
+import {
+  useSearchParams,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useTaskData } from "../context/TaskContext";
 import { taskStatusLabels, taskPriorityLabels } from "../data/mockData";
@@ -109,11 +114,23 @@ export function TasksPage() {
     "ALL" | "OVERDUE" | "TODAY" | "THIS_WEEK" | "UPCOMING"
   >("ALL");
 
+  // Đọc taskId từ URL params (khi vào từ deep link /tasks/:taskId)
+  const { taskId: taskIdFromUrl } = useParams<{ taskId: string }>();
+
   // Task detail panel
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(
+    taskIdFromUrl ?? null,
+  );
 
   // Create task modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  // Khi URL có taskId (deep link từ Telegram), tự động mở panel
+  useEffect(() => {
+    if (taskIdFromUrl) {
+      setSelectedTaskId(taskIdFromUrl);
+    }
+  }, [taskIdFromUrl]);
 
   // Filter tasks
   const filteredTasks = useMemo(() => {
@@ -479,7 +496,13 @@ export function TasksPage() {
         <TaskDetailPanel
           taskId={selectedTaskId}
           open={!!selectedTaskId}
-          onClose={() => setSelectedTaskId(null)}
+          onClose={() => {
+            setSelectedTaskId(null);
+            // Nếu đang ở route /tasks/:id thì navigate về /tasks
+            if (taskIdFromUrl) {
+              navigate("/tasks");
+            }
+          }}
         />
       )}
 

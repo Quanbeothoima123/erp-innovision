@@ -82,6 +82,52 @@ const _validateAssignee = async (assignedToUserId, currentUser) => {
 };
 
 /**
+ * Tạo nội dung thông báo task chi tiết cho Telegram
+ */
+const _buildTaskMessage = (task, type = "new") => {
+  const priorityLabels = {
+    LOW: "🟢 Thấp",
+    MEDIUM: "🟡 Trung bình",
+    HIGH: "🔴 Cao",
+    URGENT: "🚨 Khẩn cấp",
+  };
+
+  const lines = [
+    type === "new"
+      ? `Bạn được giao task mới: "${task.title}"`
+      : `Task đã được gán lại cho bạn: "${task.title}"`,
+  ];
+
+  if (task.priority) {
+    lines.push(`Độ ưu tiên: ${priorityLabels[task.priority] ?? task.priority}`);
+  }
+
+  if (task.deadline) {
+    const d = new Date(task.deadline);
+    const deadlineStr = d.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    lines.push(`Deadline: ${deadlineStr}`);
+  }
+
+  if (task.project?.projectName) {
+    lines.push(`Dự án: ${task.project.projectName}`);
+  }
+
+  if (task.description) {
+    const shortDesc =
+      task.description.length > 80
+        ? task.description.substring(0, 80) + "..."
+        : task.description;
+    lines.push(`Mô tả: ${shortDesc}`);
+  }
+
+  return lines.join("\n");
+};
+
+/**
  * Gửi notification cho assignee (không block nếu thất bại)
  */
 const _notifyAssignee = async (task, currentUser, message) => {
@@ -228,11 +274,7 @@ const createTask = async (body, currentUser) => {
     estimatedHours: estimatedHours ?? null,
   });
 
-  await _notifyAssignee(
-    task,
-    currentUser,
-    `Bạn được giao task mới: "${title}"`,
-  );
+  await _notifyAssignee(task, currentUser, _buildTaskMessage(task, "new"));
 
   return task;
 };
@@ -341,7 +383,7 @@ const assignTask = async (id, { assignedToUserId }, currentUser) => {
   await _notifyAssignee(
     updated,
     currentUser,
-    `Bạn được giao task: "${updated.title}"`,
+    _buildTaskMessage(updated, "assign"),
   );
 
   return updated;

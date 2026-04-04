@@ -98,6 +98,7 @@ export const router = createBrowserRouter([
           // ── THÊM MỚI ───────────────────────────────────────
           { path: "tasks", Component: TasksPage },
           { path: "tasks/my", Component: MyTasksPage },
+          { path: "tasks/:taskId", Component: TasksPage },
           // ───────────────────────────────────────────────────
           { path: "reports/hr", Component: HRReportPage },
           { path: "reports/attendance", Component: AttendanceReportPage },
