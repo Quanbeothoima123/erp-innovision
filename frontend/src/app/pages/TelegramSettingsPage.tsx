@@ -22,6 +22,13 @@ import {
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import {
   MessageCircle,
   Link2Off,
   Bell,
@@ -37,6 +44,8 @@ import {
   CheckSquare,
   FolderKanban,
   Megaphone,
+  Copy,
+  CheckCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -45,6 +54,7 @@ import * as telegramService from "../../lib/services/telegram.service";
 import type {
   TelegramStatus,
   TelegramSettings,
+  TelegramConnectLink,
 } from "../../lib/services/telegram.service";
 
 // ─── Nhóm cài đặt thông báo ──────────────────────────────────
@@ -207,6 +217,15 @@ export function TelegramSettingsPage() {
   const [unlinkDialog, setUnlinkDialog] = useState(false);
   const [savingSettings, setSavingSettings] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
+  const [connectData, setConnectData] = useState<TelegramConnectLink | null>(
+    null,
+  );
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<ReturnType<
+    typeof setInterval
+  > | null>(null);
+  const [countdown, setCountdown] = useState(900); // 15 phút = 900 giây
+  const [copied, setCopied] = useState(false);
 
   // Load trạng thái
   const fetchStatus = useCallback(async () => {
@@ -229,14 +248,43 @@ export function TelegramSettingsPage() {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      const { connectUrl } = await telegramService.getConnectLink();
-      window.open(connectUrl, "_blank", "noopener,noreferrer");
-      toast.info(
-        "Đã mở Telegram. Sau khi xác nhận trong bot, hãy làm mới trang này.",
-        { duration: 8000 },
-      );
-      setTimeout(() => fetchStatus(), 5000);
-      setTimeout(() => fetchStatus(), 12000);
+      const data = await telegramService.getConnectLink();
+      setConnectData(data);
+      setCountdown(900);
+      setShowConnectDialog(true);
+
+      // Bắt đầu polling mỗi 3 giây để kiểm tra đã link chưa
+      const interval = setInterval(async () => {
+        try {
+          const status = await telegramService.getStatus();
+          if (status.isLinked) {
+            clearInterval(interval);
+            setPollingInterval(null);
+            setShowConnectDialog(false);
+            setConnectData(null);
+            setStatus(status);
+            setSettings(status.settings);
+            toast.success("🎉 Kết nối Telegram thành công!");
+          }
+        } catch {
+          // silent
+        }
+      }, 3000);
+
+      setPollingInterval(interval);
+
+      // Countdown timer
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            clearInterval(interval);
+            setPollingInterval(null);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Không thể tạo link kết nối";
       toast.error(msg);
@@ -285,6 +333,38 @@ export function TelegramSettingsPage() {
     } finally {
       setToggling(false);
     }
+  };
+
+  // Đóng dialog kết nối
+  const handleCloseConnectDialog = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+    setShowConnectDialog(false);
+    setConnectData(null);
+    setCountdown(900);
+  };
+
+  // Copy command
+  const handleCopyCommand = async () => {
+    if (!connectData) return;
+    try {
+      await navigator.clipboard.writeText(connectData.startCommand);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Không thể copy, vui lòng copy thủ công");
+    }
+  };
+
+  // Format countdown
+  const formatCountdown = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
   };
 
   // Cập nhật từng setting
@@ -538,6 +618,101 @@ export function TelegramSettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Connect Dialog ── */}
+      <Dialog open={showConnectDialog} onOpenChange={handleCloseConnectDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-blue-600" />
+              Kết nối Telegram
+            </DialogTitle>
+            <DialogDescription>
+              Làm theo 2 bước bên dưới để liên kết tài khoản
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            {/* Bước 1 */}
+            <div className="space-y-2">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+                  1
+                </span>
+                Mở bot Telegram
+              </p>
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() =>
+                  window.open(
+                    connectData?.botUrl,
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
+              >
+                <ExternalLink className="h-4 w-4" />
+                Mở @{connectData?.botUsername}
+              </Button>
+            </div>
+
+            {/* Bước 2 */}
+            <div className="space-y-2">
+              <p className="text-sm font-semibold flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+                  2
+                </span>
+                Gửi lệnh này cho bot
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm font-mono break-all select-all">
+                  {connectData?.startCommand}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={handleCopyCommand}
+                >
+                  {copied ? (
+                    <CheckCheck className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Mở bot ở bước 1, rồi gửi đúng nội dung trên vào hộp chat
+              </p>
+            </div>
+
+            {/* Status chờ */}
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center gap-3">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Đang chờ xác nhận...</p>
+                  <p className="text-xs text-muted-foreground">
+                    Trang sẽ tự cập nhật khi kết nối thành công.
+                    {countdown > 0 && (
+                      <span className="ml-1">
+                        Hết hạn sau:{" "}
+                        <strong>{formatCountdown(countdown)}</strong>
+                      </span>
+                    )}
+                    {countdown === 0 && (
+                      <span className="ml-1 text-destructive">
+                        Link đã hết hạn. Vui lòng thử lại.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

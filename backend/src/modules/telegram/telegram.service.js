@@ -43,6 +43,10 @@ async function generateConnectLink(userId) {
 
   return {
     connectUrl: `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=${rawToken}`,
+    botUrl: `https://t.me/${env.TELEGRAM_BOT_USERNAME}`,
+    rawToken,
+    startCommand: `/start ${rawToken}`,
+    botUsername: env.TELEGRAM_BOT_USERNAME,
     expiresIn: CONNECT_TOKEN_EXPIRES,
   };
 }

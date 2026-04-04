@@ -47,6 +47,10 @@ export interface TelegramSettings {
 
 export interface TelegramConnectLink {
   connectUrl: string;
+  botUrl: string;
+  rawToken: string;
+  startCommand: string;
+  botUsername: string;
   expiresIn: string;
 }
 
