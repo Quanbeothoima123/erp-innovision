@@ -20,7 +20,7 @@ function generateConnectLink(userId) {
     throw AppError.badRequest("Telegram bot chưa được cấu hình.");
   }
   // Encode userId vào JWT, bot sẽ gửi lại để backend verify
-  const token = jwt.sign({ userId }, env.JWT_SECRET, {
+  const token = jwt.sign({ userId }, env.JWT_ACCESS_SECRET, {
     expiresIn: CONNECT_TOKEN_EXPIRES,
   });
   // Telegram start payload không được chứa '.' và '+', dùng base64url
@@ -56,7 +56,7 @@ async function handleWebhook(body) {
 
     try {
       const rawToken = Buffer.from(payload, "base64url").toString("utf8");
-      const decoded = jwt.verify(rawToken, env.JWT_SECRET);
+      const decoded = jwt.verify(rawToken, env.JWT_ACCESS_SECRET);
       const { userId } = decoded;
 
       await repo.linkUserChatId(userId, chatId);
