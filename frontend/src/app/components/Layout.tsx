@@ -301,7 +301,7 @@ export function Layout() {
     // ── SETTINGS: Cài đặt cá nhân (cho tất cả user) ─────────────
     items.push({
       label: "Cài Đặt",
-      icon: <Settings size={18} />,
+      icon: <Bell size={18} />,
       children: [{ label: "Thông báo Telegram", path: "/settings/telegram" }],
     });
     // ──────────────────────────────────────────────────────────
