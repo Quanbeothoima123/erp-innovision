@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `auth_tokens` MODIFY `token_type` ENUM('ACCOUNT_SETUP', 'PASSWORD_RESET', 'TELEGRAM_CONNECT') NOT NULL;

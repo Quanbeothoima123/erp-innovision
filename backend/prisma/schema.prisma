@@ -1156,6 +1156,7 @@ enum AccountStatus {
 enum AuthTokenType {
   ACCOUNT_SETUP
   PASSWORD_RESET
+  TELEGRAM_CONNECT
 }
 
 enum EmploymentStatus {

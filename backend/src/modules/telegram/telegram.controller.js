@@ -28,7 +28,7 @@ async function getStatus(req, res, next) {
 /** GET /api/telegram/connect-link — lấy deep link kết nối */
 async function getConnectLink(req, res, next) {
   try {
-    const data = svc.generateConnectLink(req.user.id);
+    const data = await svc.generateConnectLink(req.user.id);
     return successResponse(res, data, "Lấy link kết nối thành công");
   } catch (e) {
     next(e);
