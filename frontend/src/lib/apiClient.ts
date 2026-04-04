@@ -37,25 +37,39 @@ let refreshPromise: Promise<boolean> | null = null;
 async function refreshTokens(): Promise<boolean> {
   const rt = TokenStore.getRefresh();
   if (!rt) return false;
+
   try {
     const res = await fetch(`${BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: rt }),
     });
-    if (!res.ok) {
+
+    // ✅ Chỉ xoá token khi server XÁC NHẬN token không hợp lệ (401 hoặc 403)
+    // Không xoá khi lỗi mạng (5xx, timeout, network error)
+    if (res.status === 401 || res.status === 403) {
       TokenStore.clear();
       return false;
     }
+
+    if (!res.ok) {
+      // Lỗi server tạm thời (500, 502, 503...) → KHÔNG xoá token
+      // Giữ lại token, user sẽ được retry sau
+      return false;
+    }
+
     const data = await res.json();
     if (data.data?.accessToken) {
       TokenStore.set(data.data.accessToken, data.data.refreshToken ?? rt);
       return true;
     }
-    TokenStore.clear();
+
+    // Không nhận được token mới nhưng server trả 200 → unexpected, không xoá
     return false;
   } catch {
-    TokenStore.clear();
+    // ✅ Lỗi mạng (ECONNREFUSED, timeout, offline...) → KHÔNG xoá token
+    // Session vẫn còn hợp lệ, user chỉ tạm thời mất mạng
+    console.warn("[apiClient] Refresh token network error — keeping tokens");
     return false;
   }
 }

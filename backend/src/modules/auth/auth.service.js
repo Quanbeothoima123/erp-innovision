@@ -133,9 +133,14 @@ async function refreshTokens(refreshToken) {
 
   // 4. Rotate: tạo refresh token mới, cập nhật session
   const roleCodes = extractRoleCodes(user.roles);
-  const newRefreshToken = generateSecureToken(48);
-  const newRefreshTokenHash = hashToken(newRefreshToken);
   const newExpiresAt = getRefreshTokenExpiresAt();
+
+  // ✅ Tạo JWT refresh token mới (nhất quán với login)
+  const newRefreshToken = signRefreshToken({
+    sub: user.id,
+    sid: session.id,
+  });
+  const newRefreshTokenHash = hashToken(newRefreshToken);
 
   await repo.rotateSessionToken(session.id, newRefreshTokenHash, newExpiresAt);
 
