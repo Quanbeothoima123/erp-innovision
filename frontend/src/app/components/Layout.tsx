@@ -33,6 +33,7 @@ import {
   // ── THÊM MỚI ───────────────────────────────────────────────
   CheckSquare,
   Shield,
+  MessageCircle,
 } from "lucide-react";
 
 interface NavItem {
@@ -292,9 +293,18 @@ export function Layout() {
           { label: "Cấu hình hệ thống", path: "/system/config" },
           { label: "Tài khoản & Phân quyền", path: "/system/accounts" },
           { label: "Nhật ký hệ thống", path: "/system/audit-log" },
+          { label: "Quản lý Telegram Bot", path: "/system/telegram" },
         ],
       });
     }
+
+    // ── SETTINGS: Cài đặt cá nhân (cho tất cả user) ─────────────
+    items.push({
+      label: "Cài Đặt",
+      icon: <Settings size={18} />,
+      children: [{ label: "Thông báo Telegram", path: "/settings/telegram" }],
+    });
+    // ──────────────────────────────────────────────────────────
 
     return items;
   };
@@ -574,7 +584,9 @@ export function Layout() {
                   />
                   <div className="absolute right-0 top-10 z-50 w-56 bg-popover border border-border rounded-xl shadow-xl overflow-hidden">
                     <div className="p-3 border-b border-border">
-                      <div className="text-[0.8125rem]">{currentUser.fullName}</div>
+                      <div className="text-[0.8125rem]">
+                        {currentUser.fullName}
+                      </div>
                       <div className="text-[0.6875rem] text-muted-foreground">
                         {currentUser.email}
                       </div>

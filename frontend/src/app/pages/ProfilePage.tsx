@@ -37,6 +37,7 @@ import {
   Loader2,
   RefreshCw,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import * as usersService from "../../lib/services/users.service";
@@ -98,7 +99,14 @@ const roleLabels: Record<string, string> = {
   ACCOUNTANT: "Kế toán",
 };
 
-type TabKey = "work" | "personal" | "bank" | "education" | "emergency" | "team";
+type TabKey =
+  | "work"
+  | "personal"
+  | "bank"
+  | "education"
+  | "emergency"
+  | "team"
+  | "settings";
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("vi-VN") : "—";
@@ -309,6 +317,7 @@ export function ProfilePage() {
         ]
       : []),
     { key: "emergency", label: "Liên hệ KC", icon: <Heart size={14} /> },
+    { key: "settings", label: "Cài đặt", icon: <Shield size={14} /> },
   ];
 
   // ─── Render ───────────────────────────────────────────────────────
@@ -358,7 +367,7 @@ export function ProfilePage() {
                   src={user.avatarUrl}
                   alt={user.fullName}
                   onClick={() => setAvatarLightboxOpen(true)}
-                  className="w-20 h-20 rounded-2xl border-4 border-card shadow-lg object-cover cursor-zoom-in cursor-pointer"
+                  className="w-20 h-20 rounded-2xl border-4 border-card shadow-lg object-cover cursor-zoom-in"
                 />
               ) : (
                 <div
@@ -1325,7 +1334,9 @@ export function ProfilePage() {
                 ) : myTeam.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                     <Users size={28} className="opacity-20 mb-2" />
-                    <p className="text-[0.8125rem]">Không có nhân viên trực thuộc</p>
+                    <p className="text-[0.8125rem]">
+                      Không có nhân viên trực thuộc
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1400,9 +1411,7 @@ export function ProfilePage() {
               {selectedMember && (
                 <div className="w-1/2 border border-border rounded-xl p-4 space-y-4 self-start">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium">
-                      Thông tin chi tiết
-                    </h3>
+                    <h3 className="text-sm font-medium">Thông tin chi tiết</h3>
                     <button
                       onClick={() => setSelectedMember(null)}
                       className="p-1 rounded hover:bg-accent"
@@ -1502,6 +1511,30 @@ export function ProfilePage() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── SETTINGS TAB ── */}
+          {activeTab === "settings" && (
+            <div className="space-y-4">
+              {/* Telegram Notification */}
+              <button
+                onClick={() => navigate("/settings/telegram")}
+                className="w-full flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                    <MessageCircle className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Thông báo Telegram</p>
+                    <p className="text-xs text-muted-foreground">
+                      Nhận thông báo qua Telegram bot
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              </button>
             </div>
           )}
         </div>

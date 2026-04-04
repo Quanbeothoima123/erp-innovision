@@ -53,6 +53,8 @@ import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { TasksPage, MyTasksPage } from "./pages/TasksPage";
 import { TwoFactorAuthPage } from "./pages/security/TwoFactorAuthPage";
 import { TwoFactorVerificationPage } from "./pages/security/TwoFactorVerificationPage";
+import { TelegramSettingsPage } from "./pages/TelegramSettingsPage";
+import { TelegramAdminPage } from "./pages/TelegramAdminPage";
 export const router = createBrowserRouter([
   {
     Component: RootLayout,
@@ -107,9 +109,11 @@ export const router = createBrowserRouter([
           { path: "system/config", Component: SystemConfigPage },
           { path: "system/accounts", Component: AccountsPage },
           { path: "system/audit-log", Component: AuditLogPage },
+          { path: "system/telegram", Component: TelegramAdminPage },
           { path: "notifications", Component: NotificationsPage },
           { path: "profile", Component: ProfilePage },
           { path: "security/two-factor", Component: TwoFactorAuthPage },
+          { path: "settings/telegram", Component: TelegramSettingsPage },
         ],
       },
     ],
