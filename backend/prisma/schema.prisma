@@ -112,6 +112,7 @@ model User {
   assignedTasks          Task[]                  @relation("TaskAssignee")
   taskComments           TaskComment[]           @relation("TaskCommentAuthor")
   telegramSettings       UserTelegramSetting?
+  aiSummaryCaches        AiSummaryCache[]
 
   @@index([accountStatus, employmentStatus])
   @@index([departmentId])
@@ -1144,6 +1145,29 @@ model TelegramGroupConfig {
   updatedAt   DateTime @updatedAt      @map("updated_at")
 
   @@map("telegram_group_configs")
+}
+
+model AiSummaryCache {
+  id           String   @id @default(cuid()) @db.VarChar(30)
+  userId       String   @map("user_id") @db.VarChar(30)
+  questionType String   @map("question_type") @db.VarChar(50)
+  // Hash của data truyền vào AI — dùng để phát hiện khi data thay đổi
+  dataHash     String   @map("data_hash") @db.VarChar(64)
+  // Khoá thời gian: ngày/tuần/tháng (dạng "2026-04-05", "2026-W14", "2026-04")
+  periodKey    String   @map("period_key") @db.VarChar(20)
+  answer       String   @db.LongText
+  // Metadata
+  tokensUsed   Int?     @map("tokens_used")
+  createdAt    DateTime @default(now()) @map("created_at")
+  expiresAt    DateTime @map("expires_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Mỗi user + questionType + period chỉ có 1 cache entry
+  @@unique([userId, questionType, periodKey])
+  @@index([userId, questionType])
+  @@index([expiresAt])
+  @@map("ai_summary_caches")
 }
 
 enum AccountStatus {

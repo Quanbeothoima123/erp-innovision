@@ -34,6 +34,7 @@ import {
   CheckSquare,
   Shield,
   MessageCircle,
+  Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -112,6 +113,12 @@ export function Layout() {
       ],
     });
     // ──────────────────────────────────────────────────────────
+
+    items.push({
+      label: "AI Assistant",
+      icon: <Sparkles size={18} />,
+      path: "/ai-assistant",
+    });
 
     if (can("ADMIN", "HR")) {
       items.push({

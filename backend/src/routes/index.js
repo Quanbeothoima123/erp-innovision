@@ -16,6 +16,7 @@ const notificationRoutes = require("../modules/notifications/notifications.route
 const systemRoutes = require("../modules/system/system.routes");
 const taskRoutes = require("../modules/tasks/tasks.routes");
 const telegramRoutes = require("../modules/telegram/telegram.routes");
+const aiSummaryRoutes = require("../modules/ai-summary/ai-summary.routes");
 
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -32,5 +33,6 @@ router.use("/notifications", notificationRoutes);
 router.use("/system", systemRoutes);
 router.use("/tasks", taskRoutes);
 router.use("/telegram", telegramRoutes);
+router.use("/ai-summary", aiSummaryRoutes);
 
 module.exports = router;

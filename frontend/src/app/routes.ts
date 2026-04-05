@@ -55,6 +55,7 @@ import { TwoFactorAuthPage } from "./pages/security/TwoFactorAuthPage";
 import { TwoFactorVerificationPage } from "./pages/security/TwoFactorVerificationPage";
 import { TelegramSettingsPage } from "./pages/TelegramSettingsPage";
 import { TelegramAdminPage } from "./pages/TelegramAdminPage";
+import { AiAssistantPage } from "./pages/AiAssistantPage";
 export const router = createBrowserRouter([
   {
     Component: RootLayout,
@@ -99,6 +100,7 @@ export const router = createBrowserRouter([
           { path: "tasks", Component: TasksPage },
           { path: "tasks/my", Component: MyTasksPage },
           { path: "tasks/:taskId", Component: TasksPage },
+          { path: "ai-assistant", Component: AiAssistantPage },
           // ───────────────────────────────────────────────────
           { path: "reports/hr", Component: HRReportPage },
           { path: "reports/attendance", Component: AttendanceReportPage },

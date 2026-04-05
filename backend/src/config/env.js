@@ -62,6 +62,10 @@ const env = {
   TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || "",
   TELEGRAM_BOT_USERNAME: process.env.TELEGRAM_BOT_USERNAME || "",
   TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET || "",
+
+  // ── Gemini AI ─────────────────────────────────────────────
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
+  GEMINI_MODEL: process.env.GEMINI_MODEL || "gemini-2.0-flash",
 };
 
 module.exports = { env };
